@@ -1,4 +1,4 @@
-from flask import g, Flask
+from flask import g, Flask, request
 from flask_sqlalchemy import SQLAlchemy
 
 from .models import db
@@ -36,5 +36,58 @@ def create_app():
             db.session.add(user)
 
         db.session.commit()
+
+    from flask_oso import authorize
+
+    @app.route("/orgs/", methods=["GET"])
+    @authorize(resource=request)
+    def orgs_index():
+        return "orgs"
+
+    @app.route("/orgs/<string:org_name>/repos/", methods=["GET"])
+    @authorize(resource=request)
+    def repos_index(org_name):
+        return f"repos for org: {org_name}"
+
+    @app.route("/orgs/<string:org_name>/repos/", methods=["POST"])
+    @authorize(resource=request)
+    def repos_new(org_name):
+        content = request.get_json()
+        print(content)
+        return f"creating a new repo for org: {org_name}, {content['name']}"
+
+    @app.route("/orgs/<string:org_name>/repos/<string:repo_name>", methods=["GET"])
+    @authorize(resource=request)
+    def repos_show(org_name, repo_name):
+        return f"repo for: {org_name}, {repo_name}"
+
+    @app.route(
+        "/orgs/<string:org_name>/repos/<string:repo_name>/issues/", methods=["GET"]
+    )
+    @authorize(resource=request)
+    def issues_index(org_name, repo_name):
+        return f"issues for: {org_name}, {repo_name}"
+
+    @app.route(
+        "/orgs/<string:org_name>/repos/<string:repo_name>/roles/", methods=["GET"]
+    )
+    @authorize(resource=request)
+    def repo_roles_index(org_name, repo_name):
+        return f"roles for: {org_name}, {repo_name}"
+
+    @app.route("/orgs/<string:org_name>/teams/", methods=["GET"])
+    @authorize(resource=request)
+    def teams_index(org_name):
+        return f"teams for org_name: {org_name}"
+
+    @app.route("/orgs/<string:org_name>/teams/<string:team_name>", methods=["GET"])
+    @authorize(resource=request)
+    def teams_show(org_name, team_name):
+        return f"team for org_name: {org_name}, {team_name}"
+
+    @app.route("/orgs/<string:org_name>/people/", methods=["GET"])
+    @authorize(resource=request)
+    def org_people_index(org_name):
+        return f"people for org_name: {org_name}"
 
     return app
