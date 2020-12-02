@@ -174,7 +174,7 @@ class RepositoryRole(db.Model):
     )
 
     def repr(self):
-        return {"id": self.id, "name": self.name}
+        return {"id": self.id, "name": str(self.name)}
 
 
 class OrganizationRole(db.Model):
@@ -197,7 +197,7 @@ class OrganizationRole(db.Model):
     )
 
     def repr(self):
-        return {"id": self.id, "name": self.name}
+        return {"id": self.id, "name": str(self.name)}
 
 
 class TeamRole(db.Model):
@@ -220,4 +220,4 @@ class TeamRole(db.Model):
     )
 
     def repr(self):
-        return {"id": self.id, "name": self.name}
+        return {"id": self.id, "name": str(self.name)}
