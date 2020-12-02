@@ -37,7 +37,7 @@ resource_role_applies_to(role_resource, role_resource);
 ### User role source: direct mapping between users and organization roles
 user_in_role(user: User, role, org: Organization) if
     # role is an OrganizationRole object
-    role in OrganizationRole.query.filter(OrganizationRole.users.any(User.id.in_([user.id]))) and
+    role in OrganizationRole.query.filter(OrganizationRole.users.any(User.id.__eq__(user.id))) and
     role.organization = org;
 
 
