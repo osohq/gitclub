@@ -109,35 +109,35 @@ def create_app():
             teams=[],
         )
         paperwork_read = RepositoryRole(
-            id=1,
+            id=6,
             name="READ",
             repository=paperwork,
             users=[john, paul],
             teams=[vocalists],
         )
         paperwork_triage = RepositoryRole(
-            id=2,
+            id=7,
             name="TRIAGE",
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_write = RepositoryRole(
-            id=3,
+            id=8,
             name="WRITE",
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_maintain = RepositoryRole(
-            id=4,
+            id=9,
             name="MAINTAIN",
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_admin = RepositoryRole(
-            id=5,
+            id=10,
             name="ADMIN",
             repository=paperwork,
             users=[],
