@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized
 
 from sqlalchemy.orm import Session
 
-from .models import User, db
+from .models import User, Organization, Team, Repository, Issue, db
 from flask_oso import FlaskOso, authorize
 
 
@@ -20,9 +20,9 @@ def init_oso(app):
             email = request.headers.get("user")
             if email:
                 try:
-                    session = Session(bind=db.engine)
+                    g.session = Session(bind=db.engine)
                     g.current_user = (
-                        session.query(User).filter(User.email == email).first()
+                        g.session.query(User).filter(User.email == email).first()
                     )
                 except Exception:
                     return Unauthorized("user not found")
@@ -34,6 +34,10 @@ def init_oso(app):
         return you.repr()
 
     base_oso.register_class(User)
+    base_oso.register_class(Organization)
+    base_oso.register_class(Team)
+    base_oso.register_class(Repository)
+    base_oso.register_class(Issue)
     oso.init_app(app)
 
     base_oso.load_file("app/authorization.polar")
