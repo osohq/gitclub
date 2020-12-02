@@ -47,32 +47,42 @@ def create_app():
             ringo,
             randall,
         ]
+        for user in users:
+            db.session.add(user)
         beatles = Organization(id=1, name="The Beatles", base_repo_role="READ")
         monsters = Organization(id=2, name="Monsters Inc.", base_repo_role="READ")
         organizations = [beatles, monsters]
-        vocalists = Team(id=1, name="Vocalists", organization_id=1)
-        percussion = Team(id=2, name="Percussion", organization_id=1)
-        scarers = Team(id=3, name="Scarers", organization_id=2)
+        for org in organizations:
+            db.session.add(org)
+        vocalists = Team(id=1, name="Vocalists", organization=beatles)
+        percussion = Team(id=2, name="Percussion", organization=beatles)
+        scarers = Team(id=3, name="Scarers", organization=monsters)
         teams = [
             vocalists,
             percussion,
             scarers,
         ]
-        abby_road = Repository(id=1, name="Abbey Road", organization_id=1)
-        paperwork = Repository(id=2, name="Paperwork", organization_id=2)
+        for team in teams:
+            db.session.add(team)
+        abby_road = Repository(id=1, name="Abbey Road", organization=beatles)
+        paperwork = Repository(id=2, name="Paperwork", organization=monsters)
         repositories = [
             abby_road,
             paperwork,
         ]
-        issues = []
-        for user in users:
-            db.session.add(user)
-        for org in organizations:
-            db.session.add(org)
-        for team in teams:
-            db.session.add(team)
         for repo in repositories:
             db.session.add(repo)
+        # TODO: issues
+        abby_road_read = RepositoryRole(
+            id=1,
+            name="READ",
+            repository=abby_road,
+            users=[john, paul],
+            teams=[vocalists],
+        )
+        repo_roles = [abby_road_read]
+        for repo_role in repo_roles:
+            db.session.add(repo_role)
 
         db.session.commit()
 
