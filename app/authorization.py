@@ -39,12 +39,6 @@ def init_oso(app):
             except Exception:
                 return Unauthorized("user not found")
 
-    @app.route("/whoami")
-    @authorize(resource=request)
-    def whoami():
-        you = g.current_user
-        return you.repr()
-
     register_models(base_oso, db.Model)
     oso.init_app(app)
 
