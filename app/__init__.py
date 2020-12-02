@@ -80,7 +80,82 @@ def create_app():
             users=[john, paul],
             teams=[vocalists],
         )
-        repo_roles = [abby_road_read]
+        abby_road_triage = RepositoryRole(
+            id=2,
+            name="TRIAGE",
+            repository=abby_road,
+            users=[],
+            teams=[],
+        )
+        abby_road_write = RepositoryRole(
+            id=3,
+            name="WRITE",
+            repository=abby_road,
+            users=[],
+            teams=[],
+        )
+        abby_road_maintain = RepositoryRole(
+            id=4,
+            name="MAINTAIN",
+            repository=abby_road,
+            users=[],
+            teams=[],
+        )
+        abby_road_admin = RepositoryRole(
+            id=5,
+            name="ADMIN",
+            repository=abby_road,
+            users=[],
+            teams=[],
+        )
+        paperwork_read = RepositoryRole(
+            id=1,
+            name="READ",
+            repository=paperwork,
+            users=[john, paul],
+            teams=[vocalists],
+        )
+        paperwork_triage = RepositoryRole(
+            id=2,
+            name="TRIAGE",
+            repository=paperwork,
+            users=[],
+            teams=[],
+        )
+        paperwork_write = RepositoryRole(
+            id=3,
+            name="WRITE",
+            repository=paperwork,
+            users=[],
+            teams=[],
+        )
+        paperwork_maintain = RepositoryRole(
+            id=4,
+            name="MAINTAIN",
+            repository=paperwork,
+            users=[],
+            teams=[],
+        )
+        paperwork_admin = RepositoryRole(
+            id=5,
+            name="ADMIN",
+            repository=paperwork,
+            users=[],
+            teams=[],
+        )
+
+        repo_roles = [
+            abby_road_read,
+            abby_road_triage,
+            abby_road_write,
+            abby_road_maintain,
+            abby_road_admin,
+            paperwork_read,
+            paperwork_triage,
+            paperwork_write,
+            paperwork_maintain,
+            paperwork_admin,
+        ]
         for repo_role in repo_roles:
             db.session.add(repo_role)
 
