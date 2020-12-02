@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .models import User, Organization, Team, Repository, Issue, db
 from flask_oso import FlaskOso, authorize
-from sqlalchemy_oso import authorized_sessionmaker
+from sqlalchemy_oso import authorized_sessionmaker, register_models
 
 
 base_oso = Oso()
@@ -45,11 +45,7 @@ def init_oso(app):
         you = g.current_user
         return you.repr()
 
-    base_oso.register_class(User)
-    base_oso.register_class(Organization)
-    base_oso.register_class(Team)
-    base_oso.register_class(Repository)
-    base_oso.register_class(Issue)
+    register_models(base_oso, db.Model)
     oso.init_app(app)
 
     base_oso.load_file("app/authorization.polar")

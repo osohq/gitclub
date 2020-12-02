@@ -197,7 +197,7 @@ def create_app():
     @app.route("/orgs", methods=["GET"])
     @authorize(resource=request)
     def orgs_index():
-        orgs = g.basic_session.query(Organization).all()
+        orgs = g.auth_session.query(Organization).all()
         return {"orgs": [org.repr() for org in orgs]}
 
     @app.route("/orgs/<int:org_id>/repos", methods=["GET"])

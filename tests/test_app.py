@@ -15,8 +15,16 @@ def test_orgs(test_client):
     resp = test_client.get("/orgs", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
 
-    # for org in json.loads(resp.data).get("orgs"):
-    #     assert org["id"] == 1
+    orgs = json.loads(resp.data).get("orgs")
+    assert len(orgs) == 1
+    assert orgs[0]["id"] == 1
+
+    resp = test_client.get("/orgs", headers={"user": "mike@monsters.com"})
+    assert resp.status_code == 200
+
+    orgs = json.loads(resp.data).get("orgs")
+    assert len(orgs) == 1
+    assert orgs[0]["id"] == 2
 
 
 def test_repos_new(test_client):
