@@ -29,29 +29,40 @@ def create_app():
     from .models import RepositoryRole, OrganizationRole, TeamRole
 
     with app.app_context():
-        print(db.create_all())
+        db.create_all()
 
+        john = User(id=1, email="john@beatles.com")
+        paul = User(id=2, email="paul@beatles.com")
+        admin = User(id=3, email="admin@admin.com")
+        mike = User(id=4, email="mike@monsters.com")
+        sully = User(id=5, email="sully@monsters.com")
+        ringo = User(id=6, email="ringo@beatles.com")
+        randall = User(id=7, email="randall@monsters.com")
         users = [
-            User(id=1, email="john@beatles.com"),
-            User(id=2, email="paul@beatles.com"),
-            User(id=3, email="admin@admin.com"),
-            User(id=4, email="mike@monsters.com"),
-            User(id=5, email="sully@monsters.com"),
-            User(id=6, email="ringo@beatles.com"),
-            User(id=7, email="randall@monsters.com"),
+            john,
+            paul,
+            admin,
+            mike,
+            sully,
+            ringo,
+            randall,
         ]
-        organizations = [
-            Organization(id=1, name="The Beatles", base_repo_role="READ"),
-            Organization(id=2, name="Monsters Inc.", base_repo_role="READ"),
-        ]
+        beatles = Organization(id=1, name="The Beatles", base_repo_role="READ")
+        monsters = Organization(id=2, name="Monsters Inc.", base_repo_role="READ")
+        organizations = [beatles, monsters]
+        vocalists = Team(id=1, name="Vocalists", organization_id=1)
+        percussion = Team(id=2, name="Percussion", organization_id=1)
+        scarers = Team(id=3, name="Scarers", organization_id=2)
         teams = [
-            Team(id=1, name="Vocalists", organization_id=1),
-            Team(id=2, name="Percussion", organization_id=1),
-            Team(id=3, name="Scarers", organization_id=2),
+            vocalists,
+            percussion,
+            scarers,
         ]
+        abby_road = Repository(id=1, name="Abbey Road", organization_id=1)
+        paperwork = Repository(id=2, name="Paperwork", organization_id=2)
         repositories = [
-            Repository(id=1, name="Abbey Road", organization_id=1),
-            Repository(id=2, name="Paperwork", organization_id=2),
+            abby_road,
+            paperwork,
         ]
         issues = []
         for user in users:
