@@ -1,5 +1,6 @@
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
+from .models import RepositoryRoleEnum, OrganizationRoleEnum
 
 
 def load_fixture_data(app, db):
@@ -24,8 +25,12 @@ def load_fixture_data(app, db):
         ]
         for user in users:
             db.session.add(user)
-        beatles = Organization(name="The Beatles", base_repo_role="READ")
-        monsters = Organization(name="Monsters Inc.", base_repo_role="READ")
+        beatles = Organization(
+            name="The Beatles", base_repo_role=RepositoryRoleEnum.READ
+        )
+        monsters = Organization(
+            name="Monsters Inc.", base_repo_role=RepositoryRoleEnum.READ
+        )
         organizations = [beatles, monsters]
         for org in organizations:
             db.session.add(org)
@@ -49,61 +54,61 @@ def load_fixture_data(app, db):
             db.session.add(repo)
         # TODO: issues
         abby_road_read = RepositoryRole(
-            name="READ",
+            name=RepositoryRoleEnum.READ,
             repository=abby_road,
             users=[john, paul],
             teams=[vocalists],
         )
         abby_road_triage = RepositoryRole(
-            name="TRIAGE",
+            name=RepositoryRoleEnum.TRIAGE,
             repository=abby_road,
             users=[],
             teams=[],
         )
         abby_road_write = RepositoryRole(
-            name="WRITE",
+            name=RepositoryRoleEnum.WRITE,
             repository=abby_road,
             users=[],
             teams=[],
         )
         abby_road_maintain = RepositoryRole(
-            name="MAINTAIN",
+            name=RepositoryRoleEnum.MAINTAIN,
             repository=abby_road,
             users=[],
             teams=[],
         )
         abby_road_admin = RepositoryRole(
-            name="ADMIN",
+            name=RepositoryRoleEnum.ADMIN,
             repository=abby_road,
             users=[],
             teams=[],
         )
         paperwork_read = RepositoryRole(
-            name="READ",
+            name=RepositoryRoleEnum.READ,
             repository=paperwork,
             users=[john, paul],
             teams=[vocalists],
         )
         paperwork_triage = RepositoryRole(
-            name="TRIAGE",
+            name=RepositoryRoleEnum.TRIAGE,
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_write = RepositoryRole(
-            name="WRITE",
+            name=RepositoryRoleEnum.WRITE,
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_maintain = RepositoryRole(
-            name="MAINTAIN",
+            name=RepositoryRoleEnum.MAINTAIN,
             repository=paperwork,
             users=[],
             teams=[],
         )
         paperwork_admin = RepositoryRole(
-            name="ADMIN",
+            name=RepositoryRoleEnum.ADMIN,
             repository=paperwork,
             users=[],
             teams=[],
@@ -123,22 +128,22 @@ def load_fixture_data(app, db):
         for repo_role in repo_roles:
             db.session.add(repo_role)
         beatles_owner = OrganizationRole(
-            name="OWNER",
+            name=OrganizationRoleEnum.OWNER,
             organization=beatles,
             users=[john],
         )
         beatles_member = OrganizationRole(
-            name="MEMBER",
+            name=OrganizationRoleEnum.MEMBER,
             organization=beatles,
             users=[paul, ringo],
         )
         monsters_owner = OrganizationRole(
-            name="OWNER",
+            name=OrganizationRoleEnum.OWNER,
             organization=monsters,
             users=[mike],
         )
         monsters_member = OrganizationRole(
-            name="MEMBER",
+            name=OrganizationRoleEnum.MEMBER,
             organization=monsters,
             users=[sully, randall],
         )

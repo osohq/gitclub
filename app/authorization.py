@@ -5,7 +5,8 @@ from werkzeug.exceptions import Unauthorized
 
 from sqlalchemy.orm import Session
 
-from .models import User, Organization, Team, Repository, Issue, db
+from .models import User, RepositoryRoleEnum, OrganizationRoleEnum, db
+
 from flask_oso import FlaskOso, authorize
 from sqlalchemy_oso import authorized_sessionmaker, register_models
 
@@ -36,9 +37,11 @@ def init_oso(app):
                     get_action=lambda: action,
                 )
                 g.auth_session = AuthorizedSession()
-            except Exception:
+            except Exception as e:
                 return Unauthorized("user not found")
 
+    base_oso.register_constant(RepositoryRoleEnum, "RepoRoles")
+    base_oso.register_constant(OrganizationRoleEnum, "OrgRoles")
     register_models(base_oso, db.Model)
     oso.init_app(app)
 

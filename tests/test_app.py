@@ -35,6 +35,13 @@ def test_repos_new(test_client):
     )
     assert resp.status_code == 200
 
+    resp = test_client.post(
+        "/orgs/2/repos",
+        headers={"user": "john@beatles.com"},
+        json={"name": "White Album"},
+    )
+    assert resp.status_code == 403
+
 
 def test_repos_show(test_client):
     resp = test_client.get("/orgs/1/repos/1", headers={"user": "john@beatles.com"})

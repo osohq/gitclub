@@ -1,10 +1,6 @@
 allow(user: User, "GET", req: Request) if
     print(user.email,req);
 
-allow(user: User, "POST", req: Request) if
-    print(user.email,req);
-
-
 # RBAC BASE POLICY
 
 ## Top-level RBAC allow rule
@@ -29,6 +25,16 @@ rbac_allow(actor: User, action, resource) if
 ### A resource's roles applies to itself
 resource_role_applies_to(role_resource, role_resource);
 
+### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
+resource_role_applies_to(requested_resource: Request, role_resource) if
+    requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
+    role_resource = Organization.query.filter_by(id: org_id).first();
+
+### Repo roles apply to HttpRequests with paths starting /orgs/<org_id>/repos/<repo_id>/
+resource_role_applies_to(requested_resource: Request, role_resource) if
+    requested_resource.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, *_rest] and
+    role_resource = Repository.query.filter_by(id: repo_id).first();
+
 
 # USER-ROLE RELATIONSHIPS
 
@@ -48,3 +54,70 @@ user_in_role(user: User, role, org: Organization) if
 ### All organization roles let users read organizations
 role_allow(role: OrganizationRole, "READ", org: Organization) if
     role.organization = org;
+
+## Route-level Organization Permissions
+
+# ### Organization owners can access the "People" org page
+# role_allow(role: github::OrganizationRole{name: "Owner"}, "GET", request: HttpRequest) if
+#     request.path.split("/") matches ["", "orgs", org_name, "roles", ""] and
+#     # this is enforced in the `rbac_allow` rule, but checking here to be safe
+#     role.organization.name = org_name;
+
+### Organization members can access the "Teams" and "Repositories" pages within their organizations
+role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "GET", request: Request) if
+    # TODO: add a method to the Role classes so that the name can go in the specializer again
+    request.path.split("/") matches ["", "orgs", org_id, page, ""] and
+    page in ["teams", "repos"] and
+    org_id = Integer.__str__(role.organization.id);
+
+### Organization members can hit the route to create repositories
+role_allow(role: OrganizationRole{name: OrgRoles.OWNER}, "POST", request: Request) if
+    request.path.split("/") matches ["", "orgs", org_id, "repos"] and
+    org_id = Integer.__str__(role.organization.id);
+
+
+# ROLE-ROLE RELATIONSHIPS
+
+## Role Hierarchies
+
+### Grant a role permissions that it inherits from a more junior role
+role_allow(role, action, resource) if
+    inherits_role(role, inherited_role) and
+    role_allow(inherited_role, action, resource);
+
+### Helper to determine relative order or roles in a list
+inherits_role_helper(role, inherited_role, role_order) if
+    ([first, *rest] = role_order and
+    role = first and
+    inherited_role in rest) or
+    ([first, *rest] = role_order and
+    inherits_role_helper(role, inherited_role, rest));
+
+### Role inheritance for repository roles
+inherits_role(role: RepositoryRole, inherited_role) if
+    repository_role_order(role_order) and
+    inherits_role_helper(role.name.code, inherited_role_name, role_order) and
+    inherited_role = new RepositoryRole(name: inherited_role_name, repository: role.repository);
+
+### Specify repository role order (most senior on left)
+repository_role_order([RepoRoles.ADMIN, RepoRoles.MAINTAIN, RepoRoles.WRITE, RepoRoles.TRIAGE, RepoRoles.READ]);
+
+
+### Role inheritance for organization roles
+inherits_role(role: OrganizationRole, inherited_role) if
+    organization_role_order(role_order) and
+    inherits_role_helper(role.name, inherited_role_name, role_order) and
+    inherited_role = new OrganizationRole(name: inherited_role_name, organization: role.organization);
+
+### Specify organization role order (most senior on left)
+organization_role_order([OrgRoles.OWNER, OrgRoles.MEMBER]);
+organization_role_order([OrgRoles.OWNER, OrgRoles.BILLING]);
+
+### Role inheritance for team roles
+inherits_role(role: TeamRole, inherited_role) if
+    team_role_order(role_order) and
+    inherits_role_helper(role.name, inherited_role_name, role_order) and
+    inherited_role := new TeamRole(name: inherited_role_name, team: role.team);
+
+### Specify team role order (most senior on left)
+team_role_order(["MAINTAINER", "MEMBER"]);

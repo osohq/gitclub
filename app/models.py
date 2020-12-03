@@ -1,5 +1,6 @@
 import json
 import datetime
+from enum import Enum
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
@@ -12,19 +13,20 @@ db = SQLAlchemy()
 
 ## TEXT CHOICES ##
 
-RepositoryRoleLevel = [
-    ("READ", "Read"),
-    ("TRIAGE", "Triage"),
-    ("WRITE", "Write"),
-    ("MAINTAIN", "Maintain"),
-    ("ADMIN", "Admin"),
-]
 
-OrganizationRoleLevel = [
-    ("MEMBER", "Member"),
-    ("BILLING_MANAGER", "Billing"),
-    ("OWNER", "Owner"),
-]
+class RepositoryRoleEnum(Enum):
+    READ = 1
+    TRIAGE = 2
+    WRITE = 3
+    MAINTAIN = 4
+    ADMIN = 5
+
+
+class OrganizationRoleEnum(Enum):
+    OWNER = 1
+    MEMBER = 2
+    BILLING = 3
+
 
 TeamRoleLevel = [
     ("MEMBER", "Member"),
@@ -85,7 +87,7 @@ class Organization(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
-    base_repo_role = db.Column(ChoiceType(RepositoryRoleLevel, impl=db.String()))
+    base_repo_role = db.Column(ChoiceType(RepositoryRoleEnum, impl=db.Integer()))
 
     def repr(self):
         return {"id": self.id, "name": self.name}
@@ -137,7 +139,7 @@ class Issue(db.Model):
     __tablename__ = "issues"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(ChoiceType(RepositoryRoleLevel, impl=db.String()))
+    name = db.Column(db.String(256))
     repository_id = db.Column(db.Integer, db.ForeignKey("repositories.id"))
     repository = db.relationship("Repository", backref="issues", lazy=True)
 
@@ -151,7 +153,7 @@ class RepositoryRole(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # RepositoryRole name, selected from RepositoryRoleChoices
-    name = db.Column(ChoiceType(RepositoryRoleLevel, impl=db.String()))
+    name = db.Column(ChoiceType(RepositoryRoleEnum, impl=db.Integer()))
 
     # many-to-one relationship with repositories
     repository_id = db.Column(db.Integer, db.ForeignKey("repositories.id"))
@@ -182,7 +184,7 @@ class OrganizationRole(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # OrganizationRole name, selected from OrganizationRoleLevel
-    name = db.Column(ChoiceType(OrganizationRoleLevel, impl=db.String()))
+    name = db.Column(ChoiceType(OrganizationRoleEnum, impl=db.Integer()))
 
     # many-to-one relationship with repositories
     organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))

@@ -22,7 +22,6 @@ def whoami():
 
 
 @bp.route("/orgs", methods=["GET"])
-@authorize(resource=request)
 def orgs_index():
     orgs = g.auth_session.query(Organization).all()
     return {"orgs": [org.repr() for org in orgs]}
