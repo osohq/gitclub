@@ -5,7 +5,8 @@ from werkzeug.exceptions import Unauthorized
 
 from sqlalchemy.orm import Session
 
-from .models import User, RepositoryRoleEnum, OrganizationRoleEnum, db
+from .db import engine, Session
+from .models import Base, User, RepositoryRoleEnum, OrganizationRoleEnum
 
 from flask_oso import FlaskOso, authorize
 from sqlalchemy_oso import authorized_sessionmaker, register_models
@@ -25,13 +26,13 @@ def init_oso(app):
             try:
                 actions = {"GET": "READ", "POST": "CREATE"}
                 action = actions[request.method]
-                basic_session = Session(bind=db.engine)
+                basic_session = Session()
                 g.basic_session = basic_session
                 g.current_user = (
                     basic_session.query(User).filter(User.email == email).first()
                 )
                 AuthorizedSession = authorized_sessionmaker(
-                    bind=db.engine,
+                    bind=engine,
                     get_oso=lambda: base_oso,
                     get_user=lambda: g.current_user,
                     get_action=lambda: action,
@@ -42,7 +43,7 @@ def init_oso(app):
 
     base_oso.register_constant(RepositoryRoleEnum, "RepoRoles")
     base_oso.register_constant(OrganizationRoleEnum, "OrgRoles")
-    register_models(base_oso, db.Model)
+    register_models(base_oso, Base)
     oso.init_app(app)
 
     base_oso.load_file("app/authorization.polar")

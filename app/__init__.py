@@ -1,22 +1,20 @@
 from flask import g, Flask, request
-from flask_sqlalchemy import SQLAlchemy
+
 from datetime import datetime, timedelta
 
-from .models import db
-
+from .models import Base
 from .authorization import init_oso
 from .fixtures import load_fixture_data
+from .db import engine, Session
 
 
 def create_app():
     app = Flask(__name__)
 
-    app.config.from_mapping(
-        SQLALCHEMY_DATABASE_URI="sqlite://",
-    )
+    Base.metadata.create_all(engine)
 
-    db.init_app(app)
-    load_fixture_data(app, db)
+    session = Session()
+    load_fixture_data(session)
 
     oso = init_oso(app)
 

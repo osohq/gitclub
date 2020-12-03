@@ -1,5 +1,14 @@
-from .conftest import test_client
+from .conftest import test_client, test_db_session
 from flask import json
+
+from app.models import User
+
+
+def test_db_loads(test_db_session):
+    just_john = (
+        test_db_session.query(User).filter(User.email == "john@beatles.com").all()
+    )
+    assert len(just_john) == 1
 
 
 def test_user(test_client):
