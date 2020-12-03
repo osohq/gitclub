@@ -11,6 +11,7 @@ from .models import Base, User, RepositoryRoleEnum, OrganizationRoleEnum
 from flask_oso import FlaskOso, authorize
 from sqlalchemy_oso import authorized_sessionmaker, register_models
 
+from .role_helpers import OsoSession
 
 base_oso = Oso()
 oso = FlaskOso(base_oso)
@@ -40,6 +41,8 @@ def init_oso(app):
                 g.auth_session = AuthorizedSession()
             except Exception as e:
                 return Unauthorized("user not found")
+
+    base_oso.register_constant(OsoSession, "OsoSession")
 
     base_oso.register_constant(RepositoryRoleEnum, "RepoRoles")
     base_oso.register_constant(OrganizationRoleEnum, "OrgRoles")

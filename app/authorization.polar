@@ -28,7 +28,8 @@ resource_role_applies_to(role_resource, role_resource);
 ### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
 resource_role_applies_to(requested_resource: Request, role_resource) if
     requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
-    role_resource = Organization.query.filter_by(id: org_id).first();
+    session = OsoSession.get() and
+    role_resource = session.query(Organization).filter_by(id: org_id).first();
 
 ### Repo roles apply to HttpRequests with paths starting /orgs/<org_id>/repos/<repo_id>/
 resource_role_applies_to(requested_resource: Request, role_resource) if
@@ -43,7 +44,8 @@ resource_role_applies_to(requested_resource: Request, role_resource) if
 ### User role source: direct mapping between users and organization roles
 user_in_role(user: User, role, org: Organization) if
     # role is an OrganizationRole object
-    role in OrganizationRole.query.filter(OrganizationRole.users.any(User.id.__eq__(user.id))) and
+    session = OsoSession.get() and
+    role in session.query(OrganizationRole).filter(OrganizationRole.users.any(User.id.__eq__(user.id))) and
     role.organization = org;
 
 

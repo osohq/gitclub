@@ -1,4 +1,12 @@
 from flask import g
+
+
+class OsoSession:
+    @classmethod
+    def get(cls):
+        return g.basic_session
+
+
 from .models import (
     User,
     Repository,
@@ -11,8 +19,9 @@ from .models import (
 
 # - Get a user's organizations (and roles in those organizations)
 def get_user_organizations_and_roles(user):
-    try:
-        orgs = [{role: role, org: role.organization} for role in user.organization_roles]
+    pass
+    # try:
+    #     orgs = [{role: role, org: role.organization} for role in user.organization_roles]
 
 
 def get_group_resources_and_roles(group, resource_type):
