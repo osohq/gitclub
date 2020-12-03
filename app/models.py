@@ -185,6 +185,24 @@ class RepositoryRole(Base):
     def repr(self):
         return {"id": self.id, "name": str(self.name)}
 
+    @classmethod
+    def get_user_roles(cls, user, resource=None):
+        """Get a user's roles (optional: for a specific resource)"""
+        user_cls = type(user)
+        query = cls.query.filter(cls.users.any(user_cls.id == user.id))
+        if resource:
+            user_roles = query.filter(cls.repository == resource)
+        return user_roles.all()
+
+    @classmethod
+    def get_group_roles(cls, group, resource=None):
+        """Get a user's roles (optional: for a specific resource)"""
+        group_cls = type(group)
+        query = cls.query.filter(cls.teams.any(group_cls.id == group.id))
+        if resource:
+            group_roles = query.filter(cls.repository == resource)
+        return group_roles.all()
+
 
 class OrganizationRole(Base):
     __tablename__ = "organization_roles"

@@ -56,6 +56,9 @@ def test_repos_show(test_client):
     resp = test_client.get("/orgs/1/repos/1", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
 
+    resp = test_client.get("/orgs/1/repos/2", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 403
+
 
 def test_issues_index(test_client):
     resp = test_client.get(
@@ -84,3 +87,10 @@ def test_team(test_client):
 def test_org_roles(test_client):
     resp = test_client.get("/orgs/1/roles", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
+
+
+## TEST ROLE HELPERS ##
+
+
+def test_get_user_organizations(test_client):
+    pass
