@@ -1,6 +1,5 @@
 from flask import current_app, g, request
 from oso import Oso, OsoError
-from oso.extras import Http
 from werkzeug.exceptions import Unauthorized
 
 from sqlalchemy.orm import Session

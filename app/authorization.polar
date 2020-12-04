@@ -34,7 +34,8 @@ resource_role_applies_to(requested_resource: Request, role_resource) if
 ### Repo roles apply to HttpRequests with paths starting /orgs/<org_id>/repos/<repo_id>/
 resource_role_applies_to(requested_resource: Request, role_resource) if
     requested_resource.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, *_rest] and
-    role_resource = Repository.query.filter_by(id: repo_id).first();
+    session = OsoSession.get() and
+    role_resource = session.query(Repository).filter_by(id: repo_id).first();
 
 
 # USER-ROLE RELATIONSHIPS
