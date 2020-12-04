@@ -15,7 +15,6 @@ def hello():
 
 
 @bp.route("/whoami")
-@authorize(resource=request)
 def whoami():
     you = g.current_user
     return you.repr()
@@ -81,9 +80,9 @@ def teams_index(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/teams/<int:team_id>", methods=["GET"])
-@authorize(resource=request)
 def teams_show(org_id, team_id):
     team = g.basic_session.query(Team).get(team_id)
+    current_app.oso.authorize(team, action="READ")
     return team.repr()
 
 

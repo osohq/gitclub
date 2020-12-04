@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized
 from sqlalchemy.orm import Session
 
 from .db import engine, Session
-from .models import Base, User, RepositoryRoleEnum, OrganizationRoleEnum
+from .models import Base, User
 
 from flask_oso import FlaskOso, authorize
 from sqlalchemy_oso import authorized_sessionmaker, register_models
@@ -43,8 +43,6 @@ def init_oso(app):
 
     base_oso.register_constant(OsoSession, "OsoSession")
 
-    base_oso.register_constant(RepositoryRoleEnum, "RepoRoles")
-    base_oso.register_constant(OrganizationRoleEnum, "OrgRoles")
     register_models(base_oso, Base)
     oso.init_app(app)
 

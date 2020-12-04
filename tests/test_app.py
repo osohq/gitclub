@@ -104,22 +104,41 @@ def test_repo_roles(test_client):
     assert resp.status_code == 403
 
 
-## MUST ADD AUTHZ TESTING BELOW THIS LINE
-
-
 def test_teams(test_client):
     resp = test_client.get("/orgs/1/teams", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/1/teams", headers={"user": "paul@beatles.com"})
+    assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/2/teams", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 403
+
 
 
 def test_team(test_client):
     resp = test_client.get("/orgs/1/teams/1", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
 
+    resp = test_client.get("/orgs/1/teams/1", headers={"user": "paul@beatles.com"})
+    assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/1/teams/1", headers={"user": "ringo@beatles.com"})
+    assert resp.status_code == 403
+
+    resp = test_client.get("/orgs/1/teams/3", headers={"user": "paul@beatles.com"})
+    assert resp.status_code == 403
+
 
 def test_org_roles(test_client):
     resp = test_client.get("/orgs/1/roles", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/1/roles", headers={"user": "paul@beatles.com"})
+    assert resp.status_code == 403
+
+    resp = test_client.get("/orgs/2/roles", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 403
 
 
 ## TEST ROLE HELPERS ##

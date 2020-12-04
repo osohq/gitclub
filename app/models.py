@@ -15,25 +15,6 @@ from sqlalchemy_oso.hooks import authorized_sessionmaker, make_authorized_query_
 from sqlalchemy_utils.types.choice import ChoiceType
 
 
-class RepositoryRoleEnum(Enum):
-    READ = 1
-    TRIAGE = 2
-    WRITE = 3
-    MAINTAIN = 4
-    ADMIN = 5
-
-
-class OrganizationRoleEnum(Enum):
-    OWNER = 1
-    MEMBER = 2
-    BILLING = 3
-
-
-class TeamRoleEnum(Enum):
-    MEMBER = 1
-    MAINTAINER = 2
-
-
 Base = declarative_base()
 
 ## JOIN TABLES ##
@@ -94,7 +75,7 @@ class Organization(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String())
-    base_repo_role = Column(ChoiceType(RepositoryRoleEnum, impl=Integer()))
+    base_repo_role = Column(String())
 
     def repr(self):
         return {"id": self.id, "name": self.name}
@@ -160,7 +141,7 @@ class RepositoryRole(Base):
     id = Column(Integer, primary_key=True)
 
     # RepositoryRole name, selected from RepositoryRoleChoices
-    name = Column(ChoiceType(RepositoryRoleEnum, impl=Integer()))
+    name = Column(String())
 
     # many-to-one relationship with repositories
     repository_id = Column(Integer, ForeignKey("repositories.id"))
@@ -209,7 +190,7 @@ class OrganizationRole(Base):
     id = Column(Integer, primary_key=True)
 
     # OrganizationRole name, selected from OrganizationRoleLevel
-    name = Column(ChoiceType(OrganizationRoleEnum, impl=Integer()))
+    name = Column(String())
 
     # many-to-one relationship with repositories
     organization_id = Column(Integer, ForeignKey("organizations.id"))
@@ -232,7 +213,7 @@ class TeamRole(Base):
     id = Column(Integer, primary_key=True)
 
     # Role name, selected from role choices
-    name = Column(ChoiceType(TeamRoleEnum, impl=Integer()))
+    name = Column(String())
 
     # many-to-one relationship with teams
     team_id = Column(Integer, ForeignKey("teams.id"))
