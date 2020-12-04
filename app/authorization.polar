@@ -1,6 +1,3 @@
-allow(user: User, "GET", req: Request) if
-    print(user.email,req);
-
 # RBAC BASE POLICY
 
 ## Top-level RBAC allow rule
@@ -49,6 +46,14 @@ user_in_role(user: User, role, org: Organization) if
     role in session.query(OrganizationRole).filter(OrganizationRole.users.any(User.id.__eq__(user.id))) and
     role.organization = org;
 
+## Repository Roles
+
+### User role source: direct mapping between users and repository roles
+user_in_role(user: User, role, repo: Repository) if
+    session = OsoSession.get() and
+    # role is a RepositoryRole object
+    role in session.query(RepositoryRole).filter(RepositoryRole.users.any(User.id.__eq__(user.id))) and
+    role.repository.id = repo.id;
 
 # ROLE-PERMISSION RELATIONSHIPS
 
@@ -69,7 +74,7 @@ role_allow(role: OrganizationRole, "READ", org: Organization) if
 ### Organization members can access the "Teams" and "Repositories" pages within their organizations
 role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "GET", request: Request) if
     # TODO: add a method to the Role classes so that the name can go in the specializer again
-    request.path.split("/") matches ["", "orgs", org_id, page, ""] and
+    request.path.split("/") matches ["", "orgs", org_id, page] and
     page in ["teams", "repos"] and
     org_id = Integer.__str__(role.organization.id);
 
@@ -77,6 +82,40 @@ role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "GET", request: Reques
 role_allow(role: OrganizationRole{name: OrgRoles.OWNER}, "POST", request: Request) if
     request.path.split("/") matches ["", "orgs", org_id, "repos"] and
     org_id = Integer.__str__(role.organization.id);
+
+
+## Repository Permissions
+
+### Read role can read the repository
+role_allow(role: RepositoryRole{name: RepoRoles.READ}, "READ", repo: Repository) if
+    role.repository.id = repo.id;
+
+# ### Read role can read the repository's issues
+# role_allow(role: RepositoryRole{name: "Read"}, "read", issue: Issue) if
+#     role.repository.id = issue.repository.id;
+
+# ### Organization "Read" base roles
+# role_allow(role: OrganizationRole{name: "Member"}, "read", repo: Repository) if
+#     role.organization = repo.organization and
+#     repo.organization.base_role = "Read";
+
+# ### Repository admins can access the "Roles" repo page
+# role_allow(role: RepositoryRole{name: "Admin"}, _action, request: HttpRequest) if
+#     request.path.split("/") matches ["", "orgs", _org_name, "repos", repo_name, "roles", ""] and
+#     role.repository.name = repo_name;
+
+# ### Organization owners can access the "Roles" repo page for all repos in the org
+# role_allow(role: OrganizationRole{name: "Owner"}, _action, request: HttpRequest) if
+#     request.path.split("/") matches ["", "orgs", org_name, "repos", _repo_name, "roles", ""] and
+#     role.organization.name = org_name;
+
+# ### Repo Admins can take any action on their repositories
+# role_allow(role: RepositoryRole{name: "Admin"}, _action, repo: Repository) if
+#     role.repository.id = repo.id;
+
+# ### Org Owners can take any action on their repositories
+# role_allow(role: OrganizationRole{name: "Owner"}, _action, repo: Repository) if
+#     role.organization.id = repo.organization.id;
 
 
 # ROLE-ROLE RELATIONSHIPS
@@ -99,7 +138,7 @@ inherits_role_helper(role, inherited_role, role_order) if
 ### Role inheritance for repository roles
 inherits_role(role: RepositoryRole, inherited_role) if
     repository_role_order(role_order) and
-    inherits_role_helper(role.name.code, inherited_role_name, role_order) and
+    inherits_role_helper(role.name, inherited_role_name, role_order) and
     inherited_role = new RepositoryRole(name: inherited_role_name, repository: role.repository);
 
 ### Specify repository role order (most senior on left)

@@ -36,6 +36,14 @@ def test_orgs(test_client):
     assert orgs[0]["id"] == 2
 
 
+def test_repos_index(test_client):
+    resp = test_client.get("/orgs/1/repos", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/2/repos", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 403
+
+
 def test_repos_new(test_client):
     resp = test_client.post(
         "/orgs/1/repos",

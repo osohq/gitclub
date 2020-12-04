@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request
+from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
@@ -49,9 +49,9 @@ def repos_new(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
-@authorize(resource=request)
 def repos_show(org_id, repo_id):
     repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+    current_app.oso.authorize(repo, actor=g.current_user, action="READ")
     return {f"repo for org {org_id}": repo.repr()}
 
 

@@ -81,8 +81,8 @@ def load_fixture_data(session):
     paperwork_read = RepositoryRole(
         name=RepositoryRoleEnum.READ,
         repository=paperwork,
-        users=[john, paul],
-        teams=[vocalists],
+        users=[mike, sully],
+        teams=[scarers],
     )
     paperwork_triage = RepositoryRole(
         name=RepositoryRoleEnum.TRIAGE,
