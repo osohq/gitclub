@@ -22,6 +22,10 @@ rbac_allow(actor: User, action, resource) if
 ### A resource's roles applies to itself
 resource_role_applies_to(role_resource, role_resource);
 
+### An organization's roles apply to its child resources (repos, teams)
+resource_role_applies_to(repo: Repository, parent_org) if
+    parent_org = repo.organization;
+
 ### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
 resource_role_applies_to(requested_resource: Request, role_resource) if
     requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
@@ -90,33 +94,21 @@ role_allow(role: OrganizationRole{name: OrgRoles.OWNER}, "POST", request: Reques
 role_allow(role: RepositoryRole{name: RepoRoles.READ}, "READ", repo: Repository) if
     role.repository.id = repo.id;
 
-# ### Read role can read the repository's issues
-# role_allow(role: RepositoryRole{name: "Read"}, "read", issue: Issue) if
-#     role.repository.id = issue.repository.id;
+### Organization "Read" base roles
+role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "READ", repo: Repository) if
+    role.organization = repo.organization and
+    repo.organization.base_repo_role = RepoRoles.READ;
 
-# ### Organization "Read" base roles
-# role_allow(role: OrganizationRole{name: "Member"}, "read", repo: Repository) if
-#     role.organization = repo.organization and
-#     repo.organization.base_role = "Read";
+### Read role can read the repository's issues
+role_allow(role, "READ", issue: Issue) if
+    role_allow(role, "READ", issue.repository);
 
-# ### Repository admins can access the "Roles" repo page
-# role_allow(role: RepositoryRole{name: "Admin"}, _action, request: HttpRequest) if
-#     request.path.split("/") matches ["", "orgs", _org_name, "repos", repo_name, "roles", ""] and
-#     role.repository.name = repo_name;
+## Route-level Repository Permissions
 
-# ### Organization owners can access the "Roles" repo page for all repos in the org
-# role_allow(role: OrganizationRole{name: "Owner"}, _action, request: HttpRequest) if
-#     request.path.split("/") matches ["", "orgs", org_name, "repos", _repo_name, "roles", ""] and
-#     role.organization.name = org_name;
-
-# ### Repo Admins can take any action on their repositories
-# role_allow(role: RepositoryRole{name: "Admin"}, _action, repo: Repository) if
-#     role.repository.id = repo.id;
-
-# ### Org Owners can take any action on their repositories
-# role_allow(role: OrganizationRole{name: "Owner"}, _action, repo: Repository) if
-#     role.organization.id = repo.organization.id;
-
+### Repository READ role access the issues index
+role_allow(role: RepositoryRole{name: RepoRoles.READ}, "GET", request: Request) if
+    request.path.split("/") matches ["", "orgs", org_id, "repos", repo_id, "issues"] and
+    repo_id = Integer.__str__(role.repository.id);
 
 # ROLE-ROLE RELATIONSHIPS
 

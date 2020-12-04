@@ -40,6 +40,10 @@ def test_repos_index(test_client):
     resp = test_client.get("/orgs/1/repos", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
 
+    repos = json.loads(resp.data).get("repos")
+    assert len(repos) == 1
+    assert repos[0]["id"] == 1
+
     resp = test_client.get("/orgs/2/repos", headers={"user": "john@beatles.com"})
     assert resp.status_code == 403
 
@@ -61,10 +65,16 @@ def test_repos_new(test_client):
 
 
 def test_repos_show(test_client):
+    # test user with direct access to repo can read it
     resp = test_client.get("/orgs/1/repos/1", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
 
-    resp = test_client.get("/orgs/1/repos/2", headers={"user": "john@beatles.com"})
+    # test user with org base role access to repo can read it
+    resp = test_client.get("/orgs/1/repos/1", headers={"user": "ringo@beatles.com"})
+    assert resp.status_code == 200
+
+    # test user outside org cannot read repos
+    resp = test_client.get("/orgs/2/repos/2", headers={"user": "john@beatles.com"})
     assert resp.status_code == 403
 
 
@@ -73,6 +83,16 @@ def test_issues_index(test_client):
         "/orgs/1/repos/1/issues", headers={"user": "john@beatles.com"}
     )
     assert resp.status_code == 200
+
+    resp = test_client.get(
+        "/orgs/2/repos/2/issues", headers={"user": "john@beatles.com"}
+    )
+    assert resp.status_code == 403
+
+    # TODO: add issues to fixtures to test list filtering
+
+
+## MUST ADD AUTHZ TESTING BELOW THIS LINE
 
 
 def test_repo_roles(test_client):

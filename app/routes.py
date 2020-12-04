@@ -33,7 +33,7 @@ def repos_index(org_id):
     repos = g.auth_session.query(Repository).filter(
         Repository.organization.has(id=org_id)
     )
-    return {f"repos for org {org_id}": [repo.repr() for repo in repos]}
+    return {f"repos": [repo.repr() for repo in repos]}
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
