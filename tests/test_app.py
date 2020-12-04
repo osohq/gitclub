@@ -26,14 +26,14 @@ def test_orgs(test_client):
 
     orgs = json.loads(resp.data).get("orgs")
     assert len(orgs) == 1
-    assert orgs[0]["id"] == 1
+    assert orgs[0]["name"] == "The Beatles"
 
     resp = test_client.get("/orgs", headers={"user": "mike@monsters.com"})
     assert resp.status_code == 200
 
     orgs = json.loads(resp.data).get("orgs")
     assert len(orgs) == 1
-    assert orgs[0]["id"] == 2
+    assert orgs[0]["name"] == "Monsters Inc."
 
 
 def test_repos_index(test_client):
@@ -42,7 +42,7 @@ def test_repos_index(test_client):
 
     repos = json.loads(resp.data).get("repos")
     assert len(repos) == 1
-    assert repos[0]["id"] == 1
+    assert repos[0]["name"] == "Abbey Road"
 
     resp = test_client.get("/orgs/2/repos", headers={"user": "john@beatles.com"})
     assert resp.status_code == 403
@@ -115,7 +115,6 @@ def test_teams(test_client):
     assert resp.status_code == 403
 
 
-
 def test_team(test_client):
     resp = test_client.get("/orgs/1/teams/1", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
@@ -143,6 +142,45 @@ def test_org_roles(test_client):
 
 ## TEST ROLE HELPERS ##
 
+from app import role_helpers
+from app.models import Organization, Team, Repository
 
-def test_get_user_organizations(test_client):
-    pass
+
+def test_get_user_resources_and_roles(test_db_session):
+    john = test_db_session.query(User).filter_by(email="john@beatles.com").first()
+    resource_roles = role_helpers.get_user_resources_and_roles(
+        test_db_session, john, Organization
+    )
+    assert len(resource_roles) == 1
+    assert resource_roles[0][0].name == "The Beatles"
+    assert resource_roles[0][1].name == "OWNER"
+
+
+def test_get_group_resources_and_roles(test_db_session):
+    vocalists = test_db_session.query(Team).filter_by(name="Vocalists").first()
+    resource_roles = role_helpers.get_group_resources_and_roles(
+        test_db_session, vocalists, Repository
+    )
+    assert len(resource_roles) == 1
+    assert resource_roles[0][0].name == "Abbey Road"
+    assert resource_roles[0][1].name == "READ"
+
+
+def test_get_resource_users_and_roles(test_db_session):
+    abbey_road = test_db_session.query(Repository).filter_by(name="Abbey Road").first()
+    users = role_helpers.get_resource_users_and_roles(test_db_session, abbey_road)
+    assert len(users)
+    assert users[0][0].email == "john@beatles.com"
+    assert users[0][1].name == "READ"
+    assert users[1][0].email == "paul@beatles.com"
+    assert users[0][1].name == "READ"
+
+
+def test_get_resource_users_with_role(test_db_session):
+    abbey_road = test_db_session.query(Repository).filter_by(name="Abbey Road").first()
+    users = role_helpers.get_resource_users_with_role(
+        test_db_session, abbey_road, "READ"
+    )
+    assert len(users) == 2
+    assert users[0].email == "john@beatles.com"
+    assert users[1].email == "paul@beatles.com"
