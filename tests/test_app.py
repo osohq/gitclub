@@ -92,14 +92,19 @@ def test_issues_index(test_client):
     # TODO: add issues to fixtures to test list filtering
 
 
-## MUST ADD AUTHZ TESTING BELOW THIS LINE
-
-
 def test_repo_roles(test_client):
     resp = test_client.get(
         "/orgs/1/repos/1/roles", headers={"user": "john@beatles.com"}
     )
     assert resp.status_code == 200
+
+    resp = test_client.get(
+        "/orgs/1/repos/1/roles", headers={"user": "paul@beatles.com"}
+    )
+    assert resp.status_code == 403
+
+
+## MUST ADD AUTHZ TESTING BELOW THIS LINE
 
 
 def test_teams(test_client):

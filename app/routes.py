@@ -58,7 +58,7 @@ def repos_show(org_id, repo_id):
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
 @authorize(resource=request)
 def issues_index(org_id, repo_id):
-    issues = g.basic_session.query(Issue).filter(Issue.repository.has(id=repo_id))
+    issues = g.auth_session.query(Issue).filter(Issue.repository.has(id=repo_id))
     return {
         f"issues for org {org_id}, repo {repo_id}": [issue.repr() for issue in issues]
     }

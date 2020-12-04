@@ -7,9 +7,11 @@ allow(user: User, action: String, resource) if
     rbac_allow(user, action, resource);
 
 ### The association between the resource roles and the requested resource is outsourced from the rbac_allow
-rbac_allow(actor: User, action, resource) if
+rbac_allow(user: User, action, resource) if
     resource_role_applies_to(resource, role_resource) and
-    user_in_role(actor, role, role_resource) and
+    user_in_role(user, role, role_resource) and
+    print(user.email) and
+    print(role.name) and
     role_allow(role, action, resource);
 
 ## Resource-role relationships
@@ -83,7 +85,7 @@ role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "GET", request: Reques
     org_id = Integer.__str__(role.organization.id);
 
 ### Organization members can hit the route to create repositories
-role_allow(role: OrganizationRole{name: OrgRoles.OWNER}, "POST", request: Request) if
+role_allow(role: OrganizationRole{name: OrgRoles.MEMBER}, "POST", request: Request) if
     request.path.split("/") matches ["", "orgs", org_id, "repos"] and
     org_id = Integer.__str__(role.organization.id);
 
@@ -110,48 +112,62 @@ role_allow(role: RepositoryRole{name: RepoRoles.READ}, "GET", request: Request) 
     request.path.split("/") matches ["", "orgs", org_id, "repos", repo_id, "issues"] and
     repo_id = Integer.__str__(role.repository.id);
 
-# ROLE-ROLE RELATIONSHIPS
+### Repository admins can access the "Roles" repo page
+role_allow(role: RepositoryRole{name: RepoRoles.ADMIN}, _action, request: Request) if
+    # TODO: figure out why the specializer is working so we can kill this line
+    role.name = RepoRoles.ADMIN and
+    request.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, "roles"] and
+    repo_id = Integer.__str__(role.repository.id);
 
-## Role Hierarchies
+### Organization owners can access the "Roles" repo page for all repos in the org
+role_allow(role: OrganizationRole{name: OrgRoles.OWNER}, _action, request: Request) if
+    # TODO: figure out why the specializer is working so we can kill this line
+    role.name = OrgRoles.OWNER and
+    request.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, "roles"] and
+    org_id = Integer.__str__(role.organization.id);
 
-### Grant a role permissions that it inherits from a more junior role
-role_allow(role, action, resource) if
-    inherits_role(role, inherited_role) and
-    role_allow(inherited_role, action, resource);
+# # ROLE-ROLE RELATIONSHIPS
 
-### Helper to determine relative order or roles in a list
-inherits_role_helper(role, inherited_role, role_order) if
-    ([first, *rest] = role_order and
-    role = first and
-    inherited_role in rest) or
-    ([first, *rest] = role_order and
-    inherits_role_helper(role, inherited_role, rest));
+# ## Role Hierarchies
 
-### Role inheritance for repository roles
-inherits_role(role: RepositoryRole, inherited_role) if
-    repository_role_order(role_order) and
-    inherits_role_helper(role.name, inherited_role_name, role_order) and
-    inherited_role = new RepositoryRole(name: inherited_role_name, repository: role.repository);
+# ### Grant a role permissions that it inherits from a more junior role
+# role_allow(role, action, resource) if
+#     inherits_role(role, inherited_role) and
+#     role_allow(inherited_role, action, resource);
 
-### Specify repository role order (most senior on left)
-repository_role_order([RepoRoles.ADMIN, RepoRoles.MAINTAIN, RepoRoles.WRITE, RepoRoles.TRIAGE, RepoRoles.READ]);
+# ### Helper to determine relative order or roles in a list
+# inherits_role_helper(role, inherited_role, role_order) if
+#     ([first, *rest] = role_order and
+#     role = first and
+#     inherited_role in rest) or
+#     ([first, *rest] = role_order and
+#     inherits_role_helper(role, inherited_role, rest));
+
+# ### Role inheritance for repository roles
+# inherits_role(role: RepositoryRole, inherited_role) if
+#     repository_role_order(role_order) and
+#     inherits_role_helper(role.name, inherited_role_name, role_order) and
+#     inherited_role = new RepositoryRole(name: inherited_role_name, repository: role.repository);
+
+# ### Specify repository role order (most senior on left)
+# repository_role_order([RepoRoles.ADMIN, RepoRoles.MAINTAIN, RepoRoles.WRITE, RepoRoles.TRIAGE, RepoRoles.READ]);
 
 
-### Role inheritance for organization roles
-inherits_role(role: OrganizationRole, inherited_role) if
-    organization_role_order(role_order) and
-    inherits_role_helper(role.name, inherited_role_name, role_order) and
-    inherited_role = new OrganizationRole(name: inherited_role_name, organization: role.organization);
+# ### Role inheritance for organization roles
+# inherits_role(role: OrganizationRole, inherited_role) if
+#     organization_role_order(role_order) and
+#     inherits_role_helper(role.name, inherited_role_name, role_order) and
+#     inherited_role = new OrganizationRole(name: inherited_role_name, organization: role.organization);
 
-### Specify organization role order (most senior on left)
-organization_role_order([OrgRoles.OWNER, OrgRoles.MEMBER]);
-organization_role_order([OrgRoles.OWNER, OrgRoles.BILLING]);
+# ### Specify organization role order (most senior on left)
+# organization_role_order([OrgRoles.OWNER, OrgRoles.MEMBER]);
+# organization_role_order([OrgRoles.OWNER, OrgRoles.BILLING]);
 
-### Role inheritance for team roles
-inherits_role(role: TeamRole, inherited_role) if
-    team_role_order(role_order) and
-    inherits_role_helper(role.name, inherited_role_name, role_order) and
-    inherited_role := new TeamRole(name: inherited_role_name, team: role.team);
+# ### Role inheritance for team roles
+# inherits_role(role: TeamRole, inherited_role) if
+#     team_role_order(role_order) and
+#     inherits_role_helper(role.name, inherited_role_name, role_order) and
+#     inherited_role := new TeamRole(name: inherited_role_name, team: role.team);
 
-### Specify team role order (most senior on left)
-team_role_order(["MAINTAINER", "MEMBER"]);
+# ### Specify team role order (most senior on left)
+# team_role_order(["MAINTAINER", "MEMBER"]);
