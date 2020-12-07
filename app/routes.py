@@ -2,7 +2,7 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-import app.role_helpers
+from . import role_helpers
 
 bp = Blueprint("routes", __name__)
 
@@ -65,13 +65,27 @@ def issues_index(org_id, repo_id):
     }
 
 
-@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET"])
+@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
 @authorize(resource=request)
 def repo_roles_index(org_id, repo_id):
-    roles = g.basic_session.query(RepositoryRole).filter(
-        RepositoryRole.repository.has(id=repo_id)
-    )
-    return {f"roles for: org {org_id}, repo {repo_id}": [role.repr() for role in roles]}
+    if request.method == "GET":
+        roles = g.basic_session.query(RepositoryRole).filter(
+            RepositoryRole.repository.has(id=repo_id)
+        )
+        return {
+            f"roles for: org {org_id}, repo {repo_id}": [role.repr() for role in roles]
+        }
+    if request.method == "POST":
+        # TODO: test this
+        content = request.get_json()
+        print(content)
+        user_info = content.get("user")
+        role_info = content.get("role")
+        role_name = role_info.get("name")
+        user = g.basic_session.query(User).filter_by(email=user_info.get("email"))
+        repo = g.basic_session.query(Repository).filter_by(id=repo_id)
+        role_helpers.reassign_user_role(g.basic_session, user, repo, role_name)
+        return f"created a new repo role for repo: {repo_id}, {role_name}"
 
 
 @bp.route("/orgs/<int:org_id>/teams", methods=["GET"])
