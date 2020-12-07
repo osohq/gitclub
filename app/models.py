@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship, scoped_session, backref
 
 from sqlalchemy.ext.declarative import declarative_base
 
-from sqlalchemy_oso.hooks import authorized_sessionmaker, make_authorized_query_cls
+from sqlalchemy_oso import authorized_sessionmaker
 from sqlalchemy_utils.types.choice import ChoiceType
 
 from sqlalchemy_oso.roles import resource_role_class

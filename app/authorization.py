@@ -9,6 +9,7 @@ from .models import Base, User
 
 from flask_oso import FlaskOso, authorize
 from sqlalchemy_oso import authorized_sessionmaker, register_models
+from sqlalchemy_oso.roles import enable_roles
 
 from .role_helpers import OsoSession
 
@@ -45,6 +46,7 @@ def init_oso(app):
 
     register_models(base_oso, Base)
     oso.init_app(app)
+    enable_roles(base_oso)
 
     base_oso.load_file("app/authorization.polar")
 
