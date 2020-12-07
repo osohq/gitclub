@@ -1,5 +1,6 @@
 from .conftest import test_client, test_db_session
 from flask import json
+import pytest
 
 from app.models import User
 
@@ -156,6 +157,16 @@ def test_get_user_resources_and_roles(test_db_session):
     assert resource_roles[0][1].name == "OWNER"
 
 
+def test_get_user_roles_for_resource(test_db_session):
+    john = test_db_session.query(User).filter_by(email="john@beatles.com").first()
+    beatles = test_db_session.query(Organization).filter_by(name="The Beatles").first()
+    resource_roles = role_helpers.get_user_roles_for_resource(
+        test_db_session, john, beatles
+    )
+    assert len(resource_roles) == 1
+    assert resource_roles[0].name == "OWNER"
+
+
 def test_get_group_resources_and_roles(test_db_session):
     vocalists = test_db_session.query(Team).filter_by(name="Vocalists").first()
     resource_roles = role_helpers.get_group_resources_and_roles(
@@ -184,3 +195,60 @@ def test_get_resource_users_with_role(test_db_session):
     assert len(users) == 2
     assert users[0].email == "john@beatles.com"
     assert users[1].email == "paul@beatles.com"
+
+
+def test_add_user_role(test_db_session):
+    ringo = test_db_session.query(User).filter_by(email="ringo@beatles.com").first()
+    abbey_road = test_db_session.query(Repository).filter_by(name="Abbey Road").first()
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, ringo, abbey_road)
+    assert len(roles) == 0
+
+    role_helpers.add_user_role(test_db_session, ringo, abbey_road, "READ")
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, ringo, abbey_road)
+    assert len(roles) == 1
+    assert roles[0].name == "READ"
+
+
+def test_delete_user_role(test_db_session):
+    # Test with explicit role arg
+    john = test_db_session.query(User).filter_by(email="john@beatles.com").first()
+    abbey_road = test_db_session.query(Repository).filter_by(name="Abbey Road").first()
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, john, abbey_road)
+    assert len(roles) == 1
+
+    role_helpers.delete_user_role(test_db_session, john, abbey_road, "READ")
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, john, abbey_road)
+    assert len(roles) == 0
+
+    # Test without explicit role arg
+    paul = test_db_session.query(User).filter_by(email="paul@beatles.com").first()
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, paul, abbey_road)
+    assert len(roles) == 1
+
+    role_helpers.delete_user_role(test_db_session, paul, abbey_road)
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, paul, abbey_road)
+    assert len(roles) == 0
+
+    # Test trying to delete non-existent role raises exception
+    with pytest.raises(Exception):
+        role_helpers.delete_user_role(test_db_session, paul, abbey_road, "READ")
+
+
+def test_reassign_user_role(test_db_session):
+    john = test_db_session.query(User).filter_by(email="john@beatles.com").first()
+    abbey_road = test_db_session.query(Repository).filter_by(name="Abbey Road").first()
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, john, abbey_road)
+    assert len(roles) == 1
+    assert roles[0].name == "READ"
+
+    role_helpers.reassign_user_role(test_db_session, john, abbey_road, "WRITE")
+
+    roles = role_helpers.get_user_roles_for_resource(test_db_session, john, abbey_road)
+    assert len(roles) == 1
+    assert roles[0].name == "WRITE"
