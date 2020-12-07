@@ -51,7 +51,7 @@ def get_group_resources_and_roles(session, group, resource_model):
     resource_roles = (
         session.query(resource_model, role_model)
         .join(role_model)
-        .filter(role_model.teams.any(group_model.id == group.id))
+        .filter(role_model.groups.any(group_model.id == group.id))
         .order_by(resource_model.id)
         .order_by(role_model.name)
         .all()

@@ -14,58 +14,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_oso.hooks import authorized_sessionmaker, make_authorized_query_cls
 from sqlalchemy_utils.types.choice import ChoiceType
 
+from sqlalchemy_oso.roles import resource_role_class
+
 
 Base = declarative_base()
-
-## JOIN TABLES ##
-
-repository_roles_users = Table(
-    "repository_roles_users",
-    Base.metadata,
-    Column(
-        "repository_role_id",
-        Integer,
-        ForeignKey("repository_roles.id"),
-        primary_key=True,
-    ),
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-)
-
-repository_roles_teams = Table(
-    "repository_roles_teams",
-    Base.metadata,
-    Column(
-        "repository_role_id",
-        Integer,
-        ForeignKey("repository_roles.id"),
-        primary_key=True,
-    ),
-    Column("team_id", Integer, ForeignKey("teams.id"), primary_key=True),
-)
-
-organization_roles_users = Table(
-    "organization_roles_users",
-    Base.metadata,
-    Column(
-        "organization_role_id",
-        Integer,
-        ForeignKey("organization_roles.id"),
-        primary_key=True,
-    ),
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-)
-
-team_roles_users = Table(
-    "team_roles_users",
-    Base.metadata,
-    Column(
-        "team_role_id",
-        Integer,
-        ForeignKey("team_roles.id"),
-        primary_key=True,
-    ),
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-)
 
 ## MODELS ##
 
@@ -135,97 +87,29 @@ class Issue(Base):
 ## ROLE MODELS ##
 
 
-class RepositoryRole(Base):
-    __tablename__ = "repository_roles"
-
-    id = Column(Integer, primary_key=True)
-
-    # RepositoryRole name, selected from RepositoryRoleChoices
-    name = Column(String())
-
-    # many-to-one relationship with repositories
-    repository_id = Column(Integer, ForeignKey("repositories.id"))
-    repository = relationship("Repository", backref="roles", lazy=True)
-
-    # many-to-many relationship with users
-    users = relationship(
-        "User",
-        secondary=repository_roles_users,
-        lazy="subquery",
-        backref=backref("repository_roles", lazy=True),
-    )
-
-    # many-to-many relationship with teams
-    teams = relationship(
-        "Team",
-        secondary=repository_roles_teams,
-        lazy="subquery",
-        backref=backref("repository_roles", lazy=True),
-    )
-
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
-
-    @classmethod
-    def get_user_roles(cls, user, resource=None):
-        """Get a user's roles (optional: for a specific resource)"""
-        user_cls = type(user)
-        query = cls.query.filter(cls.users.any(user_cls.id == user.id))
-        if resource:
-            user_roles = query.filter(cls.repository == resource)
-        return user_roles.all()
-
-    @classmethod
-    def get_group_roles(cls, group, resource=None):
-        """Get a user's roles (optional: for a specific resource)"""
-        group_cls = type(group)
-        query = cls.query.filter(cls.teams.any(group_cls.id == group.id))
-        if resource:
-            group_roles = query.filter(cls.repository == resource)
-        return group_roles.all()
+RepositoryRoleMixin = resource_role_class(
+    Base, User, Repository, ["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"], Team
+)
 
 
-class OrganizationRole(Base):
-    __tablename__ = "organization_roles"
-    id = Column(Integer, primary_key=True)
-
-    # OrganizationRole name, selected from OrganizationRoleLevel
-    name = Column(String())
-
-    # many-to-one relationship with repositories
-    organization_id = Column(Integer, ForeignKey("organizations.id"))
-    organization = relationship("Organization", backref="roles", lazy=True)
-
-    # many-to-many relationship with users
-    users = relationship(
-        "User",
-        secondary=organization_roles_users,
-        lazy="subquery",
-        backref=backref("organization_roles", lazy=True),
-    )
-
+class RepositoryRole(Base, RepositoryRoleMixin):
     def repr(self):
         return {"id": self.id, "name": str(self.name)}
 
 
-class TeamRole(Base):
-    __tablename__ = "team_roles"
-    id = Column(Integer, primary_key=True)
+OrganizationRoleMixin = resource_role_class(
+    Base, User, Organization, ["OWNER", "MEMBER", "BILLING"]
+)
 
-    # Role name, selected from role choices
-    name = Column(String())
 
-    # many-to-one relationship with teams
-    team_id = Column(Integer, ForeignKey("teams.id"))
-    team = relationship("Team", backref="roles", lazy=True)
+class OrganizationRole(Base, OrganizationRoleMixin):
+    def repr(self):
+        return {"id": self.id, "name": str(self.name)}
 
-    # many-to-many relationship with users
-    users = relationship(
-        "User",
-        secondary=team_roles_users,
-        lazy="subquery",
-        backref=backref("team_roles", lazy=True),
-    )
 
+TeamRoleMixin = resource_role_class(Base, User, Team, ["MAINTAINER", "MEMBER"])
+
+
+class TeamRole(Base, TeamRoleMixin):
     def repr(self):
         return {"id": self.id, "name": str(self.name)}

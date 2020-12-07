@@ -49,61 +49,61 @@ def load_fixture_data(session):
         name="READ",
         repository=abby_road,
         users=[john, paul],
-        teams=[vocalists],
+        groups=[vocalists],
     )
     abby_road_triage = RepositoryRole(
         name="TRIAGE",
         repository=abby_road,
         users=[],
-        teams=[],
+        groups=[],
     )
     abby_road_write = RepositoryRole(
         name="WRITE",
         repository=abby_road,
         users=[],
-        teams=[],
+        groups=[],
     )
     abby_road_maintain = RepositoryRole(
         name="MAINTAIN",
         repository=abby_road,
         users=[],
-        teams=[],
+        groups=[],
     )
     abby_road_admin = RepositoryRole(
         name="ADMIN",
         repository=abby_road,
         users=[],
-        teams=[],
+        groups=[],
     )
     paperwork_read = RepositoryRole(
         name="READ",
         repository=paperwork,
         users=[mike, sully],
-        teams=[scarers],
+        groups=[scarers],
     )
     paperwork_triage = RepositoryRole(
         name="TRIAGE",
         repository=paperwork,
         users=[],
-        teams=[],
+        groups=[],
     )
     paperwork_write = RepositoryRole(
         name="WRITE",
         repository=paperwork,
         users=[],
-        teams=[],
+        groups=[],
     )
     paperwork_maintain = RepositoryRole(
         name="MAINTAIN",
         repository=paperwork,
         users=[],
-        teams=[],
+        groups=[],
     )
     paperwork_admin = RepositoryRole(
         name="ADMIN",
         repository=paperwork,
         users=[],
-        teams=[],
+        groups=[],
     )
     repo_roles = [
         abby_road_read,
