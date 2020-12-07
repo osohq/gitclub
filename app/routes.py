@@ -2,6 +2,7 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
+import app.role_helpers
 
 bp = Blueprint("routes", __name__)
 
@@ -44,7 +45,8 @@ def repos_new(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     repo = Repository(name=name, organization=org)
     g.basic_session.add(repo)
-    return f"creating a new repo for org: {org_id}, {content['name']}"
+    g.basic_session.commit()
+    return f"created a new repo for org: {org_id}, {content['name']}"
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])

@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_db_session():
     engine = create_engine("sqlite://")
     models.Base.metadata.create_all(engine)

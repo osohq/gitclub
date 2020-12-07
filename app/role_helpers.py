@@ -37,6 +37,8 @@ def get_user_resources_and_roles(session, user, resource_model):
         session.query(resource_model, role_model)
         .join(role_model)
         .filter(role_model.users.any(user_model.id == user.id))
+        .order_by(resource_model.id)
+        .order_by(role_model.name)
         .all()
     )
     return resource_roles
@@ -50,6 +52,8 @@ def get_group_resources_and_roles(session, group, resource_model):
         session.query(resource_model, role_model)
         .join(role_model)
         .filter(role_model.teams.any(group_model.id == group.id))
+        .order_by(resource_model.id)
+        .order_by(role_model.name)
         .all()
     )
     return resource_roles
@@ -79,6 +83,8 @@ def get_resource_users_and_roles(session, resource):
         .join(role_model.users)
         .join(resource_model)
         .filter(resource_model.id == resource.id)
+        .order_by(user_model.id)
+        .order_by(role_model.name)
         .all()
     )
     return user_roles
@@ -96,6 +102,7 @@ def get_resource_users_with_role(session, resource, role_name):
         .join(role_model.users)
         .join(resource_model)
         .filter(role_model.name == role_name, resource_model.id == resource.id)
+        .order_by(user_model.id)
         .all()
     )
 
