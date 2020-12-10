@@ -2,7 +2,7 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-from . import role_helpers
+from sqlalchemy_oso import roles
 
 bp = Blueprint("routes", __name__)
 
@@ -34,19 +34,24 @@ def repos_index(org_id):
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
 @authorize(resource=request)
 def repos_new(org_id):
-    content = request.get_json()
-    print(content)
-    name = content.get("name")
+    # Create repo
+    repo_name = request.get_json().get("name")
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
-    repo = Repository(name=name, organization=org)
+    repo = Repository(name=repo_name, organization=org)
+
+    # Authorize repo creation + save
+    current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
     g.basic_session.add(repo)
     g.basic_session.commit()
-    return f"created a new repo for org: {org_id}, {content['name']}"
+    return f"created a new repo for org: {org_id}, {repo_name}"
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
 def repos_show(org_id, repo_id):
+    # Get repo
     repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+
+    # Authorize repo access
     current_app.oso.authorize(repo, actor=g.current_user, action="READ")
     return {f"repo for org {org_id}": repo.repr()}
 
@@ -54,6 +59,7 @@ def repos_show(org_id, repo_id):
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
 @authorize(resource=request)
 def issues_index(org_id, repo_id):
+    # Get authorized issues
     issues = g.auth_session.query(Issue).filter(Issue.repository.has(id=repo_id))
     return {
         f"issues for org {org_id}, repo {repo_id}": [issue.repr() for issue in issues]
@@ -64,11 +70,15 @@ def issues_index(org_id, repo_id):
 @authorize(resource=request)
 def repo_roles_index(org_id, repo_id):
     if request.method == "GET":
-        roles = g.basic_session.query(RepositoryRole).filter(
-            RepositoryRole.repository.has(id=repo_id)
-        )
+        # Get authorized roles for this repository
+        # TODO: having to get the model is annoying if you don't have it, would be better to just pass in the id
+        repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
+        user_roles = roles.get_resource_users_and_roles(g.auth_session, repo)
         return {
-            f"roles for: org {org_id}, repo {repo_id}": [role.repr() for role in roles]
+            f"roles": [
+                {"user": user.repr(), "role": role.repr()}
+                for (user, role) in user_roles
+            ]
         }
     if request.method == "POST":
         # TODO: test this

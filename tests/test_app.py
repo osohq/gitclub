@@ -97,7 +97,11 @@ def test_repo_roles(test_client):
     resp = test_client.get(
         "/orgs/1/repos/1/roles", headers={"user": "john@beatles.com"}
     )
+    roles = json.loads(resp.data).get("roles")
     assert resp.status_code == 200
+    assert len(roles) == 2
+    assert roles[0].get("user").get("email") == "john@beatles.com"
+    assert roles[1].get("user").get("email") == "paul@beatles.com"
 
     resp = test_client.get(
         "/orgs/1/repos/1/roles", headers={"user": "paul@beatles.com"}
