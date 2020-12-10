@@ -1,3 +1,9 @@
+# RESOURCE-ROLE RELATIONSHIPS
+
+## These rules allow roles to apply to resources other than those that they are scoped to.
+## The most common example of this is nested resources, e.g. Repository roles should apply to the Issues
+## nested in that repository.
+
 ### An organization's roles apply to its child repositories
 resource_role_applies_to(repo: Repository, parent_org) if
     parent_org = repo.organization;
@@ -17,6 +23,7 @@ resource_role_applies_to(requested_resource: Request, role_resource) if
     requested_resource.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, *_rest] and
     session = OsoSession.get() and
     role_resource = session.query(Repository).filter_by(id: repo_id).first();
+
 # ROLE-PERMISSION RELATIONSHIPS
 
 ## Record-level Organization Permissions
@@ -86,6 +93,8 @@ role_allow(role: OrganizationRole{name: "OWNER"}, "READ", team: Team) if
 ### Team members are able to see their own teams
 role_allow(role: TeamRole{name: "MEMBER"}, "READ", team: Team) if
     role.team = team;
+
+# ROLE-ROLE RELATIONSHIPS
 
 ## Role Hierarchies
 
