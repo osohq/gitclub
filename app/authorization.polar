@@ -12,6 +12,18 @@ resource_role_applies_to(repo: Repository, parent_org) if
 resource_role_applies_to(team: Team, parent_org) if
     parent_org = team.organization;
 
+### An organization's roles apply to its child roles
+resource_role_applies_to(role: OrganizationRole, parent_org) if
+    parent_org = role.organization;
+
+### A repository's roles apply to its child roles
+resource_role_applies_to(role: RepositoryRole, parent_repo) if
+    parent_repo = role.repository;
+
+### A repository's roles apply to its child issues
+resource_role_applies_to(issue: Issue, parent_repo) if
+    parent_repo = issue.repository;
+
 ### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
 resource_role_applies_to(requested_resource: Request, role_resource) if
     requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
@@ -34,7 +46,7 @@ role_allow(role: OrganizationRole, "READ", org: Organization) if
 
 ## Route-level Organization Permissions
 
-### Organization owners can access the "People" org page
+### Organization owners can access the "Roles" org page
 role_allow(role: OrganizationRole{name: "OWNER"}, "GET", request: Request) if
     request.path.split("/") matches ["", "orgs", org_id, "roles"] and
     org_id = Integer.__str__(role.organization.id);
@@ -45,11 +57,11 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "GET", request: Request) if
     page in ["teams", "repos"] and
     org_id = Integer.__str__(role.organization.id);
 
-### Organization members can hit the route to create repositories
-role_allow(role: OrganizationRole{name: "MEMBER"}, "POST", request: Request) if
-    request.path.split("/") matches ["", "orgs", org_id, "repos"] and
-    org_id = Integer.__str__(role.organization.id);
+## OrganizationRole Permissions
 
+### Organization owners can access the Organization's roles
+role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: OrganizationRole) if
+    role.organization = role_resource.organization;
 
 ## Repository Permissions
 
@@ -63,7 +75,7 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
     repo.organization.base_repo_role = "READ";
 
 ### Read role can read the repository's issues
-role_allow(role, "READ", issue: Issue) if
+role_allow(role: RepositoryRole, "READ", issue: Issue) if
     role_allow(role, "READ", issue.repository);
 
 ## Route-level Repository Permissions
@@ -83,6 +95,15 @@ role_allow(role: OrganizationRole{name: "OWNER"}, _action, request: Request) if
     request.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, "roles"] and
     org_id = Integer.__str__(role.organization.id);
 
+### Organization members can hit the route to create repositories
+role_allow(role: OrganizationRole{name: "MEMBER"}, "POST", request: Request) if
+    request.path.split("/") matches ["", "orgs", org_id, "repos"] and
+    org_id = Integer.__str__(role.organization.id);
+
+## RepositoryRole Permissions
+
+role_allow(role: OrganizationRole{name: "MEMBER"}, "CREATE", repository: Repository) if
+    role.organization = repository.organization;
 
 ## Team Permissions
 
