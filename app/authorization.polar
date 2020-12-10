@@ -1,3 +1,12 @@
+# ALLOW RULES
+
+### All users can access the orgs index
+allow(user: User, "GET", resource: Request) if
+    resource.path.split("/") matches ["", "orgs"];
+
+
+# RBAC RULES
+
 # RESOURCE-ROLE RELATIONSHIPS
 
 ## These rules allow roles to apply to resources other than those that they are scoped to.
@@ -6,35 +15,35 @@
 
 ### An organization's roles apply to its child repositories
 resource_role_applies_to(repo: Repository, parent_org) if
-    parent_org = repo.organization;
+    parent_org := repo.organization;
 
 ### An organization's roles apply to its child teams
 resource_role_applies_to(team: Team, parent_org) if
-    parent_org = team.organization;
+    parent_org := team.organization;
 
 ### An organization's roles apply to its child roles
 resource_role_applies_to(role: OrganizationRole, parent_org) if
-    parent_org = role.organization;
+    parent_org := role.organization;
 
 ### A repository's roles apply to its child roles
 resource_role_applies_to(role: RepositoryRole, parent_repo) if
     parent_repo = role.repository;
 
-### A repository's roles apply to its child issues
+## A repository's roles apply to its child issues
 resource_role_applies_to(issue: Issue, parent_repo) if
-    parent_repo = issue.repository;
+    parent_repo := issue.repository;
 
 ### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
-resource_role_applies_to(requested_resource: Request, role_resource) if
+resource_role_applies_to(requested_resource: Request, parent_org) if
     requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
     session = OsoSession.get() and
-    role_resource = session.query(Organization).filter_by(id: org_id).first();
+    parent_org := session.query(Organization).filter_by(id: org_id).first();
 
 ### Repo roles apply to HttpRequests with paths starting /orgs/<org_id>/repos/<repo_id>/
-resource_role_applies_to(requested_resource: Request, role_resource) if
+resource_role_applies_to(requested_resource: Request, parent_repo) if
     requested_resource.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, *_rest] and
     session = OsoSession.get() and
-    role_resource = session.query(Repository).filter_by(id: repo_id).first();
+    parent_repo := session.query(Repository).filter_by(id: repo_id).first();
 
 # ROLE-PERMISSION RELATIONSHIPS
 
@@ -76,7 +85,9 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
 
 ### Read role can read the repository's issues
 role_allow(role: RepositoryRole, "READ", issue: Issue) if
-    role_allow(role, "READ", issue.repository);
+    repo = issue.repository and
+    repo matches Repository and
+    role_allow(role, "READ", repo);
 
 ## Route-level Repository Permissions
 

@@ -13,10 +13,10 @@ def test_db_loads(test_db_session):
 
 
 def test_user(test_client):
-    resp = test_client.get("/whoami")
+    resp = test_client.get("/")
     assert resp.status_code == 401
 
-    resp = test_client.get("/whoami", headers={"user": "john@beatles.com"})
+    resp = test_client.get("/", headers={"user": "john@beatles.com"})
     assert resp.status_code == 200
     assert json.loads(resp.data).get("email") == "john@beatles.com"
 

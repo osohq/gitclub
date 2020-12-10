@@ -10,18 +10,13 @@ bp = Blueprint("routes", __name__)
 @bp.route("/")
 def hello():
     if "current_user" in g:
-        return f"hello {g.current_user}"
+        return g.current_user.repr()
     else:
         return f'Please "log in"'
 
 
-@bp.route("/whoami")
-def whoami():
-    you = g.current_user
-    return you.repr()
-
-
 @bp.route("/orgs", methods=["GET"])
+@authorize(resource=request)
 def orgs_index():
     orgs = g.auth_session.query(Organization).all()
     return {"orgs": [org.repr() for org in orgs]}
