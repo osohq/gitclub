@@ -136,7 +136,12 @@ def test_team(test_client):
 
 def test_org_roles(test_client):
     resp = test_client.get("/orgs/1/roles", headers={"user": "john@beatles.com"})
+    roles = json.loads(resp.data).get("roles")
     assert resp.status_code == 200
+    assert len(roles) == 3
+    assert roles[0].get("user").get("email") == "john@beatles.com"
+    assert roles[1].get("user").get("email") == "paul@beatles.com"
+    assert roles[2].get("user").get("email") == "ringo@beatles.com"
 
     resp = test_client.get("/orgs/1/roles", headers={"user": "paul@beatles.com"})
     assert resp.status_code == 403

@@ -110,7 +110,11 @@ def teams_show(org_id, team_id):
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 @authorize(resource=request)
 def org_roles_index(org_id):
-    roles = g.basic_session.query(OrganizationRole).filter(
-        OrganizationRole.organization.has(id=org_id)
-    )
-    return {f"roles for org {org_id}": [role.repr() for role in roles]}
+    # Get authorized roles for this organization
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    user_roles = roles.get_resource_users_and_roles(g.auth_session, org)
+    return {
+        f"roles": [
+            {"user": user.repr(), "role": role.repr()} for (user, role) in user_roles
+        ]
+    }
