@@ -94,6 +94,7 @@ def test_issues_index(test_client):
 
 
 def test_repo_roles(test_client):
+    # Test getting roles
     resp = test_client.get(
         "/orgs/1/repos/1/roles", headers={"user": "john@beatles.com"}
     )
@@ -107,6 +108,25 @@ def test_repo_roles(test_client):
         "/orgs/1/repos/1/roles", headers={"user": "paul@beatles.com"}
     )
     assert resp.status_code == 403
+
+    # Test editing roles
+    resp = test_client.post(
+        "/orgs/1/repos/1/roles",
+        headers={"user": "john@beatles.com"},
+        json={
+            "role": {"name": "WRITE", "user": "ringo@beatles.com"},
+        },
+    )
+    assert resp.status_code == 200
+
+    resp = test_client.get(
+        "/orgs/1/repos/1/roles", headers={"user": "john@beatles.com"}
+    )
+    assert resp.status_code == 200
+    roles = json.loads(resp.data).get("roles")
+    assert len(roles) == 3
+    assert roles[2].get("user").get("email") == "ringo@beatles.com"
+    assert roles[2].get("role").get("name") == "WRITE"
 
 
 def test_teams(test_client):

@@ -84,12 +84,12 @@ def repo_roles_index(org_id, repo_id):
         # TODO: test this
         content = request.get_json()
         print(content)
-        user_info = content.get("user")
         role_info = content.get("role")
         role_name = role_info.get("name")
-        user = g.basic_session.query(User).filter_by(email=user_info.get("email"))
-        repo = g.basic_session.query(Repository).filter_by(id=repo_id)
-        role_helpers.reassign_user_role(g.basic_session, user, repo, role_name)
+        user_email = role_info.get("user")
+        user = g.basic_session.query(User).filter_by(email=user_email).first()
+        repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
+        roles.reassign_user_role(g.basic_session, user, repo, role_name)
         return f"created a new repo role for repo: {repo_id}, {role_name}"
 
 
