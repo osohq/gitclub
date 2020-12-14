@@ -46,76 +46,14 @@ def load_fixture_data(session):
         session.add(repo)
     # TODO: issues
     abby_road_read = RepositoryRole(
-        name="READ",
-        repository=abby_road,
-        users=[john, paul],
-        groups=[vocalists],
-    )
-    abby_road_triage = RepositoryRole(
-        name="TRIAGE",
-        repository=abby_road,
-        users=[],
-        groups=[],
-    )
-    abby_road_write = RepositoryRole(
-        name="WRITE",
-        repository=abby_road,
-        users=[],
-        groups=[],
-    )
-    abby_road_maintain = RepositoryRole(
-        name="MAINTAIN",
-        repository=abby_road,
-        users=[],
-        groups=[],
-    )
-    abby_road_admin = RepositoryRole(
-        name="ADMIN",
-        repository=abby_road,
-        users=[],
-        groups=[],
+        name="READ", repository=abby_road, users=[john, paul], teams=[vocalists]
     )
     paperwork_read = RepositoryRole(
-        name="READ",
-        repository=paperwork,
-        users=[mike, sully],
-        groups=[scarers],
-    )
-    paperwork_triage = RepositoryRole(
-        name="TRIAGE",
-        repository=paperwork,
-        users=[],
-        groups=[],
-    )
-    paperwork_write = RepositoryRole(
-        name="WRITE",
-        repository=paperwork,
-        users=[],
-        groups=[],
-    )
-    paperwork_maintain = RepositoryRole(
-        name="MAINTAIN",
-        repository=paperwork,
-        users=[],
-        groups=[],
-    )
-    paperwork_admin = RepositoryRole(
-        name="ADMIN",
-        repository=paperwork,
-        users=[],
-        groups=[],
+        name="READ", repository=paperwork, users=[mike, sully], teams=[scarers]
     )
     repo_roles = [
         abby_road_read,
-        abby_road_triage,
-        abby_road_write,
-        abby_road_maintain,
-        abby_road_admin,
         paperwork_read,
-        paperwork_triage,
-        paperwork_write,
-        paperwork_maintain,
-        paperwork_admin,
     ]
     for repo_role in repo_roles:
         session.add(repo_role)

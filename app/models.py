@@ -88,11 +88,36 @@ class Issue(Base):
 
 
 RepositoryRoleMixin = resource_role_class(
-    Base, User, Repository, ["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"], Team
+    Base, User, Repository, ["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"]
+)
+
+team_join_table = Table(
+    "repository_roles_teams",
+    Base.metadata,
+    Column(
+        "repository_role_id",
+        Integer,
+        ForeignKey("repository_roles.id"),
+        primary_key=True,
+    ),
+    Column(
+        "team_id",
+        Integer,
+        ForeignKey("teams.id"),
+        primary_key=True,
+    ),
 )
 
 
 class RepositoryRole(Base, RepositoryRoleMixin):
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    teams = relationship(
+        "Team",
+        secondary=team_join_table,
+        lazy="subquery",
+        backref=backref("repository_roles", lazy=True),
+    )
+
     def repr(self):
         return {"id": self.id, "name": str(self.name)}
 

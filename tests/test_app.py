@@ -2,7 +2,7 @@ from .conftest import test_client, test_db_session
 from flask import json
 import pytest
 
-from app.models import User
+from app.models import User, Repository, RepositoryRole
 
 
 def test_db_loads(test_db_session):
@@ -198,11 +198,17 @@ def test_get_user_roles_for_resource(test_db_session):
     assert resource_roles[0].name == "OWNER"
 
 
-def test_get_group_resources_and_roles(test_db_session):
+def test_get_team_resources_and_roles(test_db_session):
+    # TODO: implement
     vocalists = test_db_session.query(Team).filter_by(name="Vocalists").first()
-    resource_roles = oso_roles.get_group_resources_and_roles(
-        test_db_session, vocalists, Repository
-    )
+    resource_roles = (
+        test_db_session.query(Repository, RepositoryRole)
+        .join(RepositoryRole)
+        .filter(RepositoryRole.teams.any(Team.id == vocalists.id))
+    ).all()
+    # resource_roles = oso_roles.get_group_resources_and_roles(
+    #     test_db_session, vocalists, Repository
+    # )
     assert len(resource_roles) == 1
     assert resource_roles[0][0].name == "Abbey Road"
     assert resource_roles[0][1].name == "READ"
