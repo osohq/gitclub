@@ -77,7 +77,9 @@ role_allow(role: RepositoryRole, "READ", issue: Issue) if
     role_allow(role, "READ", repo);
 
 role_allow(role: RepositoryRole{name: "READ"}, "LIST_ISSUES", repository: Repository);
+role_allow(role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", repository: Repository);
 role_allow(role: RepositoryRole{name: "ADMIN"}, "LIST_ROLES", repository: Repository);
+
 role_allow(role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", organization: Organization);
 role_allow(role: OrganizationRole{name: "MEMBER"}, "LIST_REPOS", organization: Organization);
 role_allow(role: OrganizationRole{name: "MEMBER"}, "LIST_TEAMS", organization: Organization);
