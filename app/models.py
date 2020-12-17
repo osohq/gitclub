@@ -85,28 +85,9 @@ class Issue(Base):
 
 
 ## ROLE MODELS ##
-
-
 RepositoryRoleMixin = resource_role_class(
     Base, User, Repository, ["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"]
 )
-
-# team_join_table = Table(
-#     "repository_roles_teams",
-#     Base.metadata,
-#     Column(
-#         "repository_role_id",
-#         Integer,
-#         ForeignKey("repository_roles.id"),
-#         primary_key=True,
-#     ),
-#     Column(
-#         "team_id",
-#         Integer,
-#         ForeignKey("teams.id"),
-#         primary_key=True,
-#     ),
-# )
 
 
 class RepositoryRole(Base, RepositoryRoleMixin):
