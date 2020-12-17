@@ -51,7 +51,7 @@ def load_fixture_data(session):
 
     # CREATE ROLE DATA
     roles = [
-        RepositoryRole(name="READ", repository=abby_road, user=john),
+        RepositoryRole(name="ADMIN", repository=abby_road, user=john),
         RepositoryRole(name="READ", repository=abby_road, user=paul),
         RepositoryRole(name="READ", repository=paperwork, user=mike),
         RepositoryRole(name="READ", repository=paperwork, user=sully),

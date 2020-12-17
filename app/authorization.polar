@@ -1,9 +1,5 @@
 # ALLOW RULES
 
-### All users can access the orgs index
-allow(user: User, "GET", resource: Request) if
-    resource.path.split("/") matches ["", "orgs"];
-
 ### Anyone user can see any other user (TODO: fix this)
 allow(user: User, _action, resource: User);
 
@@ -45,18 +41,6 @@ resource_role_applies_to(role: RepositoryRole, parent_org) if
 resource_role_applies_to(issue: Issue, parent_repo) if
     parent_repo := issue.repository;
 
-### Org roles apply to HttpRequests with paths starting /orgs/<org_id>/
-resource_role_applies_to(requested_resource: Request, parent_org) if
-    requested_resource.path.split("/") matches ["", "orgs", org_id, *_rest] and
-    session = OsoSession.get() and
-    parent_org := session.query(Organization).filter_by(id: org_id).first();
-
-### Repo roles apply to HttpRequests with paths starting /orgs/<org_id>/repos/<repo_id>/
-resource_role_applies_to(requested_resource: Request, parent_repo) if
-    requested_resource.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, *_rest] and
-    session = OsoSession.get() and
-    parent_repo := session.query(Repository).filter_by(id: repo_id).first();
-
 # ROLE-PERMISSION RELATIONSHIPS
 
 ## Record-level Organization Permissions
@@ -64,19 +48,6 @@ resource_role_applies_to(requested_resource: Request, parent_repo) if
 ### All organization roles let users read organizations
 role_allow(role: OrganizationRole, "READ", org: Organization) if
     role.organization = org;
-
-## Route-level Organization Permissions
-
-### Organization owners can access the "Roles" org page
-role_allow(role: OrganizationRole{name: "OWNER"}, "GET", request: Request) if
-    request.path.split("/") matches ["", "orgs", org_id, "roles"] and
-    org_id = Integer.__str__(role.organization.id);
-
-### Organization members can access the "Teams" and "Repositories" pages within their organizations
-role_allow(role: OrganizationRole{name: "MEMBER"}, "GET", request: Request) if
-    request.path.split("/") matches ["", "orgs", org_id, page] and
-    page in ["teams", "repos"] and
-    org_id = Integer.__str__(role.organization.id);
 
 ## OrganizationRole Permissions
 
@@ -105,28 +76,11 @@ role_allow(role: RepositoryRole, "READ", issue: Issue) if
     repo matches Repository and
     role_allow(role, "READ", repo);
 
-
-## Route-level Repository Permissions
-
-### Repository READ role access the issues index
-role_allow(role: RepositoryRole{name: "READ"}, "GET", request: Request) if
-    request.path.split("/") matches ["", "orgs", org_id, "repos", repo_id, "issues"] and
-    repo_id = Integer.__str__(role.repository.id);
-
-### Repository admins can access the "Roles" repo page
-role_allow(role: RepositoryRole{name: "ADMIN"}, _action, request: Request) if
-    request.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, "roles"] and
-    repo_id = Integer.__str__(role.repository.id);
-
-### Organization owners can access the "Roles" repo page for all repos in the org
-role_allow(role: OrganizationRole{name: "OWNER"}, _action, request: Request) if
-    request.path.split("/") matches ["", "orgs", _org_id, "repos", repo_id, "roles"] and
-    org_id = Integer.__str__(role.organization.id);
-
-### Organization members can hit the route to create repositories
-role_allow(role: OrganizationRole{name: "MEMBER"}, "POST", request: Request) if
-    request.path.split("/") matches ["", "orgs", org_id, "repos"] and
-    org_id = Integer.__str__(role.organization.id);
+role_allow(role: RepositoryRole{name: "READ"}, "LIST_ISSUES", repository: Repository);
+role_allow(role: RepositoryRole{name: "ADMIN"}, "LIST_ROLES", repository: Repository);
+role_allow(role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", organization: Organization);
+role_allow(role: OrganizationRole{name: "MEMBER"}, "LIST_REPOS", organization: Organization);
+role_allow(role: OrganizationRole{name: "MEMBER"}, "LIST_TEAMS", organization: Organization);
 
 ## RepositoryRole Permissions
 
@@ -146,9 +100,6 @@ role_allow(role: OrganizationRole{name: "OWNER"}, "READ", team: Team) if
 ### Team members are able to see their own teams
 role_allow(role: TeamRole{name: "MEMBER"}, "READ", team: Team) if
     role.team.id = team.id;
-
-## User Permissions
-# TODO
 
 # ROLE-ROLE RELATIONSHIPS
 

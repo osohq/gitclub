@@ -18,15 +18,16 @@ def hello():
 
 
 @bp.route("/orgs", methods=["GET"])
-@authorize(resource=request)
 def orgs_index():
     orgs = g.auth_session.query(Organization).all()
     return {"orgs": [org.repr() for org in orgs]}
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
-@authorize(resource=request)
 def repos_index(org_id):
+    org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
+    current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
+
     repos = g.auth_session.query(Repository).filter(
         Repository.organization.has(id=org_id)
     )
@@ -34,7 +35,6 @@ def repos_index(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
-@authorize(resource=request)
 def repos_new(org_id):
     # Create repo
     repo_name = request.get_json().get("name")
@@ -59,8 +59,10 @@ def repos_show(org_id, repo_id):
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
-@authorize(resource=request)
 def issues_index(org_id, repo_id):
+    repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+    current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ISSUES")
+
     # Get authorized issues
     issues = g.auth_session.query(Issue).filter(Issue.repository.has(id=repo_id))
     return {
@@ -69,12 +71,11 @@ def issues_index(org_id, repo_id):
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
-@authorize(resource=request)
 def repo_roles_index(org_id, repo_id):
     if request.method == "GET":
-        # Get authorized roles for this repository
-        # TODO: having to get the model is annoying if you don't have it, would be better to just pass in the id
-        repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
+        repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+        current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ROLES")
+
         roles = oso_roles.get_resource_roles(g.auth_session, repo)
         return {
             f"roles": [
@@ -95,8 +96,10 @@ def repo_roles_index(org_id, repo_id):
 
 
 @bp.route("/orgs/<int:org_id>/teams", methods=["GET"])
-@authorize(resource=request)
 def teams_index(org_id):
+    org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
+    current_app.oso.authorize(org, actor=g.current_user, action="LIST_TEAMS")
+
     teams = g.basic_session.query(Team).filter(Team.organization.has(id=org_id))
     return {f"teams for org_id {org_id}": [team.repr() for team in teams]}
 
@@ -109,10 +112,11 @@ def teams_show(org_id, team_id):
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
-@authorize(resource=request)
 def org_roles_index(org_id):
     # Get authorized roles for this organization
     org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    current_app.oso.authorize(org, actor=g.current_user, action="LIST_ROLES")
+
     roles = oso_roles.get_resource_roles(g.auth_session, org)
     return {
         f"roles": [{"user": role.user.repr(), "role": role.repr()} for role in roles]
