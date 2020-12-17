@@ -1,7 +1,8 @@
 # ALLOW RULES
 
-### Anyone user can see any other user (TODO: fix this)
-allow(user: User, _action, resource: User);
+### Users can see other users in their organization
+allow(user: User, _action, resource: User) if
+    org in user.organizations and org in resource.organizations;
 
 # RBAC RULES
 
@@ -70,7 +71,7 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
     role.organization.id = repo.organization.id and
     repo.organization.base_repo_role = "READ";
 
-### Read role can read the repository's issues
+### RepositoryRoles with read access can also read the repository's issues
 role_allow(role: RepositoryRole, "READ", issue: Issue) if
     repo := issue.repository and
     repo matches Repository and
