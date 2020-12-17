@@ -41,7 +41,7 @@ resource_role_applies_to(role: RepositoryRole, parent_org) if
     parent_org := role.repository.organization and
     parent_org matches Organization;
 
-## A repository's roles apply to its child issues
+### A repository's roles apply to its child issues
 resource_role_applies_to(issue: Issue, parent_repo) if
     parent_repo := issue.repository;
 
@@ -82,7 +82,7 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "GET", request: Request) if
 
 ### Organization owners can access the Organization's roles
 role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: OrganizationRole) if
-    role.organization = role_resource.organization;
+    role.organization.id = role_resource.organization.id;
 
 ## Repository Permissions
 
@@ -92,16 +92,16 @@ role_allow(role: RepositoryRole{name: "READ"}, "READ", repo: Repository) if
 
 ### All organization members can create repositories
 role_allow(role: OrganizationRole{name: "MEMBER"}, "CREATE", repository: Repository) if
-    role.organization = repository.organization;
+    role.organization.id = repository.organization.id;
 
 ### Organization "Read" base roles
 role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
-    role.organization = repo.organization and
+    role.organization.id = repo.organization.id and
     repo.organization.base_repo_role = "READ";
 
 ### Read role can read the repository's issues
 role_allow(role: RepositoryRole, "READ", issue: Issue) if
-    repo = issue.repository and
+    repo := issue.repository and
     repo matches Repository and
     role_allow(role, "READ", repo);
 
@@ -131,7 +131,7 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "POST", request: Request) if
 ## RepositoryRole Permissions
 
 role_allow(role: RepositoryRole{name: "ADMIN"}, "READ", role_resource: RepositoryRole) if
-    role.repository = role_resource.repository;
+    role.repository.id = role_resource.repository.id;
 
 role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: RepositoryRole) if
     role.organization.id = role_resource.repository.organization.id;
@@ -141,11 +141,11 @@ role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: Reposit
 
 ### Organization owners can view all teams in the org
 role_allow(role: OrganizationRole{name: "OWNER"}, "READ", team: Team) if
-    role.organization = team.organization;
+    role.organization.id = team.organization.id;
 
 ### Team members are able to see their own teams
 role_allow(role: TeamRole{name: "MEMBER"}, "READ", team: Team) if
-    role.team = team;
+    role.team.id = team.id;
 
 ## User Permissions
 # TODO

@@ -2,7 +2,9 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-from sqlalchemy_oso import roles
+from .db import Session
+
+from sqlalchemy_oso import roles as oso_roles
 
 bp = Blueprint("routes", __name__)
 
@@ -73,11 +75,10 @@ def repo_roles_index(org_id, repo_id):
         # Get authorized roles for this repository
         # TODO: having to get the model is annoying if you don't have it, would be better to just pass in the id
         repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
-        user_roles = roles.get_resource_users_and_roles(g.auth_session, repo)
+        roles = oso_roles.get_resource_roles(g.auth_session, repo)
         return {
             f"roles": [
-                {"user": user.repr(), "role": role.repr()}
-                for (user, role) in user_roles
+                {"user": role.user.repr(), "role": role.repr()} for role in roles
             ]
         }
     if request.method == "POST":
@@ -89,7 +90,7 @@ def repo_roles_index(org_id, repo_id):
         user_email = role_info.get("user")
         user = g.auth_session.query(User).filter_by(email=user_email).first()
         repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
-        roles.reassign_user_role(g.auth_session, user, repo, role_name)
+        oso_roles.add_user_role(g.auth_session, user, repo, role_name)
         return f"created a new repo role for repo: {repo_id}, {role_name}"
 
 
@@ -112,9 +113,7 @@ def teams_show(org_id, team_id):
 def org_roles_index(org_id):
     # Get authorized roles for this organization
     org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    user_roles = roles.get_resource_users_and_roles(g.auth_session, org)
+    roles = oso_roles.get_resource_roles(g.auth_session, org)
     return {
-        f"roles": [
-            {"user": user.repr(), "role": role.repr()} for (user, role) in user_roles
-        ]
+        f"roles": [{"user": role.user.repr(), "role": role.repr()} for role in roles]
     }

@@ -8,10 +8,8 @@ from .db import engine, Session
 from .models import Base, User
 
 from flask_oso import FlaskOso, authorize
-from sqlalchemy_oso import authorized_sessionmaker, register_models
+from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_session
 from sqlalchemy_oso.roles import enable_roles
-
-from .role_helpers import OsoSession
 
 base_oso = Oso()
 oso = FlaskOso(base_oso)
@@ -42,10 +40,10 @@ def init_oso(app):
             except Exception as e:
                 return Unauthorized("user not found")
 
-    base_oso.register_constant(OsoSession, "OsoSession")
-
     register_models(base_oso, Base)
     oso.init_app(app)
+
+    set_get_session(base_oso, lambda: g.basic_session)
     enable_roles(base_oso)
 
     base_oso.load_file("app/authorization.polar")

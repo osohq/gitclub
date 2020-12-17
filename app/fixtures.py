@@ -3,6 +3,7 @@ from .models import RepositoryRole, OrganizationRole, TeamRole
 
 
 def load_fixture_data(session):
+    # CREATE USER DATA
     john = User(email="john@beatles.com")
     paul = User(email="paul@beatles.com")
     admin = User(email="admin@admin.com")
@@ -21,6 +22,8 @@ def load_fixture_data(session):
     ]
     for user in users:
         session.add(user)
+
+    # CREATE RESOURCE DATA
     beatles = Organization(name="The Beatles", base_repo_role="READ")
     monsters = Organization(name="Monsters Inc.", base_repo_role="READ")
     organizations = [beatles, monsters]
@@ -45,56 +48,51 @@ def load_fixture_data(session):
     for repo in repositories:
         session.add(repo)
     # TODO: issues
-    abby_road_read = RepositoryRole(
-        name="READ", repository=abby_road, users=[john, paul], teams=[vocalists]
-    )
-    paperwork_read = RepositoryRole(
-        name="READ", repository=paperwork, users=[mike, sully], teams=[scarers]
-    )
-    repo_roles = [
-        abby_road_read,
-        paperwork_read,
+
+    # CREATE ROLE DATA
+    roles = [
+        RepositoryRole(name="READ", repository=abby_road, user=john),
+        RepositoryRole(name="READ", repository=abby_road, user=paul),
+        RepositoryRole(name="READ", repository=paperwork, user=mike),
+        RepositoryRole(name="READ", repository=paperwork, user=sully),
+        OrganizationRole(
+            name="OWNER",
+            organization=beatles,
+            user=john,
+        ),
+        OrganizationRole(
+            name="MEMBER",
+            organization=beatles,
+            user=paul,
+        ),
+        OrganizationRole(
+            name="MEMBER",
+            organization=beatles,
+            user=ringo,
+        ),
+        OrganizationRole(
+            name="OWNER",
+            organization=monsters,
+            user=mike,
+        ),
+        OrganizationRole(
+            name="MEMBER",
+            organization=monsters,
+            user=sully,
+        ),
+        OrganizationRole(
+            name="MEMBER",
+            organization=monsters,
+            user=randall,
+        ),
+        TeamRole(name="MEMBER", team=vocalists, user=paul),
+        TeamRole(name="MAINTAINER", team=vocalists, user=john),
+        TeamRole(name="MAINTAINER", team=percussion, user=ringo),
+        TeamRole(name="MEMBER", team=scarers, user=randall),
+        TeamRole(name="MAINTAINER", team=scarers, user=sully),
     ]
-    for repo_role in repo_roles:
-        session.add(repo_role)
-    beatles_owner = OrganizationRole(
-        name="OWNER",
-        organization=beatles,
-        users=[john],
-    )
-    beatles_member = OrganizationRole(
-        name="MEMBER",
-        organization=beatles,
-        users=[paul, ringo],
-    )
-    monsters_owner = OrganizationRole(
-        name="OWNER",
-        organization=monsters,
-        users=[mike],
-    )
-    monsters_member = OrganizationRole(
-        name="MEMBER",
-        organization=monsters,
-        users=[sully, randall],
-    )
-    org_roles = [beatles_owner, beatles_member, monsters_owner, monsters_member]
-    for org_role in org_roles:
-        session.add(org_role)
-    vocalists_member = TeamRole(name="MEMBER", team=vocalists, users=[paul])
-    vocalists_maintainer = TeamRole(name="MAINTAINER", team=vocalists, users=[john])
-    percussion_member = TeamRole(name="MEMBER", team=percussion, users=[])
-    percussion_maintainer = TeamRole(name="MAINTAINER", team=percussion, users=[ringo])
-    scarers_member = TeamRole(name="MEMBER", team=scarers, users=[randall])
-    scarers_maintainer = TeamRole(name="MAINTAINER", team=scarers, users=[sully])
-    team_roles = [
-        vocalists_member,
-        vocalists_maintainer,
-        percussion_member,
-        percussion_maintainer,
-        scarers_member,
-        scarers_maintainer,
-    ]
-    for team_role in team_roles:
-        session.add(team_role)
+
+    for role in roles:
+        session.add(role)
 
     session.commit()
