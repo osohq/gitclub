@@ -53,8 +53,7 @@ role_allow(role: OrganizationRole, "READ", org: Organization) if
 ## OrganizationRole Permissions
 
 ### Organization owners can access the Organization's roles
-role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: OrganizationRole) if
-    role.organization.id = role_resource.organization.id;
+role_allow(role: OrganizationRole{name: "OWNER"}, "READ", role_resource: OrganizationRole);
 
 ## Repository Permissions
 

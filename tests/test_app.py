@@ -154,6 +154,14 @@ def test_team(test_client):
     assert resp.status_code == 403
 
 
+def test_billing_show(test_client):
+    resp = test_client.get("/orgs/1/billing", headers={"user": "john@beatles.com"})
+    assert resp.status_code == 200
+
+    resp = test_client.get("/orgs/1/billing", headers={"user": "paul@beatles.com"})
+    assert resp.status_code == 403
+
+
 def test_org_roles(test_client):
     resp = test_client.get("/orgs/1/roles", headers={"user": "john@beatles.com"})
     roles = json.loads(resp.data).get("roles")

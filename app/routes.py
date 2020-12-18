@@ -111,6 +111,13 @@ def teams_show(org_id, team_id):
     return team.repr()
 
 
+@bp.route("/orgs/<int:org_id>/billing", methods=["GET"])
+def billing_show(org_id):
+    org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
+    current_app.oso.authorize(org, actor=g.current_user, action="READ_BILLING")
+    return {f"billing_address": org.billing_address}
+
+
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 def org_roles_index(org_id):
     # Get authorized roles for this organization
