@@ -1,12 +1,15 @@
 from flask import g, Flask, request
 
-from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from .models import Base, User
 from .fixtures import load_fixture_data
-from .db import engine, Session
 
 from werkzeug.exceptions import Unauthorized
+
+engine = create_engine("sqlite://")
+Session = sessionmaker(bind=engine)
 
 
 def create_app():
