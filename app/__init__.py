@@ -8,6 +8,7 @@ from .fixtures import load_fixture_data
 
 from werkzeug.exceptions import Unauthorized
 
+from flask_oso import FlaskOso
 from oso import Oso
 from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_session
 from sqlalchemy_oso.roles import enable_roles
@@ -70,7 +71,12 @@ def create_app():
 
 
 def init_oso(app):
+    base_oso = Oso()
+    oso = FlaskOso(base_oso)
+
     register_models(base_oso, Base)
     set_get_session(base_oso, lambda: g.basic_session)
     base_oso.load_file("app/authorization.polar")
-    app.oso = base_oso
+    app.oso = oso
+
+    return base_oso
