@@ -14,7 +14,7 @@ from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_ses
 from sqlalchemy_oso.roles import enable_roles
 
 
-engine = create_engine("sqlite://")
+engine = create_engine("sqlite:///roles.db")
 Session = sessionmaker(bind=engine)
 
 base_oso = Oso()
