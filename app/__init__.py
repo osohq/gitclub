@@ -76,6 +76,7 @@ def init_oso(app):
 
     register_models(base_oso, Base)
     set_get_session(base_oso, lambda: g.basic_session)
+    enable_roles(base_oso)
     base_oso.load_file("app/authorization.polar")
     app.oso = oso
 

@@ -27,7 +27,7 @@ def repos_index(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
 
-    repos = g.session.query(Repository).filter_by(organization=org)
+    repos = g.basic_session.query(Repository).filter_by(organization=org)
     return {f"repos": [repo.repr() for repo in repos]}
 
 
