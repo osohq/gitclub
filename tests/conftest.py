@@ -15,7 +15,7 @@ def db_path(tmp_path):
 
 @pytest.fixture
 def test_client(db_path):
-    flask_app = create_app(db_path)
+    flask_app = create_app(db_path, True)
     test_client = flask_app.test_client()
     return test_client
 
