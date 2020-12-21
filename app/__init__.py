@@ -14,25 +14,28 @@ from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_ses
 from sqlalchemy_oso.roles import enable_roles
 
 
-engine = create_engine("sqlite:///roles.db")
-Session = sessionmaker(bind=engine)
-
-base_oso = Oso()
-AuthorizedSession = authorized_sessionmaker(
-    bind=engine,
-    get_oso=lambda: base_oso,
-    get_user=lambda: g.current_user,
-    get_action=lambda: g.current_action,
-)
-
-
-def create_app():
-    app = Flask(__name__)
-
-    init_oso(app)
-
+def create_app(db_path=None):
+    # init DB engine
+    if db_path:
+        engine = create_engine(db_path)
+    else:
+        engine = create_engine("sqlite:///roles.db")
     Base.metadata.create_all(engine)
 
+    # init app
+    app = Flask(__name__)
+
+    # init oso
+    oso = init_oso(app)
+
+    # init sessions
+    AuthorizedSession = authorized_sessionmaker(
+        bind=engine,
+        get_oso=lambda: oso,
+        get_user=lambda: g.current_user,
+        get_action=lambda: g.current_action,
+    )
+    Session = sessionmaker(bind=engine)
     session = Session()
     load_fixture_data(session)
 
@@ -50,12 +53,11 @@ def create_app():
                 return Unauthorized("user not found")
             try:
                 # Set basic (non-auth) session for this request
-                basic_session = Session()
-                g.basic_session = basic_session
+                g.basic_session = session
 
                 # Set user for this request
                 g.current_user = (
-                    basic_session.query(User).filter(User.email == email).first()
+                    session.query(User).filter(User.email == email).first()
                 )
                 # Set action for this request
                 actions = {"GET": "READ", "POST": "CREATE"}

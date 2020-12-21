@@ -2,7 +2,6 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-from .db import Session
 
 from sqlalchemy_oso import roles as oso_roles
 
