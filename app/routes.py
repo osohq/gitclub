@@ -27,7 +27,7 @@ def repos_index(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
 
-    repos = g.basic_session.query(Repository).filter_by(organization=org)
+    repos = g.auth_session.query(Repository).filter_by(organization=org)
     return {f"repos": [repo.repr() for repo in repos]}
 
 
@@ -97,7 +97,7 @@ def teams_index(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_TEAMS")
 
-    teams = g.basic_session.query(Team).filter(Team.organization.has(id=org_id))
+    teams = g.auth_session.query(Team).filter(Team.organization.has(id=org_id))
     return {f"teams for org_id {org_id}": [team.repr() for team in teams]}
 
 
