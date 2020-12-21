@@ -28,6 +28,7 @@ class Organization(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String())
     base_repo_role = Column(String())
+    billing_address = Column(String())
 
     def repr(self):
         return {"id": self.id, "name": self.name}

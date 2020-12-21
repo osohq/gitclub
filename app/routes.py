@@ -2,7 +2,6 @@ from flask import Blueprint, g, request, current_app
 from flask_oso import authorize
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-from .db import Session
 
 from sqlalchemy_oso import roles as oso_roles
 
@@ -28,9 +27,7 @@ def repos_index(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
 
-    repos = g.auth_session.query(Repository).filter(
-        Repository.organization.has(id=org_id)
-    )
+    repos = g.basic_session.query(Repository).filter_by(organization=org)
     return {f"repos": [repo.repr() for repo in repos]}
 
 
@@ -109,6 +106,13 @@ def teams_show(org_id, team_id):
     team = g.basic_session.query(Team).get(team_id)
     current_app.oso.authorize(team, action="READ")
     return team.repr()
+
+
+@bp.route("/orgs/<int:org_id>/billing", methods=["GET"])
+def billing_show(org_id):
+    org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
+    current_app.oso.authorize(org, actor=g.current_user, action="READ_BILLING")
+    return {f"billing_address": org.billing_address}
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
