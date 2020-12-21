@@ -14,8 +14,10 @@ from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_ses
 from sqlalchemy_oso.roles import enable_roles
 
 
-def create_app(db_path=None):
-    # init DB engine
+def create_app(db_path=None, load_fixtures=False):
+    from . import routes
+
+    # init engine and session
     if db_path:
         engine = create_engine(db_path)
     else:
@@ -24,6 +26,7 @@ def create_app(db_path=None):
 
     # init app
     app = Flask(__name__)
+    app.register_blueprint(routes.bp)
 
     # init oso
     oso = init_oso(app)
@@ -37,13 +40,10 @@ def create_app(db_path=None):
     )
     Session = sessionmaker(bind=engine)
     session = Session()
-    load_fixture_data(session)
 
-    oso = init_oso(app)
-
-    from . import routes
-
-    app.register_blueprint(routes.bp)
+    # optionally load fixture data
+    if load_fixtures:
+        load_fixture_data(session)
 
     @app.before_request
     def set_current_user_and_session():
@@ -56,9 +56,7 @@ def create_app(db_path=None):
                 g.basic_session = session
 
                 # Set user for this request
-                g.current_user = (
-                    session.query(User).filter(User.email == email).first()
-                )
+                g.current_user = session.query(User).filter(User.email == email).first()
                 # Set action for this request
                 actions = {"GET": "READ", "POST": "CREATE"}
                 g.current_action = actions[request.method]
