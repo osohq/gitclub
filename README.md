@@ -102,7 +102,6 @@ To run the application, complete the following steps:
    ```
    $ flask run
    * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-
    ```
 
    Once the server is running, you can make requests to the REST API using
@@ -125,7 +124,6 @@ Returns the current user, or asks you to log in
 ```
 $ curl --header "user: mike@monsters.com" localhost:5000/
 {"email":"mike@monsters.com","id":4}
-
 ```
 
 ### GET "/orgs"
