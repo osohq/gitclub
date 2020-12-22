@@ -8,7 +8,7 @@ from sqlalchemy_oso import roles as oso_roles
 bp = Blueprint("routes", __name__)
 
 
-@bp.route("/")
+@bp.route("/", methods=["GET"])
 def hello():
     if "current_user" in g:
         return g.current_user.repr()
