@@ -14,7 +14,7 @@ The app has the following models:
 - `Organization`
   - Organizations are the top-level grouping of users and resources in the app. As with the real GitHub, users can be in multiple Organizations, and may have different permission levels in each.
 - `User`
-  - GitHub users, built with Django's `AbstractUser` model. Users can have roles within Organizations, Teams, and Repositories.
+  - GitHub users, identified by email address. Users can have roles within Organizations, Teams, and Repositories.
 - `Team`
   - Groups of users within an organizaiton. They can be nested. Teams can have roles within Repositories.
 - `Repository`
