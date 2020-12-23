@@ -1,3 +1,7 @@
 oso
 sqlalchemy-oso
 flask
+Flask-SQLAlchemy
+sqlalchemy-utils
+flask-oso
+
