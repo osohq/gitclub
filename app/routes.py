@@ -76,7 +76,12 @@ def repo_roles_index(org_id, repo_id):
         roles = oso_roles.get_resource_roles(g.auth_session, repo)
         return {
             f"roles": [
-                {"user": role.user.repr(), "role": role.repr()} for role in roles
+                {
+                    "user": role.user.repr() if role.user else {"email": "none"},
+                    "team": role.team.repr() if role.team else {"name": "none"},
+                    "role": role.repr(),
+                }
+                for role in roles
             ]
         }
     if request.method == "POST":
@@ -88,7 +93,7 @@ def repo_roles_index(org_id, repo_id):
         user_email = role_info.get("user")
         user = g.auth_session.query(User).filter_by(email=user_email).first()
         repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
-        oso_roles.add_user_role(g.auth_session, user, repo, role_name)
+        oso_roles.add_user_role(g.auth_session, user, repo, role_name, commit=True)
         return f"created a new repo role for repo: {repo_id}, {role_name}"
 
 

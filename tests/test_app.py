@@ -80,8 +80,15 @@ def test_repos_show(test_client):
 
 
 def test_issues_index(test_client):
+    # John can read the repo because he has the "READ" role on it
     resp = test_client.get(
         "/orgs/1/repos/1/issues", headers={"user": "john@beatles.com"}
+    )
+    assert resp.status_code == 200
+
+    # Ringo can read the repo because his team has the "WRITE" role on it
+    resp = test_client.get(
+        "/orgs/1/repos/1/issues", headers={"user": "ringo@beatles.com"}
     )
     assert resp.status_code == 200
 
@@ -100,9 +107,11 @@ def test_repo_roles(test_client):
     )
     roles = json.loads(resp.data).get("roles")
     assert resp.status_code == 200
-    assert len(roles) == 2
+    assert len(roles) == 3
+    roles.sort(key=lambda x: x.get("user").get("email"))
     assert roles[0].get("user").get("email") == "john@beatles.com"
-    assert roles[1].get("user").get("email") == "paul@beatles.com"
+    assert roles[1].get("team").get("name") == "Percussion"
+    assert roles[2].get("user").get("email") == "paul@beatles.com"
 
     resp = test_client.get(
         "/orgs/1/repos/1/roles", headers={"user": "paul@beatles.com"}
@@ -124,9 +133,9 @@ def test_repo_roles(test_client):
     )
     assert resp.status_code == 200
     roles = json.loads(resp.data).get("roles")
-    assert len(roles) == 3
-    assert roles[2].get("user").get("email") == "ringo@beatles.com"
-    assert roles[2].get("role").get("name") == "WRITE"
+    assert len(roles) == 4
+    assert roles[3].get("user").get("email") == "ringo@beatles.com"
+    assert roles[3].get("role").get("name") == "WRITE"
 
 
 def test_teams(test_client):

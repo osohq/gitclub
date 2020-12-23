@@ -6,6 +6,14 @@ allow(user: User, _action, resource: User) if
 
 # RBAC RULES
 
+# USER-ROLE RELATIONSHIPS
+
+### Users inherit repository roles from their teams
+user_in_role(user: User, role, repo: Repository) if
+	team in user.teams and
+	role in team.repository_roles and
+	role.repository.id = repo.id;
+
 # RESOURCE-ROLE RELATIONSHIPS
 
 ## These rules allow roles to apply to resources other than those that they are scoped to.
