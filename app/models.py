@@ -87,7 +87,10 @@ class Issue(Base):
 
 ## ROLE MODELS ##
 RepositoryRoleMixin = resource_role_class(
-    Base, User, Repository, ["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"]
+    declarative_base=Base,
+    user_model=User,
+    resource_model=Repository,
+    role_choices=["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"],
 )
 
 
