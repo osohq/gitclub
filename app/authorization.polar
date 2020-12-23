@@ -55,25 +55,25 @@ resource_role_applies_to(issue: Issue, parent_repo) if
 ## Record-level Organization Permissions
 
 ### All organization roles let users read organizations
-role_allow(_role: OrganizationRole, "READ", org: Organization);
+role_allow(_role: OrganizationRole, "READ", _org: Organization);
 
-role_allow(_role: OrganizationRole{name: "BILLING"}, "READ_BILLING", organization: Organization);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", organization: Organization);
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_REPOS", organization: Organization);
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_TEAMS", organization: Organization);
+role_allow(_role: OrganizationRole{name: "BILLING"}, "READ_BILLING", _organization: Organization);
+role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", _organization: Organization);
+role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_REPOS", _organization: Organization);
+role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_TEAMS", _organization: Organization);
 
 ## OrganizationRole Permissions
 
 ### Organization owners can access the Organization's roles
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", role_resource: OrganizationRole);
+role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _role_resource: OrganizationRole);
 
 ## Repository Permissions
 
 ### Read role can read the repository
-role_allow(_role: RepositoryRole{name: "READ"}, "READ", repo: Repository);
+role_allow(_role: RepositoryRole{name: "READ"}, "READ", _repo: Repository);
 
 ### All organization members can create repositories
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "CREATE", repository: Repository);
+role_allow(_role: OrganizationRole{name: "MEMBER"}, "CREATE", _repository: Repository);
 
 ### Organization "Read" base roles
 role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
@@ -86,23 +86,23 @@ role_allow(role: RepositoryRole, "READ", issue: Issue) if
     repo matches Repository and
     role_allow(role, "READ", repo);
 
-role_allow(_role: RepositoryRole{name: "READ"}, "LIST_ISSUES", repository: Repository);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", repository: Repository);
-role_allow(_role: RepositoryRole{name: "ADMIN"}, "LIST_ROLES", repository: Repository);
+role_allow(_role: RepositoryRole{name: "READ"}, "LIST_ISSUES", _repository: Repository);
+role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", _repository: Repository);
+role_allow(_role: RepositoryRole{name: "ADMIN"}, "LIST_ROLES", _repository: Repository);
 
 
 ## RepositoryRole Permissions
 
-role_allow(_role: RepositoryRole{name: "ADMIN"}, "READ", role_resource: RepositoryRole);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", role_resource: RepositoryRole);
+role_allow(_role: RepositoryRole{name: "ADMIN"}, "READ", _role_resource: RepositoryRole);
+role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _role_resource: RepositoryRole);
 
 ## Team Permissions
 
 ### Organization owners can view all teams in the org
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", team: Team);
+role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _team: Team);
 
 ### Team members are able to see their own teams
-role_allow(_role: TeamRole{name: "MEMBER"}, "READ", team: Team);
+role_allow(_role: TeamRole{name: "MEMBER"}, "READ", _team: Team);
 
 # ROLE-ROLE RELATIONSHIPS
 
