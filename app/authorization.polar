@@ -23,17 +23,17 @@ user_in_role(user: User, role, repo: Repository) if
 
 ### An organization's roles apply to its child repositories
 resource_role_applies_to(repo: Repository, parent_org) if
-    parent_org := repo.organization and
+    parent_org = repo.organization and
     parent_org matches Organization;
 
 ### An organization's roles apply to its child teams
 resource_role_applies_to(team: Team, parent_org) if
-    parent_org := team.organization and
+    parent_org = team.organization and
     parent_org matches Organization;
 
 ### An organization's roles apply to its child roles
 resource_role_applies_to(role: OrganizationRole, parent_org) if
-    parent_org := role.organization and
+    parent_org = role.organization and
     parent_org matches Organization;
 
 ### A repository's roles apply to its child roles
@@ -43,12 +43,12 @@ resource_role_applies_to(role: RepositoryRole, parent_repo) if
 
 ### An organization's roles apply to its child repository's roles
 resource_role_applies_to(role: RepositoryRole, parent_org) if
-    parent_org := role.repository.organization and
+    parent_org = role.repository.organization and
     parent_org matches Organization;
 
 ### A repository's roles apply to its child issues
 resource_role_applies_to(issue: Issue, parent_repo) if
-    parent_repo := issue.repository;
+    parent_repo = issue.repository;
 
 # ROLE-PERMISSION RELATIONSHIPS
 
@@ -82,7 +82,7 @@ role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
 
 ### RepositoryRoles with read access can also read the repository's issues
 role_allow(role: RepositoryRole, "READ", issue: Issue) if
-    repo := issue.repository and
+    repo = issue.repository and
     repo matches Repository and
     role_allow(role, "READ", repo);
 
