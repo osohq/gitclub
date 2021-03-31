@@ -83,7 +83,7 @@ To run the application, complete the following steps:
 1. Set up a virtual environment and install required packages
 
    ```
-   $ python -m venv venv/
+   $ python -m venv venv && . venv/bin/activate
 
    $ pip install -r requirements.txt
    ```
