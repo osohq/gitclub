@@ -9,10 +9,7 @@ bp = Blueprint("routes", __name__)
 
 @bp.route("/", methods=["GET"])
 def hello():
-    if "current_user" in g:
-        return g.current_user.repr()
-    else:
-        return f'Please "log in"'
+    return g.current_user.repr()
 
 
 @bp.route("/orgs", methods=["GET"])
