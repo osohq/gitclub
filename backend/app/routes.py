@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request, current_app
+from flask import Blueprint, g, request, current_app, jsonify
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
 
@@ -15,7 +15,7 @@ def hello():
 @bp.route("/orgs", methods=["GET"])
 def orgs_index():
     orgs = g.auth_session.query(Organization).all()
-    return {"orgs": [org.repr() for org in orgs]}
+    return jsonify([org.repr() for org in orgs])
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
@@ -24,7 +24,7 @@ def repos_index(org_id):
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
 
     repos = g.auth_session.query(Repository).filter_by(organization=org)
-    return {f"repos": [repo.repr() for repo in repos]}
+    return jsonify([repo.repr() for repo in repos])
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
@@ -38,7 +38,8 @@ def repos_new(org_id):
     current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
     g.basic_session.add(repo)
     g.basic_session.commit()
-    return f"created a new repo for org: {org_id}, {repo_name}"
+    breakpoint()  # TODO(gj): how do we get ID of newly created repo?
+    return repo.repr(), 201
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
@@ -48,7 +49,7 @@ def repos_show(org_id, repo_id):
 
     # Authorize repo access
     current_app.oso.authorize(repo, actor=g.current_user, action="READ")
-    return {f"repo for org {org_id}": repo.repr()}
+    return repo.repr()
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
@@ -58,11 +59,10 @@ def issues_index(org_id, repo_id):
 
     # Get authorized issues
     issues = g.auth_session.query(Issue).filter(Issue.repository.has(id=repo_id))
-    return {
-        f"issues for org {org_id}, repo {repo_id}": [issue.repr() for issue in issues]
-    }
+    return jsonify([issue.repr() for issue in issues])
 
 
+# TODO(gj): not currently using 'org_id'
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
 def repo_roles_index(org_id, repo_id):
     if request.method == "GET":
@@ -70,8 +70,8 @@ def repo_roles_index(org_id, repo_id):
         current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ROLES")
 
         roles = oso_roles.get_resource_roles(g.auth_session, repo)
-        return {
-            f"roles": [
+        return jsonify(
+            [
                 {
                     "user": role.user.repr() if role.user else {"email": "none"},
                     "team": role.team.repr() if role.team else {"name": "none"},
@@ -79,8 +79,8 @@ def repo_roles_index(org_id, repo_id):
                 }
                 for role in roles
             ]
-        }
-    if request.method == "POST":
+        )
+    elif request.method == "POST":
         # TODO: test this
         content = request.get_json()
         print(content)
@@ -90,7 +90,7 @@ def repo_roles_index(org_id, repo_id):
         user = g.auth_session.query(User).filter_by(email=user_email).first()
         repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
         oso_roles.add_user_role(g.auth_session, user, repo, role_name, commit=True)
-        return f"created a new repo role for repo: {repo_id}, {role_name}"
+        return {}, 201
 
 
 @bp.route("/orgs/<int:org_id>/teams", methods=["GET"])
@@ -99,7 +99,7 @@ def teams_index(org_id):
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_TEAMS")
 
     teams = g.auth_session.query(Team).filter(Team.organization.has(id=org_id))
-    return {f"teams for org_id {org_id}": [team.repr() for team in teams]}
+    return jsonify([team.repr() for team in teams])
 
 
 @bp.route("/orgs/<int:org_id>/teams/<int:team_id>", methods=["GET"])
@@ -113,7 +113,7 @@ def teams_show(org_id, team_id):
 def billing_show(org_id):
     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
     current_app.oso.authorize(org, actor=g.current_user, action="READ_BILLING")
-    return {f"billing_address": org.billing_address}
+    return {"billing_address": org.billing_address}
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
@@ -123,6 +123,4 @@ def org_roles_index(org_id):
     current_app.oso.authorize(org, actor=g.current_user, action="LIST_ROLES")
 
     roles = oso_roles.get_resource_roles(g.auth_session, org)
-    return {
-        f"roles": [{"user": role.user.repr(), "role": role.repr()} for role in roles]
-    }
+    return jsonify([{"user": role.user.repr(), "role": role.repr()} for role in roles])
