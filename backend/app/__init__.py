@@ -6,8 +6,6 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base, User
 from .fixtures import load_fixture_data
 
-from werkzeug.exceptions import Unauthorized
-
 from flask_oso import FlaskOso
 from oso import Oso
 from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_session
@@ -50,13 +48,17 @@ def create_app(db_path=None, load_fixtures=False):
         if "current_user" not in g:
             email = request.headers.get("user")
             if not email:
-                return Unauthorized("user not found")
+                return {}, 401
             try:
                 # Set basic (non-auth) session for this request
                 g.basic_session = session
 
                 # Set user for this request
-                g.current_user = session.query(User).filter(User.email == email).first()
+                user = session.query(User).filter(User.email == email).first()
+                if user is None:
+                    return {}, 401
+                g.current_user = user
+
                 # Set action for this request
                 actions = {"GET": "READ", "POST": "CREATE"}
                 g.current_action = actions[request.method]
@@ -65,7 +67,7 @@ def create_app(db_path=None, load_fixtures=False):
                 g.auth_session = AuthorizedSession()
 
             except Exception as e:
-                return Unauthorized("user not found")
+                return {}, 401
 
     return app
 
