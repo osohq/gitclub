@@ -38,11 +38,12 @@ def create_app(db_path=None, load_fixtures=False):
         get_action=lambda: g.current_action,
     )
     Session = sessionmaker(bind=engine)
-    session = Session()
 
     # optionally load fixture data
     if load_fixtures:
+        session = Session()
         load_fixture_data(session)
+        session.close()
 
     @app.before_request
     def set_current_user_and_session():
@@ -54,7 +55,7 @@ def create_app(db_path=None, load_fixtures=False):
                 g.current_user = None
 
         # Set basic (non-auth) session for this request
-        g.basic_session = session
+        g.basic_session = Session()
 
         # Set action for this request
         actions = {"GET": "READ", "POST": "CREATE"}
@@ -69,6 +70,12 @@ def create_app(db_path=None, load_fixtures=False):
         res.headers.add("Access-Control-Allow-Headers", "Accept,Content-Type")
         res.headers.add("Access-Control-Allow-Methods", "GET,OPTIONS,POST")
         res.headers.add("Access-Control-Allow-Credentials", "true")
+        return res
+
+    @app.after_request
+    def close_sessions(res):
+        g.basic_session.close()
+        g.auth_session.close()
         return res
 
     return app
