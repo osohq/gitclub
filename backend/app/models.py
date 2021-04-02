@@ -31,7 +31,12 @@ class Organization(Base):
     billing_address = Column(String())
 
     def repr(self):
-        return {"id": self.id, "name": self.name}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "billing_address": self.billing_address,
+            "base_repo_role": self.base_repo_role,
+        }
 
 
 class User(Base):
