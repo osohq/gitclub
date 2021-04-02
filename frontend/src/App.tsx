@@ -1,4 +1,10 @@
-import React, { ChangeEvent, FormEvent, useContext, useState } from 'react';
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import {
   Link,
   LinkProps,
@@ -9,26 +15,61 @@ import {
 
 import './App.css';
 
-type User = string | null;
-const UserContext = React.createContext<User>(null);
+type UserDetails = { id: number; email: string };
+
+class User {
+  id: number;
+  email: string;
+
+  constructor({ id, email }: UserDetails) {
+    this.id = id;
+    this.email = email;
+  }
+}
+
+type LoggedInUser = User | 'Guest';
+
+const UserContext = React.createContext<LoggedInUser>('Guest');
 
 const Home = (_: RouteComponentProps) => <h1>GitClub</h1>;
 
-type LoginProps = LogoutProps;
+type SetUserProp = { setUser: (user: LoggedInUser) => void };
+
+type LoginProps = RouteComponentProps & SetUserProp;
+
+async function login(email: string): Promise<User | undefined> {
+  try {
+    const res = await fetch('http://localhost:5000/login', {
+      body: JSON.stringify({ user: email }),
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+    if (res.status === 200) {
+      const details: UserDetails = await res.json();
+      return new User(details);
+    } else {
+      console.error('TODO(gj): better error handling -- alert?');
+    }
+  } catch (e) {
+    console.error('wot', e);
+  }
+}
 
 function Login({ setUser }: LoginProps) {
   const user = useContext(UserContext);
   const [email, setEmail] = useState<string>('');
 
   // If a logged-in user navigates to this page, redirect to home.
-  if (user) return <Redirect to="/" noThrow />;
+  if (user !== 'Guest') return <Redirect to="/" noThrow />;
 
-  function handleSubmit(e: FormEvent) {
-    if (email.replaceAll(' ', '')) {
-      setUser(email);
-      setEmail('');
-    }
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const user = await login(email);
+    if (user) setUser(user);
   }
 
   function handleChange({ target: { value } }: ChangeEvent<HTMLInputElement>) {
@@ -48,10 +89,6 @@ function Login({ setUser }: LoginProps) {
   );
 }
 
-type SetUserProp = { setUser: (user: User) => void };
-
-type LogoutProps = RouteComponentProps & SetUserProp;
-
 const NavLink = (props: React.PropsWithoutRef<LinkProps<{}>>) => (
   <Link
     {...props}
@@ -69,29 +106,66 @@ type ParentProps = RouteComponentProps &
 function Parent({ children, setUser }: ParentProps) {
   const user = useContext(UserContext);
 
-  function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
-    setUser(null);
+  async function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5000/logout', {
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+      if (res.status === 200) {
+        setUser('Guest');
+      } else {
+        console.error('sad trombone');
+      }
+    } catch (e) {
+      console.error('wat', e);
+    }
   }
+
+  const home = <NavLink to="/">Home</NavLink>;
+  const login = <NavLink to="/login">Login</NavLink>;
+  const logout = (
+    <NavLink to="/logout" onClick={handleLogout}>
+      Logout
+    </NavLink>
+  );
+  const nav =
+    user === 'Guest' ? (
+      <nav>
+        {home} {login}
+      </nav>
+    ) : (
+      <nav>
+        {home} {logout} Logged in as {user.email}
+      </nav>
+    );
 
   return (
     <div>
-      <nav>
-        <NavLink to="/">Home</NavLink>{' '}
-        {!user && <NavLink to="/login">Login</NavLink>}
-        {user && (
-          <NavLink to="/logout" onClick={handleLogout}>
-            Logout
-          </NavLink>
-        )}
-      </nav>
+      {nav}
       {children}
     </div>
   );
 }
 
 function App() {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<LoggedInUser>('Guest');
+
+  useEffect(() => {
+    (async function () {
+      try {
+        const res = await fetch('http://localhost:5000/whoami', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        if (res.status === 200) {
+          const details: UserDetails | null = await res.json();
+          if (details) setUser(new User(details));
+        }
+      } catch (_) {}
+    })();
+  }, []);
 
   return (
     <UserContext.Provider value={user}>

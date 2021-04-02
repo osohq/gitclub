@@ -1,4 +1,4 @@
-from flask import g, Flask, request
+from flask import g, Flask, request, session as flask_session
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -24,6 +24,7 @@ def create_app(db_path=None, load_fixtures=False):
 
     # init app
     app = Flask(__name__)
+    app.secret_key = b"ball outside of the school"
     app.register_blueprint(routes.bp)
 
     # init oso
@@ -45,29 +46,30 @@ def create_app(db_path=None, load_fixtures=False):
 
     @app.before_request
     def set_current_user_and_session():
+        flask_session.permanent = True
         if "current_user" not in g:
-            email = request.headers.get("user")
-            if not email:
-                return {}, 401
-            try:
-                # Set basic (non-auth) session for this request
-                g.basic_session = session
+            if "current_user" in flask_session:
+                g.current_user = flask_session.get("current_user")
+            else:
+                g.current_user = None
 
-                # Set user for this request
-                user = session.query(User).filter(User.email == email).first()
-                if user is None:
-                    return {}, 401
-                g.current_user = user
+        # Set basic (non-auth) session for this request
+        g.basic_session = session
 
-                # Set action for this request
-                actions = {"GET": "READ", "POST": "CREATE"}
-                g.current_action = actions[request.method]
+        # Set action for this request
+        actions = {"GET": "READ", "POST": "CREATE"}
+        g.current_action = actions.get(request.method)
 
-                # Set auth session for this request
-                g.auth_session = AuthorizedSession()
+        # Set auth session for this request
+        g.auth_session = AuthorizedSession()
 
-            except Exception as e:
-                return {}, 401
+    @app.after_request
+    def add_cors_headers(res):
+        res.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        res.headers.add("Access-Control-Allow-Headers", "Accept,Content-Type")
+        res.headers.add("Access-Control-Allow-Methods", "GET,OPTIONS,POST")
+        res.headers.add("Access-Control-Allow-Credentials", "true")
+        return res
 
     return app
 

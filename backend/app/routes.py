@@ -1,15 +1,34 @@
-from flask import Blueprint, g, request, current_app, jsonify
+from flask import Blueprint, g, request, current_app, jsonify, session as flask_session
+from sqlalchemy_oso import roles as oso_roles
+
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
-
-from sqlalchemy_oso import roles as oso_roles
 
 bp = Blueprint("routes", __name__)
 
 
-@bp.route("/", methods=["GET"])
-def hello():
-    return g.current_user.repr()
+@bp.route("/login", methods=["POST"])
+def login():
+    payload = request.get_json(force=True)
+    if "user" not in payload:
+        return {}, 400
+    user = g.basic_session.query(User).filter(User.email == payload["user"]).first()
+    if user is None:
+        flask_session.pop("current_user", None)
+        return {}, 401
+    flask_session["current_user"] = user.repr()
+    return flask_session["current_user"]
+
+
+@bp.route("/whoami", methods=["GET"])
+def whoami():
+    return jsonify(g.current_user)
+
+
+@bp.route("/logout", methods=["GET"])
+def logout():
+    flask_session.pop("current_user", None)
+    return {}
 
 
 @bp.route("/orgs", methods=["GET"])
