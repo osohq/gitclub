@@ -1,0 +1,262 @@
+import {
+  ChangeEvent,
+  Dispatch,
+  FormEvent,
+  Fragment,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { Link, RouteComponentProps } from '@reach/router';
+
+import { UserContext } from './App';
+import { camelizeKeys, obj, snakeifyKeys } from './helpers';
+import { User } from './User';
+
+type NewOrgParams = {
+  name: string;
+  billingAddress: string;
+  baseRepoRole: string;
+};
+
+class Org {
+  id: number;
+  name: string;
+  billingAddress: string;
+  baseRepoRole: string;
+
+  constructor({ id, name, billingAddress, baseRepoRole }: Org) {
+    this.id = id;
+    this.name = name;
+    this.billingAddress = billingAddress;
+    this.baseRepoRole = baseRepoRole;
+  }
+}
+
+async function createOrg(details: NewOrgParams): Promise<Org | undefined> {
+  try {
+    const res = await fetch('http://localhost:5000/orgs', {
+      body: JSON.stringify(snakeifyKeys(details)),
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+    if (res.status === 201) {
+      const data = await res.json();
+      return new Org(camelizeKeys(data) as Org);
+    } else {
+      console.error('TODO(gj): better error handling -- alert?');
+    }
+  } catch (e) {
+    console.error('wot', e);
+  }
+}
+
+interface OrgNewProps extends RouteComponentProps {
+  setOrgs: Dispatch<SetStateAction<Org[]>>;
+}
+
+async function fetchRepoRoles(): Promise<string[] | undefined> {
+  try {
+    const res = await fetch('http://localhost:5000/repo_role_choices', {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status === 200) return await res.json();
+  } catch (_) {}
+}
+
+function OrgNew({ setOrgs }: OrgNewProps) {
+  const user = useContext(UserContext);
+  const [details, setDetails] = useState<NewOrgParams>({
+    name: '',
+    billingAddress: '',
+    baseRepoRole: '',
+  });
+  const [repoRoles, setRepoRoles] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const repoRoles = await fetchRepoRoles();
+      if (repoRoles) {
+        setDetails((details) => ({ ...details, baseRepoRole: repoRoles[0] }));
+        setRepoRoles(repoRoles);
+      }
+    })();
+  }, []);
+
+  if (user === 'Guest') return null;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const { name, billingAddress } = details;
+    // Don't allow empty strings.
+    if (!name.replaceAll(' ', '') || !billingAddress.replaceAll(' ', ''))
+      return;
+    const org = await createOrg(details);
+    if (org) {
+      setDetails({ name: '', billingAddress: '', baseRepoRole: repoRoles[0] });
+      setOrgs((orgs) => [...orgs, org]);
+    }
+  }
+
+  function handleChange({
+    target: { name, value },
+  }: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    setDetails({ ...details, [name]: value });
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {(['name', 'billingAddress'] as const).map((field) => (
+        <Fragment key={field}>
+          <label>
+            {field}:{' '}
+            <input
+              type="text"
+              name={field}
+              value={details[field]}
+              onChange={handleChange}
+            />
+          </label>{' '}
+        </Fragment>
+      ))}
+      {repoRoles.length && (
+        <label>
+          base repo role:{' '}
+          <select
+            name="baseRepoRole"
+            value={details.baseRepoRole}
+            onChange={handleChange}
+          >
+            {repoRoles.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}{' '}
+      <input type="submit" value="Create" />
+    </form>
+  );
+}
+
+async function fetchOrgs(): Promise<Org[] | undefined> {
+  try {
+    const res = await fetch('http://localhost:5000/orgs', {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status === 200) {
+      const data: obj[] = await res.json();
+      return data.map((o) => new Org(camelizeKeys(o) as Org));
+    }
+  } catch (_) {}
+}
+
+export function OrgIndex(_: RouteComponentProps) {
+  const [orgs, setOrgs] = useState<Org[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const orgs = await fetchOrgs();
+      if (orgs) setOrgs(orgs);
+    })();
+  }, []);
+
+  return (
+    <>
+      <OrgNew setOrgs={setOrgs} />
+      <ul>
+        {orgs.map((o) => (
+          <li key={'org-' + o.id}>
+            <Link to={`/orgs/${o.id}`}>
+              {o.id} - {o.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+export interface OrgShowProps extends RouteComponentProps {
+  orgId?: string;
+}
+
+export function OrgShow({ orgId }: OrgShowProps) {
+  const [org, setOrg] = useState<Org>();
+
+  useEffect(() => {
+    (async function () {
+      try {
+        const res = await fetch(`http://localhost:5000/orgs/${orgId}`, {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        if (res.status === 200) {
+          const data = await res.json();
+          setOrg(new Org(camelizeKeys(data) as Org));
+        }
+      } catch (_) {}
+    })();
+  }, [orgId]);
+
+  if (!org) return null;
+
+  return (
+    <>
+      <h1>{org.name}</h1>
+      <h4>Billing Address: {org.billingAddress}</h4>
+      <h4>Base Repo Role: {org.baseRepoRole}</h4>
+
+      <UserRoles orgId={orgId} />
+    </>
+  );
+}
+
+type UserRole = { user: User; role: string };
+
+async function fetchOrgRoles(orgId?: string): Promise<UserRole[] | undefined> {
+  try {
+    const res = await fetch(`http://localhost:5000/orgs/${orgId}/roles`, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status === 200) {
+      const data: obj[] = await res.json();
+      return data.map((o) => ({
+        user: new User(o.user as User),
+        role: (o.role as { id: number; name: string }).name as string,
+      }));
+    }
+  } catch (_) {}
+}
+
+type UserRolesProps = OrgShowProps;
+
+export function UserRoles({ orgId }: UserRolesProps) {
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const roles = await fetchOrgRoles(orgId);
+      if (roles) setUserRoles(roles);
+    })();
+  }, []);
+
+  return (
+    <ul>
+      {userRoles.map((ur) => (
+        <li key={'user-role-' + ur.user.id + ur.role}>
+          <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> - {ur.role}
+        </li>
+      ))}
+    </ul>
+  );
+}

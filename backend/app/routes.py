@@ -33,8 +33,31 @@ def logout():
 
 @bp.route("/orgs", methods=["GET"])
 def orgs_index():
-    orgs = g.auth_session.query(Organization).all()
+    orgs = g.basic_session.query(Organization).all()
     return jsonify([org.repr() for org in orgs])
+
+
+@bp.route("/orgs", methods=["POST"])
+def orgs_create():
+    payload = request.get_json(force=True)
+    org = Organization(**payload)
+    oso_roles.add_user_role(g.basic_session, g.current_user, org, "OWNER", commit=True)
+    # current_app.oso.authorize(org)
+    g.basic_session.add(org)
+    g.basic_session.commit()
+    return org.repr(), 201
+
+
+@bp.route("/orgs/<int:org_id>", methods=["GET"])
+def orgs_show(org_id):
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    return org.repr()
+
+
+# TODO(gj): maybe in the future each org can customize its repo roles.
+@bp.route("/repo_role_choices", methods=["GET"])
+def repo_role_choices_index():
+    return jsonify(RepositoryRole.choices)
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
@@ -81,35 +104,35 @@ def issues_index(org_id, repo_id):
     return jsonify([issue.repr() for issue in issues])
 
 
-# TODO(gj): not currently using 'org_id'
-@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
-def repo_roles_index(org_id, repo_id):
-    if request.method == "GET":
-        repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
-        current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ROLES")
-
-        roles = oso_roles.get_resource_roles(g.auth_session, repo)
-        return jsonify(
-            [
-                {
-                    "user": role.user.repr() if role.user else {"email": "none"},
-                    "team": role.team.repr() if role.team else {"name": "none"},
-                    "role": role.repr(),
-                }
-                for role in roles
-            ]
-        )
-    elif request.method == "POST":
-        # TODO: test this
-        content = request.get_json()
-        print(content)
-        role_info = content.get("role")
-        role_name = role_info.get("name")
-        user_email = role_info.get("user")
-        user = g.auth_session.query(User).filter_by(email=user_email).first()
-        repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
-        oso_roles.add_user_role(g.auth_session, user, repo, role_name, commit=True)
-        return {}, 201
+# # TODO(gj): not currently using 'org_id'
+# @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
+# def repo_roles_index(org_id, repo_id):
+#     if request.method == "GET":
+#         repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+#         current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ROLES")
+#
+#         roles = oso_roles.get_resource_roles(g.auth_session, repo)
+#         return jsonify(
+#             [
+#                 {
+#                     "user": role.user.repr() if role.user else {"email": "none"},
+#                     "team": role.team.repr() if role.team else {"name": "none"},
+#                     "role": role.repr(),
+#                 }
+#                 for role in roles
+#             ]
+#         )
+#     elif request.method == "POST":
+#         # TODO: test this
+#         content = request.get_json()
+#         print(content)
+#         role_info = content.get("role")
+#         role_name = role_info.get("name")
+#         user_email = role_info.get("user")
+#         user = g.auth_session.query(User).filter_by(email=user_email).first()
+#         repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
+#         oso_roles.add_user_role(g.auth_session, user, repo, role_name, commit=True)
+#         return {}, 201
 
 
 @bp.route("/orgs/<int:org_id>/teams", methods=["GET"])
@@ -139,7 +162,7 @@ def billing_show(org_id):
 def org_roles_index(org_id):
     # Get authorized roles for this organization
     org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    current_app.oso.authorize(org, actor=g.current_user, action="LIST_ROLES")
+    # current_app.oso.authorize(org, actor=g.current_user, action="LIST_ROLES")
 
-    roles = oso_roles.get_resource_roles(g.auth_session, org)
+    roles = oso_roles.get_resource_roles(g.basic_session, org)
     return jsonify([{"user": role.user.repr(), "role": role.repr()} for role in roles])
