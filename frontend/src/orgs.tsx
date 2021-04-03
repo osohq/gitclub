@@ -60,7 +60,7 @@ interface OrgNewProps extends RouteComponentProps {
   setOrgs: Dispatch<SetStateAction<Org[]>>;
 }
 
-async function fetchRepoRoles(): Promise<string[] | undefined> {
+async function fetchRepoRoleChoices(): Promise<string[] | undefined> {
   try {
     const res = await fetch('http://localhost:5000/repo_role_choices', {
       credentials: 'include',
@@ -81,7 +81,7 @@ function OrgNew({ setOrgs }: OrgNewProps) {
 
   useEffect(() => {
     (async () => {
-      const repoRoles = await fetchRepoRoles();
+      const repoRoles = await fetchRepoRoleChoices();
       if (repoRoles) {
         setDetails((details) => ({ ...details, baseRepoRole: repoRoles[0] }));
         setRepoRoles(repoRoles);
@@ -115,7 +115,7 @@ function OrgNew({ setOrgs }: OrgNewProps) {
       {(['name', 'billingAddress'] as const).map((field) => (
         <Fragment key={field}>
           <label>
-            {field}:{' '}
+            {field.replace(/[A-Z]/g, (l) => ' ' + l.toLowerCase())}:{' '}
             <input
               type="text"
               name={field}
@@ -171,7 +171,9 @@ export function OrgIndex(_: RouteComponentProps) {
 
   return (
     <>
+      <h2>Create new org</h2>
       <OrgNew setOrgs={setOrgs} />
+      <h2>Existing orgs</h2>
       <ul>
         {orgs.map((o) => (
           <li key={'org-' + o.id}>
@@ -185,12 +187,13 @@ export function OrgIndex(_: RouteComponentProps) {
   );
 }
 
-export interface OrgShowProps extends RouteComponentProps {
+interface OrgShowProps extends RouteComponentProps {
   orgId?: string;
 }
 
 export function OrgShow({ orgId }: OrgShowProps) {
   const [org, setOrg] = useState<Org>();
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
   useEffect(() => {
     (async function () {
@@ -207,7 +210,7 @@ export function OrgShow({ orgId }: OrgShowProps) {
     })();
   }, [orgId]);
 
-  if (!org) return null;
+  if (!orgId || !org) return null;
 
   return (
     <>
@@ -215,7 +218,12 @@ export function OrgShow({ orgId }: OrgShowProps) {
       <h4>Billing Address: {org.billingAddress}</h4>
       <h4>Base Repo Role: {org.baseRepoRole}</h4>
 
-      <UserRoles orgId={orgId} />
+      <NewUserRole orgId={orgId} setUserRoles={setUserRoles} />
+      <UserRoles
+        orgId={orgId}
+        userRoles={userRoles}
+        setUserRoles={setUserRoles}
+      />
     </>
   );
 }
@@ -238,25 +246,168 @@ async function fetchOrgRoles(orgId?: string): Promise<UserRole[] | undefined> {
   } catch (_) {}
 }
 
-type UserRolesProps = OrgShowProps;
+type UserRolesProps = NewUserRoleProps & {
+  userRoles: UserRole[];
+};
 
-export function UserRoles({ orgId }: UserRolesProps) {
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-
+function UserRoles({ orgId, userRoles, setUserRoles }: UserRolesProps) {
   useEffect(() => {
     (async () => {
       const roles = await fetchOrgRoles(orgId);
       if (roles) setUserRoles(roles);
     })();
-  }, []);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <ul>
-      {userRoles.map((ur) => (
-        <li key={'user-role-' + ur.user.id + ur.role}>
-          <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> - {ur.role}
-        </li>
-      ))}
-    </ul>
+    <>
+      <h2>Role assignments</h2>
+      <ul>
+        {userRoles.map((ur) => (
+          <li key={'user-role-' + ur.user.id + ur.role}>
+            <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> - {ur.role}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+async function fetchPotentialUsers(
+  orgId?: string
+): Promise<User[] | undefined> {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/orgs/${orgId}/potential_users`,
+      {
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      }
+    );
+    if (res.status === 200) {
+      const data: User[] = await res.json();
+      return data.map((o) => new User(o));
+    }
+  } catch (_) {}
+}
+
+type NewUserRoleProps = {
+  orgId: string;
+  setUserRoles: Dispatch<SetStateAction<UserRole[]>>;
+};
+
+async function fetchOrgRoleChoices(): Promise<string[] | undefined> {
+  try {
+    const res = await fetch('http://localhost:5000/org_role_choices', {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status === 200) return await res.json();
+  } catch (_) {}
+}
+
+async function createOrgRole(
+  orgId: string,
+  details: NewUserRoleParams
+): Promise<UserRole | undefined> {
+  try {
+    const res = await fetch(`http://localhost:5000/orgs/${orgId}/roles`, {
+      body: JSON.stringify(snakeifyKeys(details)),
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+    if (res.status === 201) {
+      const data: obj = await res.json();
+      return {
+        user: new User(data.user as User),
+        role: (data.role as { id: number; name: string }).name as string,
+      };
+    } else {
+      console.error('TODO(gj): better error handling -- alert?');
+    }
+  } catch (e) {
+    console.error('wot', e);
+  }
+}
+
+type NewUserRoleParams = { userId: number; role: string };
+
+function NewUserRole({ orgId, setUserRoles }: NewUserRoleProps) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [userRole, setUserRole] = useState<NewUserRoleParams>({
+    userId: 0,
+    role: '',
+  });
+  const [refetch, setRefetch] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const users = await fetchPotentialUsers(orgId);
+      if (users) {
+        setUsers(users);
+        setUserRole((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
+      }
+    })();
+  }, [orgId, refetch]);
+
+  useEffect(() => {
+    (async () => {
+      const roles = await fetchOrgRoleChoices();
+      if (roles) {
+        setRoles(roles);
+        setUserRole((ur) => ({ ...ur, role: roles[0] }));
+      }
+    })();
+  }, []);
+
+  if (!users.length) return null;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const newUserRole = await createOrgRole(orgId, userRole);
+    if (newUserRole) {
+      setRefetch((x) => !x);
+      setUserRole((ur) => ({ ...ur, userId: 0 }));
+      setUserRoles((urs) => [...urs, { ...newUserRole }]);
+    }
+  }
+
+  function handleChange({
+    target: { name, value },
+  }: ChangeEvent<HTMLSelectElement>) {
+    setUserRole((ur) => ({ ...ur, [name]: value }));
+  }
+
+  return (
+    <>
+      <h2>Assign new role</h2>
+      <form onSubmit={handleSubmit}>
+        <label>
+          user:{' '}
+          <select name="userId" value={userRole.userId} onChange={handleChange}>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.email}
+              </option>
+            ))}
+          </select>
+        </label>{' '}
+        <label>
+          role:{' '}
+          <select name="role" value={userRole.role} onChange={handleChange}>
+            {roles.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </label>{' '}
+        <input type="submit" value="Assign" />
+      </form>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 from flask import Blueprint, g, request, current_app, jsonify, session as flask_session
 from sqlalchemy_oso import roles as oso_roles
+from sqlalchemy import column
 
 from .models import User, Organization, Team, Repository, Issue
 from .models import RepositoryRole, OrganizationRole, TeamRole
@@ -58,6 +59,21 @@ def orgs_show(org_id):
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_role_choices_index():
     return jsonify(RepositoryRole.choices)
+
+
+# TODO(gj): maybe in the future each org can customize its own roles.
+@bp.route("/org_role_choices", methods=["GET"])
+def org_role_choices_index():
+    return jsonify(OrganizationRole.choices)
+
+
+@bp.route("/orgs/<int:org_id>/potential_users", methods=["GET"])
+def org_potential_users_index(org_id):
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    user_roles = oso_roles.get_resource_roles(g.basic_session, org)
+    existing = [ur.user.id for ur in user_roles]
+    potentials = g.basic_session.query(User).filter(column("id").notin_(existing))
+    return jsonify([p.repr() for p in potentials.all()])
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
@@ -166,3 +182,14 @@ def org_roles_index(org_id):
 
     roles = oso_roles.get_resource_roles(g.basic_session, org)
     return jsonify([{"user": role.user.repr(), "role": role.repr()} for role in roles])
+
+
+@bp.route("/orgs/<int:org_id>/roles", methods=["POST"])
+def org_roles_create(org_id):
+    payload = request.get_json(force=True)
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    user = g.basic_session.query(User).filter_by(id=payload["user_id"]).first()
+    oso_roles.add_user_role(g.basic_session, user, org, payload["role"], commit=True)
+    # TODO(gj): it would be nice if add_user_role() returned the persisted role.
+    role = oso_roles.get_user_roles(g.basic_session, user, Organization, org.id)[0]
+    return {"user": role.user.repr(), "role": role.repr()}, 201
