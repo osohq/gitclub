@@ -48,14 +48,18 @@ def create_app(db_path=None, load_fixtures=False):
     @app.before_request
     def set_current_user_and_session():
         flask_session.permanent = True
+
+        session = Session()
         if "current_user" not in g:
-            if "current_user" in flask_session:
-                g.current_user = flask_session.get("current_user")
+            if "current_user_id" in flask_session:
+                user_id = flask_session.get("current_user_id")
+                user = session.query(User).filter(User.id == user_id).first()
+                g.current_user = user
             else:
                 g.current_user = None
 
         # Set basic (non-auth) session for this request
-        g.basic_session = Session()
+        g.basic_session = session
 
         # Set action for this request
         actions = {"GET": "READ", "POST": "CREATE"}

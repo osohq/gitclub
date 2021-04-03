@@ -12,22 +12,22 @@ def login():
     payload = request.get_json(force=True)
     if "user" not in payload:
         return {}, 400
-    user = g.basic_session.query(User).filter(User.email == payload["user"]).first()
+    user = g.basic_session.query(User).filter_by(email=payload["user"]).first()
     if user is None:
-        flask_session.pop("current_user", None)
+        flask_session.pop("current_user_id", None)
         return {}, 401
-    flask_session["current_user"] = user.repr()
-    return flask_session["current_user"]
+    flask_session["current_user_id"] = user.id
+    return {}
 
 
 @bp.route("/whoami", methods=["GET"])
 def whoami():
-    return jsonify(g.current_user)
+    return jsonify(g.current_user.repr())
 
 
 @bp.route("/logout", methods=["GET"])
 def logout():
-    flask_session.pop("current_user", None)
+    flask_session.pop("current_user_id", None)
     return {}
 
 
