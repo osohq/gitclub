@@ -194,6 +194,7 @@ interface OrgShowProps extends RouteComponentProps {
 export function OrgShow({ orgId }: OrgShowProps) {
   const [org, setOrg] = useState<Org>();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
     (async function () {
@@ -210,6 +211,13 @@ export function OrgShow({ orgId }: OrgShowProps) {
     })();
   }, [orgId]);
 
+  useEffect(() => {
+    (async () => {
+      const roles = await fetchOrgRoleChoices();
+      if (roles) setRoles(roles);
+    })();
+  }, []);
+
   if (!orgId || !org) return null;
 
   return (
@@ -218,11 +226,14 @@ export function OrgShow({ orgId }: OrgShowProps) {
       <h4>Billing Address: {org.billingAddress}</h4>
       <h4>Base Repo Role: {org.baseRepoRole}</h4>
 
-      <NewUserRole orgId={orgId} setUserRoles={setUserRoles} />
+      {roles.length && (
+        <NewUserRole orgId={orgId} setUserRoles={setUserRoles} roles={roles} />
+      )}
       <UserRoles
         orgId={orgId}
         userRoles={userRoles}
         setUserRoles={setUserRoles}
+        roles={roles}
       />
     </>
   );
@@ -250,7 +261,7 @@ type UserRolesProps = NewUserRoleProps & {
   userRoles: UserRole[];
 };
 
-function UserRoles({ orgId, userRoles, setUserRoles }: UserRolesProps) {
+function UserRoles({ orgId, userRoles, setUserRoles, roles }: UserRolesProps) {
   useEffect(() => {
     (async () => {
       const roles = await fetchOrgRoles(orgId);
@@ -258,13 +269,48 @@ function UserRoles({ orgId, userRoles, setUserRoles }: UserRolesProps) {
     })();
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function updateRole(user: User, role: string) {
+    try {
+      const res = await fetch(`http://localhost:5000/orgs/${orgId}/roles`, {
+        body: JSON.stringify({ user_id: user.id, role }),
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        method: 'PATCH',
+      });
+      if (res.status === 204) {
+        setUserRoles((urs) =>
+          // Assumes a user has a single role per org.
+          urs.map((ur) => (ur.user.id === user.id ? { ...ur, role } : ur))
+        );
+      } else {
+        console.error('TODO(gj): better error handling -- alert?');
+      }
+    } catch (e) {
+      console.error('wot', e);
+    }
+  }
+
   return (
     <>
       <h2>Role assignments</h2>
       <ul>
         {userRoles.map((ur) => (
           <li key={'user-role-' + ur.user.id + ur.role}>
-            <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> - {ur.role}
+            <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> -{' '}
+            <select
+              name="role"
+              value={ur.role}
+              onChange={({ target: { value } }) => updateRole(ur.user, value)}
+            >
+              {roles.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>{' '}
           </li>
         ))}
       </ul>
@@ -293,6 +339,7 @@ async function fetchPotentialUsers(
 type NewUserRoleProps = {
   orgId: string;
   setUserRoles: Dispatch<SetStateAction<UserRole[]>>;
+  roles: string[];
 };
 
 async function fetchOrgRoleChoices(): Promise<string[] | undefined> {
@@ -335,12 +382,11 @@ async function createOrgRole(
 
 type NewUserRoleParams = { userId: number; role: string };
 
-function NewUserRole({ orgId, setUserRoles }: NewUserRoleProps) {
+function NewUserRole({ orgId, setUserRoles, roles }: NewUserRoleProps) {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<string[]>([]);
   const [userRole, setUserRole] = useState<NewUserRoleParams>({
     userId: 0,
-    role: '',
+    role: roles[0],
   });
   const [refetch, setRefetch] = useState(false);
 
@@ -353,16 +399,6 @@ function NewUserRole({ orgId, setUserRoles }: NewUserRoleProps) {
       }
     })();
   }, [orgId, refetch]);
-
-  useEffect(() => {
-    (async () => {
-      const roles = await fetchOrgRoleChoices();
-      if (roles) {
-        setRoles(roles);
-        setUserRole((ur) => ({ ...ur, role: roles[0] }));
-      }
-    })();
-  }, []);
 
   if (!users.length) return null;
 

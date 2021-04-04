@@ -72,7 +72,7 @@ def create_app(db_path=None, load_fixtures=False):
     def add_cors_headers(res):
         res.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         res.headers.add("Access-Control-Allow-Headers", "Accept,Content-Type")
-        res.headers.add("Access-Control-Allow-Methods", "GET,OPTIONS,POST")
+        res.headers.add("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,POST")
         res.headers.add("Access-Control-Allow-Credentials", "true")
         return res
 
