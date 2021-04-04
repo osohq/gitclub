@@ -204,3 +204,12 @@ def user_org_role_update(org_id):
         g.basic_session, user, org, payload["role"], commit=True
     )
     return {}, 204
+
+
+@bp.route("/orgs/<int:org_id>/roles", methods=["DELETE"])
+def user_org_role_delete(org_id):
+    payload = request.get_json(force=True)
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    user = g.basic_session.query(User).filter_by(id=payload["user_id"]).first()
+    oso_roles.delete_user_role(g.basic_session, user, org, payload["role"], commit=True)
+    return {}, 204

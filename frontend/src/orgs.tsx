@@ -195,6 +195,7 @@ export function OrgShow({ orgId }: OrgShowProps) {
   const [org, setOrg] = useState<Org>();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
+  const [refetch, setRefetch] = useState(false);
 
   useEffect(() => {
     (async function () {
@@ -227,13 +228,20 @@ export function OrgShow({ orgId }: OrgShowProps) {
       <h4>Base Repo Role: {org.baseRepoRole}</h4>
 
       {roles.length && (
-        <NewUserRole orgId={orgId} setUserRoles={setUserRoles} roles={roles} />
+        <NewUserRole
+          orgId={orgId}
+          setUserRoles={setUserRoles}
+          roles={roles}
+          refetch={refetch}
+          setRefetch={setRefetch}
+        />
       )}
       <UserRoles
         orgId={orgId}
         userRoles={userRoles}
         setUserRoles={setUserRoles}
         roles={roles}
+        setRefetch={setRefetch}
       />
     </>
   );
@@ -257,11 +265,17 @@ async function fetchOrgRoles(orgId?: string): Promise<UserRole[] | undefined> {
   } catch (_) {}
 }
 
-type UserRolesProps = NewUserRoleProps & {
+type UserRolesProps = RolesProps & {
   userRoles: UserRole[];
 };
 
-function UserRoles({ orgId, userRoles, setUserRoles, roles }: UserRolesProps) {
+function UserRoles({
+  orgId,
+  userRoles,
+  setUserRoles,
+  roles,
+  setRefetch,
+}: UserRolesProps) {
   useEffect(() => {
     (async () => {
       const roles = await fetchOrgRoles(orgId);
@@ -293,6 +307,30 @@ function UserRoles({ orgId, userRoles, setUserRoles, roles }: UserRolesProps) {
     }
   }
 
+  async function deleteRole(ur: UserRole) {
+    try {
+      const { user, role } = ur;
+      const res = await fetch(`http://localhost:5000/orgs/${orgId}/roles`, {
+        body: JSON.stringify({ user_id: user.id, role }),
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        method: 'DELETE',
+      });
+      if (res.status === 204) {
+        // Assumes a user has a single role per org.
+        setUserRoles((urs) => urs.filter((ur) => ur.user.id !== user.id));
+        setRefetch((x) => !x);
+      } else {
+        console.error('TODO(gj): better error handling -- alert?');
+      }
+    } catch (e) {
+      console.error('wot', e);
+    }
+  }
+
   return (
     <>
       <h2>Role assignments</h2>
@@ -311,6 +349,15 @@ function UserRoles({ orgId, userRoles, setUserRoles, roles }: UserRolesProps) {
                 </option>
               ))}
             </select>{' '}
+            -{' '}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                deleteRole(ur);
+              }}
+            >
+              delete
+            </button>
           </li>
         ))}
       </ul>
@@ -336,10 +383,15 @@ async function fetchPotentialUsers(
   } catch (_) {}
 }
 
-type NewUserRoleProps = {
+type RolesProps = {
   orgId: string;
   setUserRoles: Dispatch<SetStateAction<UserRole[]>>;
   roles: string[];
+  setRefetch: Dispatch<SetStateAction<boolean>>;
+};
+
+type NewUserRoleProps = RolesProps & {
+  refetch: boolean;
 };
 
 async function fetchOrgRoleChoices(): Promise<string[] | undefined> {
@@ -382,13 +434,18 @@ async function createOrgRole(
 
 type NewUserRoleParams = { userId: number; role: string };
 
-function NewUserRole({ orgId, setUserRoles, roles }: NewUserRoleProps) {
+function NewUserRole({
+  orgId,
+  setUserRoles,
+  roles,
+  refetch,
+  setRefetch,
+}: NewUserRoleProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [userRole, setUserRole] = useState<NewUserRoleParams>({
     userId: 0,
     role: roles[0],
   });
-  const [refetch, setRefetch] = useState(false);
 
   useEffect(() => {
     (async () => {
