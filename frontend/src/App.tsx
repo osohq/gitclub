@@ -8,7 +8,7 @@ import React, {
 import { Link, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
-import { User } from './User';
+import { User } from './models';
 import { OrgIndex, OrgShow } from './orgs';
 
 import './App.css';

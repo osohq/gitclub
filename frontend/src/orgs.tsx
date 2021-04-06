@@ -12,27 +12,13 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { UserContext } from './App';
 import { camelizeKeys, obj, snakeifyKeys } from './helpers';
-import { User } from './User';
+import { Org, User } from './models';
 
 type NewOrgParams = {
   name: string;
   billingAddress: string;
   baseRepoRole: string;
 };
-
-class Org {
-  id: number;
-  name: string;
-  billingAddress: string;
-  baseRepoRole: string;
-
-  constructor({ id, name, billingAddress, baseRepoRole }: Org) {
-    this.id = id;
-    this.name = name;
-    this.billingAddress = billingAddress;
-    this.baseRepoRole = baseRepoRole;
-  }
-}
 
 async function createOrg(details: NewOrgParams): Promise<Org | undefined> {
   try {

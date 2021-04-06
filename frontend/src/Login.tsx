@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
 import { SetUserProp, UserContext } from './App';
-import { User } from './User';
+import { User } from './models';
 
 type LoginProps = RouteComponentProps & SetUserProp;
 
