@@ -46,7 +46,6 @@ function Parent({ children, setUser }: ParentProps) {
 
   const home = <Link to="/">Home</Link>;
   const orgs = <Link to="/orgs">Orgs</Link>;
-  const repos = <Link to="/repos">Repos</Link>;
   const login = <Link to="/login">Login</Link>;
   const logout = (
     <Link to="/logout" onClick={handleLogout}>
@@ -56,11 +55,11 @@ function Parent({ children, setUser }: ParentProps) {
   const nav =
     user === 'Guest' ? (
       <nav>
-        {home} {orgs} {repos} {login}
+        {home} {orgs} {login}
       </nav>
     ) : (
       <nav>
-        {home} {orgs} {repos} {logout} Logged in as {user.email}
+        {home} {orgs} {logout} Logged in as {user.email}
       </nav>
     );
 
@@ -69,45 +68,6 @@ function Parent({ children, setUser }: ParentProps) {
       {nav}
       {children}
     </div>
-  );
-}
-
-class Repo {
-  id: number;
-  name: string;
-
-  constructor({ id, name }: { id: number; name: string }) {
-    this.id = id;
-    this.name = name;
-  }
-}
-
-function Repos(_: RouteComponentProps) {
-  const [repos, setRepos] = useState<Repo[]>([]);
-
-  useEffect(() => {
-    (async function () {
-      try {
-        const res = await fetch('http://localhost:5000/repos', {
-          credentials: 'include',
-          headers: { Accept: 'application/json' },
-        });
-        if (res.status === 200) {
-          const repos: Repo[] = await res.json();
-          setRepos(repos);
-        }
-      } catch (_) {}
-    })();
-  }, []);
-
-  return (
-    <ul>
-      {repos.map((r) => (
-        <li>
-          {r.id} - {r.name}
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -137,7 +97,6 @@ function App() {
           <Login path="/login" setUser={setUser} />
           <OrgIndex path="/orgs" />
           <OrgShow path="/orgs/:orgId" />
-          <Repos path="/repos" />
         </Parent>
       </Router>
     </UserContext.Provider>
