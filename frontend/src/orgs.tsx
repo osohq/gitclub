@@ -63,14 +63,17 @@ function OrgNew({ setOrgs }: OrgNewProps) {
     billingAddress: '',
     baseRepoRole: '',
   });
-  const [repoRoles, setRepoRoles] = useState<string[]>([]);
+  const [repoRoleChoices, setRepoRoleChoices] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      const repoRoles = await fetchRepoRoleChoices();
-      if (repoRoles) {
-        setDetails((details) => ({ ...details, baseRepoRole: repoRoles[0] }));
-        setRepoRoles(repoRoles);
+      const repoRoleChoices = await fetchRepoRoleChoices();
+      if (repoRoleChoices) {
+        setDetails((details) => ({
+          ...details,
+          baseRepoRole: repoRoleChoices[0],
+        }));
+        setRepoRoleChoices(repoRoleChoices);
       }
     })();
   }, []);
@@ -85,7 +88,11 @@ function OrgNew({ setOrgs }: OrgNewProps) {
       return;
     const org = await createOrg(details);
     if (org) {
-      setDetails({ name: '', billingAddress: '', baseRepoRole: repoRoles[0] });
+      setDetails({
+        name: '',
+        billingAddress: '',
+        baseRepoRole: repoRoleChoices[0],
+      });
       setOrgs((orgs) => [...orgs, org]);
     }
   }
@@ -111,7 +118,7 @@ function OrgNew({ setOrgs }: OrgNewProps) {
           </label>{' '}
         </Fragment>
       ))}
-      {repoRoles.length && (
+      {repoRoleChoices.length && (
         <label>
           base repo role:{' '}
           <select
@@ -119,7 +126,7 @@ function OrgNew({ setOrgs }: OrgNewProps) {
             value={details.baseRepoRole}
             onChange={handleChange}
           >
-            {repoRoles.map((r) => (
+            {repoRoleChoices.map((r) => (
               <option key={r} value={r}>
                 {r}
               </option>
