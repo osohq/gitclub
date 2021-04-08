@@ -9,7 +9,8 @@ import { Link, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
-import { OrgIndex, OrgShow } from './orgs';
+import { OrgShow } from './orgs';
+import { OrgsIndex, OrgsNew } from './views';
 
 import './App.css';
 
@@ -95,7 +96,8 @@ function App() {
         <Parent path="/" setUser={setUser}>
           <Home path="/" />
           <Login path="/login" setUser={setUser} />
-          <OrgIndex path="/orgs" />
+          <OrgsIndex path="/orgs" />
+          <OrgsNew path="/orgs/new" />
           <OrgShow path="/orgs/:orgId" />
         </Parent>
       </Router>
