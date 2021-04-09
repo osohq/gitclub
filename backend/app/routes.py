@@ -85,19 +85,17 @@ def repos_index(org_id):
     return jsonify([repo.repr() for repo in repos])
 
 
-# @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
-# def repos_new(org_id):
-#     # Create repo
-#     repo_name = request.get_json().get("name")
-#     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
-#     repo = Repository(name=repo_name, organization=org)
-#
-#     # Authorize repo creation + save
-#     current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
-#     g.basic_session.add(repo)
-#     g.basic_session.commit()
-#     breakpoint()  # TODO(gj): how do we get ID of newly created repo?
-#     return repo.repr(), 201
+@bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
+def repos_create(org_id):
+    payload = request.get_json(force=True)
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    repo = Repository(name=payload.get("name"), organization=org)
+
+    # # Authorize repo creation + save
+    # current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
+    g.basic_session.add(repo)
+    g.basic_session.commit()
+    return repo.repr(), 201
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])

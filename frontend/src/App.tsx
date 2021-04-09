@@ -9,7 +9,14 @@ import { Link, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
-import { OrgIndex, OrgNew, OrgShow, RepoIndex, RepoShow } from './views';
+import {
+  OrgIndex,
+  OrgNew,
+  OrgShow,
+  RepoIndex,
+  RepoNew,
+  RepoShow,
+} from './views';
 import { user as userApi } from './api';
 
 import './App.css';
@@ -74,10 +81,13 @@ function App() {
         <Parent path="/" setUser={setUser}>
           <Home path="/" />
           <Login path="/login" setUser={setUser} />
+
           <OrgIndex path="/orgs" />
           <OrgNew path="/orgs/new" />
           <OrgShow path="/orgs/:orgId" />
+
           <RepoIndex path="/orgs/:orgId/repos" />
+          <RepoNew path="/orgs/:orgId/repos/new" />
           <RepoShow path="/orgs/:orgId/repos/:repoId" />
         </Parent>
       </Router>

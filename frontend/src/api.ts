@@ -133,6 +133,9 @@ export const org = {
   userRoleUpdate: orgUserRoleUpdate,
 };
 
+const repoCreate = (body: { name: string }, orgId?: string) =>
+  create(`/orgs/${orgId}/repos`, 201, body, Repo);
+
 const repoIndex = (orgId?: string) => index(`/orgs/${orgId}/repos`, 200, Repo);
 
 const repoShow = (orgId?: string, repoId?: string) =>
@@ -142,6 +145,7 @@ const repoRoleChoices = () =>
   get('/repo_role_choices', 200) as Promise<string[]>;
 
 export const repo = {
+  create: repoCreate,
   index: repoIndex,
   show: repoShow,
 

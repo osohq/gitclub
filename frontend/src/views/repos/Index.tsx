@@ -34,6 +34,7 @@ export function Index({ orgId }: IndexProps) {
           </li>
         ))}
       </ul>
+      <Link to={`/orgs/${orgId}/repos/new`}>Create new repo</Link>
     </>
   );
 }
