@@ -101,21 +101,41 @@ def repos_create(org_id):
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
 def repos_show(org_id, repo_id):
     # Get repo
-    repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
+    repo = g.basic_session.query(Repository).filter_by(id=repo_id).one()
 
     # # Authorize repo access
     # current_app.oso.authorize(repo, actor=g.current_user, action="READ")
     return repo.repr()
 
 
-# @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
-# def issues_index(org_id, repo_id):
-#     repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
-#     current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ISSUES")
-#
-#     # Get authorized issues
-#     issues = g.auth_session.query(Issue).filter(Issue.repository.has(id=repo_id))
-#     return jsonify([issue.repr() for issue in issues])
+@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
+def issues_index(org_id, repo_id):
+    repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
+    # current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ISSUES")
+
+    issues = g.basic_session.query(Issue).filter_by(repository_id=repo_id).all()
+    return jsonify([issue.repr() for issue in issues])
+
+
+@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["POST"])
+def issues_create(org_id, repo_id):
+    payload = request.get_json(force=True)
+    repo = g.basic_session.query(Repository).filter_by(id=repo_id).one()
+    issue = Issue(title=payload.get("title"), repository=repo)
+
+    # # Authorize repo creation + save
+    # current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
+    g.basic_session.add(issue)
+    g.basic_session.commit()
+    return issue.repr(), 201
+
+
+@bp.route(
+    "/orgs/<int:org_id>/repos/<int:repo_id>/issues/<int:issue_id>", methods=["GET"]
+)
+def issues_show(org_id, repo_id, issue_id):
+    issue = g.basic_session.query(Issue).filter_by(id=issue_id).one()
+    return issue.repr()
 
 
 # # TODO(gj): not currently using 'org_id'

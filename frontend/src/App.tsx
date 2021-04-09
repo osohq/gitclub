@@ -10,6 +10,9 @@ import { Link, RouteComponentProps, Router } from '@reach/router';
 import { Login } from './Login';
 import { User } from './models';
 import {
+  IssueIndex,
+  IssueNew,
+  IssueShow,
   OrgIndex,
   OrgNew,
   OrgShow,
@@ -81,6 +84,10 @@ function App() {
         <Parent path="/" setUser={setUser}>
           <Home path="/" />
           <Login path="/login" setUser={setUser} />
+
+          <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />
+          <IssueNew path="/orgs/:orgId/repos/:repoId/issues/new" />
+          <IssueShow path="/orgs/:orgId/repos/:repoId/issues/:issueId" />
 
           <OrgIndex path="/orgs" />
           <OrgNew path="/orgs/new" />

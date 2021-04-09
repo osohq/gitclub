@@ -1,5 +1,5 @@
 import { camelizeKeys, obj, snakeifyKeys } from './helpers';
-import { Org, Repo, User, UserRole } from './models';
+import { Issue, Org, Repo, User, UserRole } from './models';
 import type { LoggedInUser, OrgParams, UserRoleParams } from './models';
 
 const ROOT = 'http://localhost:5000';
@@ -95,6 +95,24 @@ async function update<T>(
   const data = (await patch(path, successStatus, body)) as obj;
   return new cls(camelizeKeys(data));
 }
+
+const issueCreate = (
+  body: { title: string },
+  orgId?: string,
+  repoId?: string
+) => create(`/orgs/${orgId}/repos/${repoId}/issues`, 201, body, Issue);
+
+const issueIndex = (orgId?: string, repoId?: string) =>
+  index(`/orgs/${orgId}/repos/${repoId}/issues`, 200, Issue);
+
+const issueShow = (orgId?: string, repoId?: string, issueId?: string) =>
+  show(`/orgs/${orgId}/repos/${repoId}/issues/${issueId}`, 200, Issue);
+
+export const issue = {
+  create: issueCreate,
+  index: issueIndex,
+  show: issueShow,
+};
 
 const orgCreate = (body: OrgParams) => create('/orgs', 201, body, Org);
 

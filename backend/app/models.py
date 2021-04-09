@@ -85,9 +85,12 @@ class Issue(Base):
     __tablename__ = "issues"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(256))
+    title = Column(String(256))
     repository_id = Column(Integer, ForeignKey("repositories.id"))
     repository = relationship("Repository", backref="issues", lazy=True)
+
+    def repr(self):
+        return {"id": self.id, "title": self.title}
 
 
 ## ROLE MODELS ##

@@ -27,6 +27,7 @@ export function Show({ orgId, repoId }: ShowProps) {
     <>
       <Link to={`/orgs/${orgId}/repos`}>Back to {org.name} repos</Link>
       <h1>{repo.name}</h1>
+      <Link to={`/orgs/${orgId}/repos/${repoId}/issues`}>Issues</Link>
     </>
   );
 }
