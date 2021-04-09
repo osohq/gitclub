@@ -23,17 +23,16 @@ export function New(_: RouteComponentProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const repoRoleChoices = await repoApi.roleChoices();
+    repoApi.roleChoices().then((cs) => {
       setDetails((details) => ({
         ...details,
-        baseRepoRole: repoRoleChoices[0],
+        baseRepoRole: cs[0],
       }));
-      setRepoRoleChoices(repoRoleChoices);
-    })();
+      setRepoRoleChoices(cs);
+    });
   }, []);
 
-  // If a guest user navigates to this page, redirect to the orgs index.
+  // If a guest navigates to this page, redirect to the orgs index.
   if (user === 'Guest') return <Redirect to="/orgs" noThrow />;
 
   async function handleSubmit(e: FormEvent) {
