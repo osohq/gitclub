@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
+import { UserContext } from '../../App';
 
 interface IndexProps extends RouteComponentProps {
   orgId?: string;
 }
 
 export function Index({ orgId }: IndexProps) {
+  const user = useContext(UserContext);
   const [org, setOrg] = useState<Org>();
   const [repos, setRepos] = useState<Repo[]>([]);
 
@@ -22,6 +24,11 @@ export function Index({ orgId }: IndexProps) {
 
   if (!org) return null;
 
+  const maybeNewLink =
+    user === 'Guest' ? null : (
+      <Link to={`/orgs/${orgId}/repos/new`}>Create new repo</Link>
+    );
+
   return (
     <>
       <h2>{org.name} repos</h2>
@@ -34,7 +41,7 @@ export function Index({ orgId }: IndexProps) {
           </li>
         ))}
       </ul>
-      <Link to={`/orgs/${orgId}/repos/new`}>Create new repo</Link>
+      {maybeNewLink}
     </>
   );
 }
