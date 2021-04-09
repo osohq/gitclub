@@ -1,4 +1,5 @@
-import { Index as OrgsIndex } from './orgs/Index';
-import { New as OrgsNew } from './orgs/New';
+import { Index as OrgIndex } from './orgs/Index';
+import { New as OrgNew } from './orgs/New';
+import { Show as OrgShow } from './orgs/Show';
 
-export { OrgsIndex, OrgsNew };
+export { OrgIndex, OrgNew, OrgShow };

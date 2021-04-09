@@ -9,50 +9,12 @@ import {
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
 import { UserContext } from '../../App';
-import { camelizeKeys, snakeifyKeys } from '../../helpers';
-import { Org } from '../../models';
-
-type NewOrgParams = {
-  name: string;
-  billingAddress: string;
-  baseRepoRole: string;
-};
-
-async function createOrg(details: NewOrgParams): Promise<Org | undefined> {
-  try {
-    const res = await fetch('http://localhost:5000/orgs', {
-      body: JSON.stringify(snakeifyKeys(details)),
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    });
-    if (res.status === 201) {
-      const data = await res.json();
-      return new Org(camelizeKeys(data) as Org);
-    } else {
-      console.error('TODO(gj): better error handling -- alert?');
-    }
-  } catch (e) {
-    console.error('wot', e);
-  }
-}
-
-async function fetchRepoRoleChoices(): Promise<string[] | undefined> {
-  try {
-    const res = await fetch('http://localhost:5000/repo_role_choices', {
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-    });
-    if (res.status === 200) return await res.json();
-  } catch (_) {}
-}
+import { org as orgApi, repo as repoApi } from '../../api';
+import type { OrgParams } from '../../models';
 
 export function New(_: RouteComponentProps) {
   const user = useContext(UserContext);
-  const [details, setDetails] = useState<NewOrgParams>({
+  const [details, setDetails] = useState<OrgParams>({
     name: '',
     billingAddress: '',
     baseRepoRole: '',
@@ -62,14 +24,12 @@ export function New(_: RouteComponentProps) {
 
   useEffect(() => {
     (async () => {
-      const repoRoleChoices = await fetchRepoRoleChoices();
-      if (repoRoleChoices) {
-        setDetails((details) => ({
-          ...details,
-          baseRepoRole: repoRoleChoices[0],
-        }));
-        setRepoRoleChoices(repoRoleChoices);
-      }
+      const repoRoleChoices = await repoApi.roleChoices();
+      setDetails((details) => ({
+        ...details,
+        baseRepoRole: repoRoleChoices[0],
+      }));
+      setRepoRoleChoices(repoRoleChoices);
     })();
   }, []);
 
@@ -82,8 +42,8 @@ export function New(_: RouteComponentProps) {
     // Don't allow empty strings.
     if (!name.replaceAll(' ', '') || !billingAddress.replaceAll(' ', ''))
       return;
-    const org = await createOrg(details);
-    if (org) await navigate('/orgs');
+    await orgApi.create(details);
+    await navigate('/orgs');
   }
 
   function handleChange({

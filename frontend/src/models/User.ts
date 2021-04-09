@@ -1,3 +1,5 @@
+export type LoggedInUser = User | 'Guest';
+
 export class User {
   id: number;
   email: string;

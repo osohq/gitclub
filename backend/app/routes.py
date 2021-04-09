@@ -203,7 +203,9 @@ def user_org_role_update(org_id):
     oso_roles.reassign_user_role(
         g.basic_session, user, org, payload["role"], commit=True
     )
-    return {}, 204
+    # TODO(gj): it would be nice if reassign_user_role() returned the updated role.
+    role = oso_roles.get_user_roles(g.basic_session, user, Organization, org.id)[0]
+    return {"user": role.user.repr(), "role": role.repr()}, 200
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["DELETE"])

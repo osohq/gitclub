@@ -9,8 +9,8 @@ import { Link, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
-import { OrgShow } from './orgs';
-import { OrgsIndex, OrgsNew } from './views';
+import { OrgIndex, OrgNew, OrgShow } from './views';
+import { user as userApi } from './api';
 
 import './App.css';
 
@@ -30,19 +30,8 @@ function Parent({ children, setUser }: ParentProps) {
 
   async function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
-    try {
-      const res = await fetch('http://localhost:5000/logout', {
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      });
-      if (res.status === 200) {
-        setUser('Guest');
-      } else {
-        console.error('sad trombone');
-      }
-    } catch (e) {
-      console.error('wat', e);
-    }
+    await userApi.logout();
+    setUser('Guest');
   }
 
   const home = <Link to="/">Home</Link>;
@@ -53,20 +42,20 @@ function Parent({ children, setUser }: ParentProps) {
       Logout
     </Link>
   );
-  const nav =
+  const userStatus =
     user === 'Guest' ? (
-      <nav>
-        {home} {orgs} {login}
-      </nav>
+      login
     ) : (
-      <nav>
-        {home} {orgs} {logout} Logged in as {user.email}
-      </nav>
+      <>
+        {logout} Logged in as {user.email}
+      </>
     );
 
   return (
     <div>
-      {nav}
+      <nav>
+        {home} {orgs} {userStatus}
+      </nav>
       {children}
     </div>
   );
@@ -76,18 +65,7 @@ function App() {
   const [user, setUser] = useState<LoggedInUser>('Guest');
 
   useEffect(() => {
-    (async function () {
-      try {
-        const res = await fetch('http://localhost:5000/whoami', {
-          credentials: 'include',
-          headers: { Accept: 'application/json' },
-        });
-        if (res.status === 200) {
-          const details: User | null = await res.json();
-          if (details) setUser(new User(details));
-        }
-      } catch (_) {}
-    })();
+    userApi.whoami().then(setUser);
   }, []);
 
   return (
@@ -96,8 +74,8 @@ function App() {
         <Parent path="/" setUser={setUser}>
           <Home path="/" />
           <Login path="/login" setUser={setUser} />
-          <OrgsIndex path="/orgs" />
-          <OrgsNew path="/orgs/new" />
+          <OrgIndex path="/orgs" />
+          <OrgNew path="/orgs/new" />
           <OrgShow path="/orgs/:orgId" />
         </Parent>
       </Router>

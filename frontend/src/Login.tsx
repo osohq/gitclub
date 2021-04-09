@@ -2,31 +2,9 @@ import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
 import { SetUserProp, UserContext } from './App';
-import { User } from './models';
+import { user as userApi } from './api';
 
 type LoginProps = RouteComponentProps & SetUserProp;
-
-async function login(email: string): Promise<User | undefined> {
-  try {
-    const res = await fetch('http://localhost:5000/login', {
-      body: JSON.stringify({ user: email }),
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    });
-    if (res.status === 200) {
-      const details: User = await res.json();
-      return new User(details);
-    } else {
-      console.error('TODO(gj): better error handling -- alert?');
-    }
-  } catch (e) {
-    console.error('wot', e);
-  }
-}
 
 export function Login({ setUser }: LoginProps) {
   const user = useContext(UserContext);
@@ -37,8 +15,13 @@ export function Login({ setUser }: LoginProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const user = await login(email);
-    if (user) setUser(user);
+    try {
+      const user = await userApi.login({ user: email });
+      setUser(user);
+    } catch (e) {
+      // TODO(gj): flash message?
+      console.log(e);
+    }
   }
 
   function handleChange({ target: { value } }: ChangeEvent<HTMLInputElement>) {

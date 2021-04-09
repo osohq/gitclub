@@ -1,3 +1,9 @@
+export type OrgParams = {
+  name: string;
+  billingAddress: string;
+  baseRepoRole: string;
+};
+
 export class Org {
   id: number;
   name: string;
