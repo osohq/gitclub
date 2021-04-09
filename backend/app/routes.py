@@ -100,14 +100,14 @@ def repos_index(org_id):
 #     return repo.repr(), 201
 
 
-# @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
-# def repos_show(org_id, repo_id):
-#     # Get repo
-#     repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
-#
-#     # Authorize repo access
-#     current_app.oso.authorize(repo, actor=g.current_user, action="READ")
-#     return repo.repr()
+@bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
+def repos_show(org_id, repo_id):
+    # Get repo
+    repo = g.basic_session.query(Repository).filter_by(id=repo_id).first()
+
+    # # Authorize repo access
+    # current_app.oso.authorize(repo, actor=g.current_user, action="READ")
+    return repo.repr()
 
 
 # @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])

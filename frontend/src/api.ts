@@ -135,11 +135,15 @@ export const org = {
 
 const repoIndex = (orgId?: string) => index(`/orgs/${orgId}/repos`, 200, Repo);
 
+const repoShow = (orgId?: string, repoId?: string) =>
+  show(`/orgs/${orgId}/repos/${repoId}`, 200, Repo);
+
 const repoRoleChoices = () =>
   get('/repo_role_choices', 200) as Promise<string[]>;
 
 export const repo = {
   index: repoIndex,
+  show: repoShow,
 
   roleChoices: repoRoleChoices,
 };
