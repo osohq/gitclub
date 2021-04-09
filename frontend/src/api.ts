@@ -1,5 +1,5 @@
 import { camelizeKeys, obj, snakeifyKeys } from './helpers';
-import { Org, User, UserRole } from './models';
+import { Org, Repo, User, UserRole } from './models';
 import type { LoggedInUser, OrgParams, UserRoleParams } from './models';
 
 const ROOT = 'http://localhost:5000';
@@ -133,10 +133,14 @@ export const org = {
   userRoleUpdate: orgUserRoleUpdate,
 };
 
+const repoIndex = (orgId?: string) => index(`/orgs/${orgId}/repos`, 200, Repo);
+
 const repoRoleChoices = () =>
   get('/repo_role_choices', 200) as Promise<string[]>;
 
 export const repo = {
+  index: repoIndex,
+
   roleChoices: repoRoleChoices,
 };
 

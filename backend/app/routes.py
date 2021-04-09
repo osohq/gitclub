@@ -76,13 +76,13 @@ def org_potential_users_index(org_id):
     return jsonify([p.repr() for p in potentials.all()])
 
 
-# @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
-# def repos_index(org_id):
-#     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
-#     current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
-#
-#     repos = g.auth_session.query(Repository).filter_by(organization=org)
-#     return jsonify([repo.repr() for repo in repos])
+@bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
+def repos_index(org_id):
+    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    # current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
+
+    repos = g.basic_session.query(Repository).filter_by(organization=org)
+    return jsonify([repo.repr() for repo in repos])
 
 
 # @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])

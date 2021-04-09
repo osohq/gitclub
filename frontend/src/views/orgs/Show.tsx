@@ -38,6 +38,8 @@ export function Show({ orgId }: ShowProps) {
       <h4>Billing Address: {org.billingAddress}</h4>
       <h4>Base Repo Role: {org.baseRepoRole}</h4>
 
+      <Link to={`/orgs/${orgId}/repos`}>Repos</Link>
+
       {roles.length && (
         <NewUserRole
           orgId={orgId}

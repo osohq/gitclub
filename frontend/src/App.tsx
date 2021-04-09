@@ -9,7 +9,7 @@ import { Link, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
-import { OrgIndex, OrgNew, OrgShow } from './views';
+import { OrgIndex, OrgNew, OrgShow, RepoIndex } from './views';
 import { user as userApi } from './api';
 
 import './App.css';
@@ -77,6 +77,7 @@ function App() {
           <OrgIndex path="/orgs" />
           <OrgNew path="/orgs/new" />
           <OrgShow path="/orgs/:orgId" />
+          <RepoIndex path="/orgs/:orgId/repos" />
         </Parent>
       </Router>
     </UserContext.Provider>
