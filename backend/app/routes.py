@@ -26,7 +26,7 @@ def whoami():
     if g.current_user:
         return jsonify(g.current_user.repr())
     else:
-        return jsonify(g.current_user)
+        return jsonify(None)
 
 
 @bp.route("/logout", methods=["GET"])
