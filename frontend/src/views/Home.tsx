@@ -1,18 +1,16 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { RouteComponentProps } from '@reach/router';
+import { NotifyContext } from '../App';
 
-import type { PushErrorProp } from '../App';
-
-type HomeProps = RouteComponentProps & PushErrorProp;
-
-export function Home({ location, pushError }: HomeProps) {
+export function Home({ location }: RouteComponentProps) {
+  const notify = useContext(NotifyContext);
   useEffect(() => {
     if (
       typeof location?.state === 'object' &&
       location.state !== null &&
       typeof (location.state as { error?: string }).error === 'string'
     )
-      pushError((location.state as { error: string }).error);
+      notify.error((location.state as { error: string }).error);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return <h1>GitClub</h1>;
 }

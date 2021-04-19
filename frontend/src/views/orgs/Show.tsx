@@ -12,13 +12,14 @@ import { Link, RouteComponentProps } from '@reach/router';
 import { Org, User, UserRole } from '../../models';
 import type { UserRoleParams } from '../../models';
 import { org as orgApi } from '../../api';
-import { UserContext } from '../../App';
+import { NotifyContext, UserContext } from '../../App';
 
 interface ShowProps extends RouteComponentProps {
   orgId?: string;
 }
 
 export function Show({ navigate, orgId }: ShowProps) {
+  const { error } = useContext(NotifyContext);
   const [org, setOrg] = useState<Org>();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
@@ -29,13 +30,16 @@ export function Show({ navigate, orgId }: ShowProps) {
       .show(orgId)
       .then((o) => setOrg(o))
       .catch(() =>
-        navigate!('/', { state: { error: `/orgs/${orgId} not found.` } })
+        navigate!('/', { state: { error: `Failed to load /orgs/${orgId}.` } })
       );
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    orgApi.roleChoices().then((rs) => setRoles(rs));
-  }, []);
+    orgApi
+      .roleChoices()
+      .then((rs) => setRoles(rs))
+      .catch(error);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!orgId || !org) return null;
 
@@ -81,17 +85,25 @@ function UserRoles({
   setRefetch,
 }: UserRolesProps) {
   const user = useContext(UserContext);
+  const { error } = useContext(NotifyContext);
   useEffect(() => {
-    orgApi.userRoleIndex(orgId).then((urs) => setUserRoles(urs));
+    orgApi
+      .userRoleIndex(orgId)
+      .then((urs) => setUserRoles(urs))
+      .catch(error);
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function updateRole(user: User, role: string) {
     const body = { userId: user.id, role };
-    const updated = await orgApi.userRoleUpdate(body, orgId);
-    setUserRoles((urs) =>
-      // Assumes a user has a single role per org.
-      urs.map((old) => (old.user.id === updated.user.id ? updated : old))
-    );
+    try {
+      const updated = await orgApi.userRoleUpdate(body, orgId);
+      setUserRoles((urs) =>
+        // Assumes a user has a single role per org.
+        urs.map((old) => (old.user.id === updated.user.id ? updated : old))
+      );
+    } catch (e) {
+      error(e);
+    }
   }
 
   async function deleteRole({ user, role }: UserRole) {
@@ -101,7 +113,8 @@ function UserRoles({
         // Assumes a user has a single role per org.
         setUserRoles((urs) => urs.filter((ur) => ur.user.id !== user.id));
         setRefetch((x) => !x);
-      });
+      })
+      .catch(error);
   }
 
   return (
@@ -112,7 +125,7 @@ function UserRoles({
           <li key={'user-role-' + ur.user.id + ur.role}>
             <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> -{' '}
             <select
-              disabled={user === 'Guest'}
+              disabled={!user.loggedIn()}
               name="role"
               value={ur.role.name}
               onChange={({ target: { value } }) => updateRole(ur.user, value)}
@@ -125,7 +138,7 @@ function UserRoles({
             </select>{' '}
             -{' '}
             <button
-              disabled={user === 'Guest'}
+              disabled={!user.loggedIn()}
               onClick={(e) => {
                 e.preventDefault();
                 deleteRole(ur);
@@ -159,6 +172,7 @@ function NewUserRole({
   setRefetch,
 }: NewUserRoleProps) {
   const user = useContext(UserContext);
+  const { error } = useContext(NotifyContext);
   const [users, setUsers] = useState<User[]>([]);
   const [details, setDetails] = useState<UserRoleParams>({
     userId: 0,
@@ -166,22 +180,29 @@ function NewUserRole({
   });
 
   useEffect(() => {
-    if (user !== 'Guest') {
-      orgApi.potentialUsers(orgId).then((users) => {
-        setUsers(users);
-        setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
-      });
+    if (user.loggedIn()) {
+      orgApi
+        .potentialUsers(orgId)
+        .then((users) => {
+          setUsers(users);
+          setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
+        })
+        .catch(error);
     }
-  }, [orgId, refetch, user]);
+  }, [orgId, refetch, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (user === 'Guest' || !users.length) return null;
+  if (!user.loggedIn() || !users.length) return null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const newUserRole = await orgApi.userRoleCreate(details, orgId);
-    setRefetch((x) => !x);
-    setDetails((ur) => ({ ...ur, userId: 0 }));
-    setUserRoles((urs) => [...urs, { ...newUserRole }]);
+    try {
+      const newUserRole = await orgApi.userRoleCreate(details, orgId);
+      setRefetch((x) => !x);
+      setDetails((ur) => ({ ...ur, userId: 0 }));
+      setUserRoles((urs) => [...urs, { ...newUserRole }]);
+    } catch (e) {
+      error(e);
+    }
   }
 
   function handleChange({

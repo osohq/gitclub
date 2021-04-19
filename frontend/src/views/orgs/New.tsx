@@ -8,12 +8,13 @@ import {
 } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { UserContext } from '../../App';
+import { NotifyContext, UserContext } from '../../App';
 import { org as orgApi, repo as repoApi } from '../../api';
-import type { OrgParams } from '../../models';
+import { OrgParams } from '../../models';
 
 export function New(_: RouteComponentProps) {
   const user = useContext(UserContext);
+  const { error } = useContext(NotifyContext);
   const [details, setDetails] = useState<OrgParams>({
     name: '',
     billingAddress: '',
@@ -23,26 +24,39 @@ export function New(_: RouteComponentProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    repoApi.roleChoices().then((cs) => {
-      setDetails((details) => ({
-        ...details,
-        baseRepoRole: cs[0],
-      }));
-      setRepoRoleChoices(cs);
-    });
-  }, []);
+    if (user.loggedIn()) {
+      repoApi
+        .roleChoices()
+        .then((cs) => {
+          setDetails((details) => ({
+            ...details,
+            baseRepoRole: cs[0],
+          }));
+          setRepoRoleChoices(cs);
+        })
+        .catch(error);
+    }
+  }, [user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (user.current === 'Loading') return null;
   // If a guest navigates to this page, redirect to the orgs index.
-  if (user === 'Guest') return <Redirect to="/orgs" noThrow />;
+  if (user.current === 'Guest') return <Redirect to="/orgs" noThrow />;
+
+  function validInputs() {
+    const { name, billingAddress } = details;
+    // Don't allow empty strings.
+    return name.replaceAll(' ', '') && billingAddress.replaceAll(' ', '');
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const { name, billingAddress } = details;
-    // Don't allow empty strings.
-    if (!name.replaceAll(' ', '') || !billingAddress.replaceAll(' ', ''))
-      return;
-    await orgApi.create(details);
-    await navigate('/orgs');
+    if (!validInputs()) return;
+    try {
+      const org = await orgApi.create(details);
+      await navigate(`/orgs/${org.id}`);
+    } catch (e) {
+      error(e.message);
+    }
   }
 
   function handleChange({
@@ -82,7 +96,7 @@ export function New(_: RouteComponentProps) {
           </select>
         </label>
       )}{' '}
-      <input type="submit" value="Create" />
+      <input type="submit" value="Create" disabled={!validInputs()} />
     </form>
   );
 }

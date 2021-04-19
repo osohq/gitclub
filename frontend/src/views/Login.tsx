@@ -1,25 +1,24 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
-import { PushErrorProp, SetUserProp, UserContext } from '../App';
+import { NotifyContext, UserContext } from '../App';
 import { user as userApi } from '../api';
 
-type LoginProps = RouteComponentProps & SetUserProp & PushErrorProp;
-
-export function Login({ pushError, setUser }: LoginProps) {
+export function Login(_: RouteComponentProps) {
   const user = useContext(UserContext);
+  const notify = useContext(NotifyContext);
   const [email, setEmail] = useState<string>('');
 
   // If a logged-in user navigates to this page, redirect to home.
-  if (user !== 'Guest') return <Redirect to="/" noThrow />;
+  if (user.loggedIn()) return <Redirect to="/" noThrow />;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const user = await userApi.login({ user: email });
-      setUser(user);
+      const u = await userApi.login({ user: email });
+      user.update(u);
     } catch (e) {
-      pushError('Failed to log in.');
+      notify.error('Failed to log in.');
     }
   }
 

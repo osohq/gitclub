@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { UserContext } from '../../App';
+import { NotifyContext, UserContext } from '../../App';
 import { issue as issueApi } from '../../api';
 
 interface NewProps extends RouteComponentProps {
@@ -11,19 +11,26 @@ interface NewProps extends RouteComponentProps {
 
 export function New({ orgId, repoId }: NewProps) {
   const user = useContext(UserContext);
+  const { error } = useContext(NotifyContext);
   const [title, setTitle] = useState<string>('');
   const navigate = useNavigate();
   const index = `/orgs/${orgId}/repos/${repoId}/issues`;
 
+  if (user.current === 'Loading') return null;
   // If a guest navigates to this page, redirect to the repos index.
-  if (user === 'Guest') return <Redirect to={index} noThrow />;
+  if (user.current === 'Guest') return <Redirect to={index} noThrow />;
+
+  const inputEmpty = !title.replaceAll(' ', '');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    // Don't allow empty strings.
-    if (!title.replaceAll(' ', '')) return;
-    await issueApi.create({ title }, orgId, repoId);
-    await navigate(index);
+    if (inputEmpty) return;
+    try {
+      const issue = await issueApi.create({ title }, orgId, repoId);
+      await navigate(`${index}/${issue.id}`);
+    } catch (e) {
+      error(e);
+    }
   }
 
   function handleChange({ target: { value } }: ChangeEvent<HTMLInputElement>) {
@@ -35,7 +42,7 @@ export function New({ orgId, repoId }: NewProps) {
       <label>
         title: <input type="text" value={title} onChange={handleChange} />
       </label>{' '}
-      <input type="submit" value="Create" />
+      <input type="submit" value="Create" disabled={inputEmpty} />
     </form>
   );
 }

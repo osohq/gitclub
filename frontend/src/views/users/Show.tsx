@@ -20,7 +20,7 @@ export function Show({ navigate, userId }: ShowProps) {
       );
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!userId || !user) return null;
+  if (!user) return null;
 
   return <h1>{user.email}</h1>;
 }

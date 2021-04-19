@@ -3,7 +3,7 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
-import { UserContext } from '../../App';
+import { NotifyContext, UserContext } from '../../App';
 
 interface IndexProps extends RouteComponentProps {
   orgId?: string;
@@ -11,23 +11,23 @@ interface IndexProps extends RouteComponentProps {
 
 export function Index({ orgId }: IndexProps) {
   const user = useContext(UserContext);
+  const { error } = useContext(NotifyContext);
   const [org, setOrg] = useState<Org>();
   const [repos, setRepos] = useState<Repo[]>([]);
 
   useEffect(() => {
-    orgApi.show(orgId).then(setOrg);
-  }, [orgId]);
+    orgApi.show(orgId).then(setOrg).catch(error);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi.index(orgId).then(setRepos);
-  }, [orgId]);
+    repoApi.index(orgId).then(setRepos).catch(error);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org) return null;
 
-  const maybeNewLink =
-    user === 'Guest' ? null : (
-      <Link to={`/orgs/${orgId}/repos/new`}>Create new repo</Link>
-    );
+  const maybeNewLink = !user.loggedIn() ? null : (
+    <Link to={`/orgs/${orgId}/repos/new`}>Create new repo</Link>
+  );
 
   return (
     <>
