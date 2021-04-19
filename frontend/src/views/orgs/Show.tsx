@@ -3,6 +3,7 @@ import {
   Dispatch,
   FormEvent,
   SetStateAction,
+  useContext,
   useEffect,
   useState,
 } from 'react';
@@ -11,6 +12,7 @@ import { Link, RouteComponentProps } from '@reach/router';
 import { Org, User, UserRole } from '../../models';
 import type { UserRoleParams } from '../../models';
 import { org as orgApi } from '../../api';
+import { UserContext } from '../../App';
 
 interface ShowProps extends RouteComponentProps {
   orgId?: string;
@@ -71,6 +73,7 @@ function UserRoles({
   roles,
   setRefetch,
 }: UserRolesProps) {
+  const user = useContext(UserContext);
   useEffect(() => {
     orgApi.userRoleIndex(orgId).then((urs) => setUserRoles(urs));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -102,6 +105,7 @@ function UserRoles({
           <li key={'user-role-' + ur.user.id + ur.role}>
             <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> -{' '}
             <select
+              disabled={user === 'Guest'}
               name="role"
               value={ur.role.name}
               onChange={({ target: { value } }) => updateRole(ur.user, value)}
@@ -114,6 +118,7 @@ function UserRoles({
             </select>{' '}
             -{' '}
             <button
+              disabled={user === 'Guest'}
               onClick={(e) => {
                 e.preventDefault();
                 deleteRole(ur);
@@ -146,6 +151,7 @@ function NewUserRole({
   refetch,
   setRefetch,
 }: NewUserRoleProps) {
+  const user = useContext(UserContext);
   const [users, setUsers] = useState<User[]>([]);
   const [details, setDetails] = useState<UserRoleParams>({
     userId: 0,
@@ -153,13 +159,15 @@ function NewUserRole({
   });
 
   useEffect(() => {
-    orgApi.potentialUsers(orgId).then((users) => {
-      setUsers(users);
-      setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
-    });
-  }, [orgId, refetch]);
+    if (user !== 'Guest') {
+      orgApi.potentialUsers(orgId).then((users) => {
+        setUsers(users);
+        setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
+      });
+    }
+  }, [orgId, refetch, user]);
 
-  if (!users.length) return null;
+  if (user === 'Guest' || !users.length) return null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
