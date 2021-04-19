@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { Link, RouteComponentProps, Router } from '@reach/router';
+import { Link, Redirect, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
@@ -29,6 +29,7 @@ type LoggedInUser = User | 'Guest';
 export const UserContext = React.createContext<LoggedInUser>('Guest');
 
 const Home = (_: RouteComponentProps) => <h1>GitClub</h1>;
+const NotFound = (_: RouteComponentProps) => <Redirect to="/" noThrow />;
 
 export type SetUserProp = { setUser: Dispatch<SetStateAction<LoggedInUser>> };
 
@@ -96,6 +97,8 @@ function App() {
           <RepoIndex path="/orgs/:orgId/repos" />
           <RepoNew path="/orgs/:orgId/repos/new" />
           <RepoShow path="/orgs/:orgId/repos/:repoId" />
+
+          <NotFound default />
         </Parent>
       </Router>
     </UserContext.Provider>
