@@ -1,11 +1,5 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import { Link, Redirect, RouteComponentProps, Router } from '@reach/router';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Redirect, RouteComponentProps, Router } from '@reach/router';
 
 import { Login } from './Login';
 import { User } from './models';
@@ -21,7 +15,7 @@ import {
   RepoShow,
 } from './views';
 import { user as userApi } from './api';
-import { FlashNotice } from './components';
+import { FlashNotice, Nav } from './components';
 import type { Notice } from './components';
 
 import './App.css';
@@ -34,45 +28,6 @@ const Home = (_: RouteComponentProps) => <h1>GitClub</h1>;
 const NotFound = (_: RouteComponentProps) => <Redirect to="/" noThrow />;
 
 export type SetUserProp = { setUser: Dispatch<SetStateAction<LoggedInUser>> };
-
-type ParentProps = RouteComponentProps &
-  SetUserProp & { children: JSX.Element[] };
-
-function Parent({ children, setUser }: ParentProps) {
-  const user = useContext(UserContext);
-
-  async function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
-    e.preventDefault();
-    await userApi.logout();
-    setUser('Guest');
-  }
-
-  const home = <Link to="/">Home</Link>;
-  const orgs = <Link to="/orgs">Orgs</Link>;
-  const login = <Link to="/login">Login</Link>;
-  const logout = (
-    <Link to="/logout" onClick={handleLogout}>
-      Logout
-    </Link>
-  );
-  const userStatus =
-    user === 'Guest' ? (
-      login
-    ) : (
-      <>
-        {logout} Logged in as {user.email}
-      </>
-    );
-
-  return (
-    <div>
-      <nav>
-        {home} {orgs} {userStatus}
-      </nav>
-      {children}
-    </div>
-  );
-}
 
 const probablyCorsError = (e: Error) =>
   e instanceof TypeError &&
@@ -112,25 +67,24 @@ function App() {
   return (
     <UserContext.Provider value={user}>
       <>{flashNotices}</>
+      <Nav setUser={setUser} />
       <Router>
-        <Parent path="/" setUser={setUser}>
-          <Home path="/" />
-          <Login path="/login" setUser={setUser} />
+        <Home path="/" />
+        <Login path="/login" setUser={setUser} />
 
-          <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />
-          <IssueNew path="/orgs/:orgId/repos/:repoId/issues/new" />
-          <IssueShow path="/orgs/:orgId/repos/:repoId/issues/:issueId" />
+        <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />
+        <IssueNew path="/orgs/:orgId/repos/:repoId/issues/new" />
+        <IssueShow path="/orgs/:orgId/repos/:repoId/issues/:issueId" />
 
-          <OrgIndex path="/orgs" />
-          <OrgNew path="/orgs/new" />
-          <OrgShow path="/orgs/:orgId" />
+        <OrgIndex path="/orgs" />
+        <OrgNew path="/orgs/new" />
+        <OrgShow path="/orgs/:orgId" />
 
-          <RepoIndex path="/orgs/:orgId/repos" />
-          <RepoNew path="/orgs/:orgId/repos/new" />
-          <RepoShow path="/orgs/:orgId/repos/:repoId" />
+        <RepoIndex path="/orgs/:orgId/repos" />
+        <RepoNew path="/orgs/:orgId/repos/new" />
+        <RepoShow path="/orgs/:orgId/repos/:repoId" />
 
-          <NotFound default />
-        </Parent>
+        <NotFound default />
       </Router>
     </UserContext.Provider>
   );
