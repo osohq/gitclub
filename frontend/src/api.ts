@@ -177,8 +177,12 @@ const logout = () => get('/logout', 200);
 const whoami: () => Promise<LoggedInUser> = () =>
   get('/whoami', 200).then((u) => (u === null ? 'Guest' : new User(u as User)));
 
+const userShow = (userId?: string) => show(`/users/${userId}`, 200, User);
+
 export const user = {
   login,
   logout,
   whoami,
+
+  show: userShow,
 };

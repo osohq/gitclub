@@ -10,6 +10,7 @@ import { Show as OrgShow } from './orgs/Show';
 import { Index as RepoIndex } from './repos/Index';
 import { New as RepoNew } from './repos/New';
 import { Show as RepoShow } from './repos/Show';
+import { Show as UserShow } from './users/Show';
 
 export {
   Home,
@@ -24,4 +25,5 @@ export {
   RepoIndex,
   RepoNew,
   RepoShow,
+  UserShow,
 };

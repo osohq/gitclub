@@ -35,6 +35,15 @@ def logout():
     return {}
 
 
+@bp.route("/users/<int:user_id>", methods=["GET"])
+def users_show(user_id):
+    user = g.basic_session.query(User).filter_by(id=user_id).first()
+    if user:
+        return user.repr()
+    else:
+        return jsonify(None), 404
+
+
 @bp.route("/orgs", methods=["GET"])
 def orgs_index():
     orgs = g.basic_session.query(Organization).all()

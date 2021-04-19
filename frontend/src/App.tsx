@@ -15,6 +15,7 @@ import {
   RepoIndex,
   RepoNew,
   RepoShow,
+  UserShow,
 } from './views';
 import { user as userApi } from './api';
 import { FlashNotice } from './components';
@@ -86,6 +87,8 @@ function App() {
         <RepoIndex path="/orgs/:orgId/repos" />
         <RepoNew path="/orgs/:orgId/repos/new" />
         <RepoShow path="/orgs/:orgId/repos/:repoId" />
+
+        <UserShow path="/users/:userId" />
 
         <NotFound default />
       </Router>
