@@ -23,7 +23,10 @@ def login():
 
 @bp.route("/whoami", methods=["GET"])
 def whoami():
-    return jsonify(g.current_user.repr())
+    if g.current_user:
+        return jsonify(g.current_user.repr())
+    else:
+        return jsonify(g.current_user)
 
 
 @bp.route("/logout", methods=["GET"])
