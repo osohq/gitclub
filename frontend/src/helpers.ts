@@ -1,5 +1,9 @@
 export type obj = { [key: string]: unknown };
 
+export function isObj(x: unknown): x is obj {
+  return typeof x === 'object' && x !== null;
+}
+
 export function camelizeKeys(o: obj): unknown {
   const snakeToCamel = (s: string) =>
     s.replace(/_[a-z]/g, (c) => c[1].toUpperCase());

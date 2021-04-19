@@ -16,7 +16,7 @@ export function Show({ navigate, userId }: ShowProps) {
       .show(userId)
       .then((u) => setUser(u))
       .catch(() =>
-        navigate!('/', { state: { error: `/users/${userId} not found.` } })
+        navigate!('/', { state: { error: `User #${userId} not found.` } })
       );
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
