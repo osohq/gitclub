@@ -12,13 +12,13 @@ bp = Blueprint("routes", __name__)
 def login():
     payload = request.get_json(force=True)
     if "user" not in payload:
-        return {}, 400
+        return jsonify(None), 400
     user = g.basic_session.query(User).filter_by(email=payload["user"]).first()
     if user is None:
         flask_session.pop("current_user_id", None)
-        return {}, 401
+        return jsonify(None), 401
     flask_session["current_user_id"] = user.id
-    return {}
+    return user.repr()
 
 
 @bp.route("/whoami", methods=["GET"])
