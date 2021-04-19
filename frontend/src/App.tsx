@@ -21,6 +21,8 @@ import {
   RepoShow,
 } from './views';
 import { user as userApi } from './api';
+import { FlashNotice } from './components';
+import type { Notice } from './components';
 
 import './App.css';
 
@@ -72,15 +74,44 @@ function Parent({ children, setUser }: ParentProps) {
   );
 }
 
+const probablyCorsError = (e: Error) =>
+  e instanceof TypeError &&
+  e.message === 'NetworkError when attempting to fetch resource.';
+
 function App() {
   const [user, setUser] = useState<LoggedInUser>('Guest');
+  const [notices, setNotices] = useState<Map<string, Notice>>(new Map());
+
+  const pushNotice = (n: Notice) =>
+    !notices.has(n.type + n.text) &&
+    setNotices((ns) => new Map(ns.set(n.type + n.text, n)));
+  const pushError = (text: string) => pushNotice({ type: 'error', text });
+  const popNotice = (n: Notice) =>
+    setNotices((ns) => {
+      ns.delete(n.type + n.text);
+      return new Map(ns);
+    });
 
   useEffect(() => {
-    userApi.whoami().then(setUser);
-  }, []);
+    userApi
+      .whoami()
+      .then(setUser)
+      .catch((e) => {
+        if (probablyCorsError(e)) {
+          pushError('Probable CORS error. Is the backend running?');
+        } else {
+          pushError(e.message);
+        }
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const flashNotices = [...notices].map(([, notice], i) => (
+    <FlashNotice key={i} notice={notice} clear={() => popNotice(notice)} />
+  ));
 
   return (
     <UserContext.Provider value={user}>
+      <>{flashNotices}</>
       <Router>
         <Parent path="/" setUser={setUser}>
           <Home path="/" />
