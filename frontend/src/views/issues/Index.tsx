@@ -39,9 +39,11 @@ export function Index({ orgId, repoId }: IndexProps) {
 
   return (
     <>
-      <h2>
-        {org.name} / {repo.name}
-      </h2>
+      <h1>
+        <Link to={`/orgs/${org.id}`}>{org.name}</Link> /{' '}
+        <Link to={`/orgs/${org.id}/repos/${repo.id}`}>{repo.name}</Link> /
+        issues
+      </h1>
       <ul>
         {issues.map((i) => (
           <li key={'issue-' + i.id}>

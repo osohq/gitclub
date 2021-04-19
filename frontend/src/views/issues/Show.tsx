@@ -31,10 +31,13 @@ export function Show({ issueId, orgId, repoId }: ShowProps) {
 
   return (
     <>
-      <Link to={`/orgs/${orgId}/repos/${repoId}/issues`}>
-        Back to {org.name} / {repo.name} issues
-      </Link>
-      <h1>{issue.title}</h1>
+      <h1>
+        <Link to={`/orgs/${org.id}`}>{org.name}</Link> /{' '}
+        <Link to={`/orgs/${org.id}/repos/${repo.id}`}>{repo.name}</Link> /{' '}
+        <Link to={`/orgs/${org.id}/repos/${repo.id}/issues`}>issues</Link> /{' '}
+        {issue.id}
+      </h1>
+      <h2>{issue.title}</h2>
     </>
   );
 }

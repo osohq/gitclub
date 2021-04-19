@@ -19,13 +19,11 @@ export function Index(_: RouteComponentProps) {
   return (
     <>
       {maybeNewLink}
-      <h2>Existing orgs</h2>
+      <h1>Orgs</h1>
       <ul>
         {orgs.map((o) => (
           <li key={'org-' + o.id}>
-            <Link to={`/orgs/${o.id}`}>
-              {o.id} - {o.name}
-            </Link>
+            <Link to={`/orgs/${o.id}`}>{o.name}</Link>
           </li>
         ))}
       </ul>

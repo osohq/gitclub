@@ -31,13 +31,13 @@ export function Index({ orgId }: IndexProps) {
 
   return (
     <>
-      <h2>{org.name} repos</h2>
+      <h1>
+        <Link to={`/orgs/${org.id}`}>{org.name}</Link> repos
+      </h1>
       <ul>
         {repos.map((r) => (
           <li key={'repo-' + r.id}>
-            <Link to={`/orgs/${org.id}/repos/${r.id}`}>
-              {r.id} - {r.name}
-            </Link>
+            <Link to={`/orgs/${org.id}/repos/${r.id}`}>{r.name}</Link>
           </li>
         ))}
       </ul>
