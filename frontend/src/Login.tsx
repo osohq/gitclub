@@ -1,12 +1,12 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
-import { SetUserProp, UserContext } from './App';
+import { PushErrorProp, SetUserProp, UserContext } from './App';
 import { user as userApi } from './api';
 
-type LoginProps = RouteComponentProps & SetUserProp;
+type LoginProps = RouteComponentProps & SetUserProp & PushErrorProp;
 
-export function Login({ setUser }: LoginProps) {
+export function Login({ pushError, setUser }: LoginProps) {
   const user = useContext(UserContext);
   const [email, setEmail] = useState<string>('');
 
@@ -19,8 +19,7 @@ export function Login({ setUser }: LoginProps) {
       const user = await userApi.login({ user: email });
       setUser(user);
     } catch (e) {
-      // TODO(gj): flash message?
-      console.log(e);
+      pushError('Failed to log in.');
     }
   }
 

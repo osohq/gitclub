@@ -28,6 +28,7 @@ const Home = (_: RouteComponentProps) => <h1>GitClub</h1>;
 const NotFound = (_: RouteComponentProps) => <Redirect to="/" noThrow />;
 
 export type SetUserProp = { setUser: Dispatch<SetStateAction<LoggedInUser>> };
+export type PushErrorProp = { pushError: (text: string) => void };
 
 const probablyCorsError = (e: Error) =>
   e instanceof TypeError &&
@@ -37,9 +38,10 @@ function App() {
   const [user, setUser] = useState<LoggedInUser>('Guest');
   const [notices, setNotices] = useState<Map<string, Notice>>(new Map());
 
-  const pushNotice = (n: Notice) =>
-    !notices.has(n.type + n.text) &&
-    setNotices((ns) => new Map(ns.set(n.type + n.text, n)));
+  const pushNotice = (n: Notice) => {
+    if (!notices.has(n.type + n.text))
+      setNotices((ns) => new Map(ns.set(n.type + n.text, n)));
+  };
   const pushError = (text: string) => pushNotice({ type: 'error', text });
   const popNotice = (n: Notice) =>
     setNotices((ns) => {
@@ -70,7 +72,7 @@ function App() {
       <Nav setUser={setUser} />
       <Router>
         <Home path="/" />
-        <Login path="/login" setUser={setUser} />
+        <Login path="/login" pushError={pushError} setUser={setUser} />
 
         <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />
         <IssueNew path="/orgs/:orgId/repos/:repoId/issues/new" />
