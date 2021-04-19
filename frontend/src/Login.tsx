@@ -35,7 +35,11 @@ export function Login({ setUser }: LoginProps) {
         <label>
           e-mail: <input type="text" value={email} onChange={handleChange} />
         </label>{' '}
-        <input type="submit" value="Log in" />
+        <input
+          type="submit"
+          value="Log in"
+          disabled={!email.replaceAll(' ', '')}
+        />
       </form>
     </>
   );
