@@ -18,15 +18,20 @@ interface ShowProps extends RouteComponentProps {
   orgId?: string;
 }
 
-export function Show({ orgId }: ShowProps) {
+export function Show({ navigate, orgId }: ShowProps) {
   const [org, setOrg] = useState<Org>();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
   const [refetch, setRefetch] = useState(false);
 
   useEffect(() => {
-    orgApi.show(orgId).then((o) => setOrg(o));
-  }, [orgId]);
+    orgApi
+      .show(orgId)
+      .then((o) => setOrg(o))
+      .catch(() =>
+        navigate!('/', { state: { error: `/orgs/${orgId} not found.` } })
+      );
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     orgApi.roleChoices().then((rs) => setRoles(rs));

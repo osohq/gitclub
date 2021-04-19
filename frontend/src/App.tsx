@@ -1,9 +1,11 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Redirect, RouteComponentProps, Router } from '@reach/router';
 
-import { Login } from './Login';
 import { User } from './models';
 import {
+  Home,
+  Login,
+  Nav,
   IssueIndex,
   IssueNew,
   IssueShow,
@@ -15,7 +17,7 @@ import {
   RepoShow,
 } from './views';
 import { user as userApi } from './api';
-import { FlashNotice, Nav } from './components';
+import { FlashNotice } from './components';
 import type { Notice } from './components';
 
 import './App.css';
@@ -24,7 +26,6 @@ type LoggedInUser = User | 'Guest';
 
 export const UserContext = React.createContext<LoggedInUser>('Guest');
 
-const Home = (_: RouteComponentProps) => <h1>GitClub</h1>;
 const NotFound = (_: RouteComponentProps) => <Redirect to="/" noThrow />;
 
 export type SetUserProp = { setUser: Dispatch<SetStateAction<LoggedInUser>> };
@@ -71,7 +72,7 @@ function App() {
       <>{flashNotices}</>
       <Nav setUser={setUser} />
       <Router>
-        <Home path="/" />
+        <Home path="/" pushError={pushError} />
         <Login path="/login" pushError={pushError} setUser={setUser} />
 
         <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />

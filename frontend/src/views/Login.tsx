@@ -1,8 +1,8 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
-import { PushErrorProp, SetUserProp, UserContext } from './App';
-import { user as userApi } from './api';
+import { PushErrorProp, SetUserProp, UserContext } from '../App';
+import { user as userApi } from '../api';
 
 type LoginProps = RouteComponentProps & SetUserProp & PushErrorProp;
 

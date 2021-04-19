@@ -1,3 +1,6 @@
+import { Home } from './Home';
+import { Login } from './Login';
+import { Nav } from './Nav';
 import { Index as IssueIndex } from './issues/Index';
 import { New as IssueNew } from './issues/New';
 import { Show as IssueShow } from './issues/Show';
@@ -9,6 +12,9 @@ import { New as RepoNew } from './repos/New';
 import { Show as RepoShow } from './repos/Show';
 
 export {
+  Home,
+  Login,
+  Nav,
   IssueIndex,
   IssueNew,
   IssueShow,
