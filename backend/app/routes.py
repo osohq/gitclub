@@ -2,8 +2,8 @@ from flask import Blueprint, g, request, current_app, jsonify, session as flask_
 from sqlalchemy_oso import roles as oso_roles
 from sqlalchemy import column
 
-from .models import User, Organization, Team, Repository, Issue
-from .models import RepositoryRole, OrganizationRole, TeamRole
+from .models import User, Organization, Repository, Issue
+from .models import RepositoryRole, OrganizationRole
 
 bp = Blueprint("routes", __name__)
 
@@ -148,60 +148,6 @@ def issues_create(org_id, repo_id):
 def issues_show(org_id, repo_id, issue_id):
     issue = g.basic_session.query(Issue).filter_by(id=issue_id).one()
     return issue.repr()
-
-
-# # TODO(gj): not currently using 'org_id'
-# @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/roles", methods=["GET", "POST"])
-# def repo_roles_index(org_id, repo_id):
-#     if request.method == "GET":
-#         repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
-#         current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ROLES")
-#
-#         roles = oso_roles.get_resource_roles(g.auth_session, repo)
-#         return jsonify(
-#             [
-#                 {
-#                     "user": role.user.repr() if role.user else {"email": "none"},
-#                     "team": role.team.repr() if role.team else {"name": "none"},
-#                     "role": role.repr(),
-#                 }
-#                 for role in roles
-#             ]
-#         )
-#     elif request.method == "POST":
-#         # TODO: test this
-#         content = request.get_json()
-#         print(content)
-#         role_info = content.get("role")
-#         role_name = role_info.get("name")
-#         user_email = role_info.get("user")
-#         user = g.auth_session.query(User).filter_by(email=user_email).first()
-#         repo = g.auth_session.query(Repository).filter_by(id=repo_id).first()
-#         oso_roles.add_user_role(g.auth_session, user, repo, role_name, commit=True)
-#         return {}, 201
-
-
-# @bp.route("/orgs/<int:org_id>/teams", methods=["GET"])
-# def teams_index(org_id):
-#     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
-#     current_app.oso.authorize(org, actor=g.current_user, action="LIST_TEAMS")
-#
-#     teams = g.auth_session.query(Team).filter(Team.organization.has(id=org_id))
-#     return jsonify([team.repr() for team in teams])
-
-
-# @bp.route("/orgs/<int:org_id>/teams/<int:team_id>", methods=["GET"])
-# def teams_show(org_id, team_id):
-#     team = g.basic_session.query(Team).get(team_id)
-#     current_app.oso.authorize(team, action="READ")
-#     return team.repr()
-
-
-# @bp.route("/orgs/<int:org_id>/billing", methods=["GET"])
-# def billing_show(org_id):
-#     org = g.basic_session.query(Organization).filter(Organization.id == org_id).first()
-#     current_app.oso.authorize(org, actor=g.current_user, action="READ_BILLING")
-#     return {"billing_address": org.billing_address}
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
