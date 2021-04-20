@@ -3,7 +3,7 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
-import { NoticeContext } from '..';
+import { NoticeContext } from '../../components';
 
 type ShowProps = RouteComponentProps & { orgId?: string; repoId?: string };
 

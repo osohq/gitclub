@@ -1,10 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Issue, Org, Repo } from '../../models';
+import { Issue, Org, Repo, UserContext } from '../../models';
 import { issue as issueApi, org as orgApi, repo as repoApi } from '../../api';
-import { UserContext } from '../../App';
-import { NoticeContext } from '..';
+import { NoticeContext } from '../../components';
 
 type IndexProps = RouteComponentProps & { orgId?: string; repoId?: string };
 

@@ -1,16 +1,15 @@
-import React, { useContext } from 'react';
+import { MouseEvent, useContext } from 'react';
 import { Link } from '@reach/router';
 
-import { UserContext } from '../App';
 import { user as userApi } from '../api';
-import { User } from '../models';
-import { NoticeContext } from '.';
+import { User, UserContext } from '../models';
+import { NoticeContext } from '../components';
 
 export function Nav() {
   const { error } = useContext(NoticeContext);
   const user = useContext(UserContext);
 
-  async function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
+  async function handleLogout(e: MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
     try {
       await userApi.logout();

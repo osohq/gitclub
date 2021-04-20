@@ -1,22 +1,6 @@
 import { useEffect, useState } from 'react';
 
-type NoticeType = 'error' | 'info';
-
-export type Notice = {
-  text: string;
-  type: NoticeType;
-};
-
-function noticeTypeToColor(t: NoticeType): string {
-  switch (t) {
-    case 'error':
-      return 'red';
-    case 'info':
-      return 'blue';
-    default:
-      return ((_: never) => _)(t);
-  }
-}
+import { Notice, noticeTypeToColor } from '.';
 
 type FlashNoticeProps = { notice: Notice; clear: () => void };
 

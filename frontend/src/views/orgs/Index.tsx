@@ -1,10 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Org } from '../../models';
+import { Org, UserContext } from '../../models';
 import { org as orgApi } from '../../api';
-import { UserContext } from '../../App';
-import { NoticeContext } from '..';
+import { NoticeContext } from '../../components';
 
 export function Index(_: RouteComponentProps) {
   const user = useContext(UserContext);

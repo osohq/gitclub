@@ -3,7 +3,7 @@ import { RouteComponentProps } from '@reach/router';
 
 import { User } from '../../models';
 import { user as userApi } from '../../api';
-import { NoticeContext } from '..';
+import { NoticeContext } from '../../components';
 
 type ShowProps = RouteComponentProps & { userId?: string };
 

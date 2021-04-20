@@ -1,8 +1,8 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
-import { UserContext } from '../App';
-import { NoticeContext } from '.';
+import { UserContext } from '../models';
+import { NoticeContext } from '../components';
 import { user as userApi } from '../api';
 
 export function Login(_: RouteComponentProps) {

@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Router } from '@reach/router';
 
-import { User } from './models';
+import { LoggedInUser, User, UserContext } from './models';
 import {
   Home,
   Login,
@@ -20,45 +20,23 @@ import {
   UserShow,
 } from './views';
 import { user as userApi } from './api';
-import { NoticeContext } from './views';
+import { NoticeContext } from './components';
 
 import './App.css';
 
-type LoggedInUser = User | 'Guest' | 'Loading';
-
-export const UserContext = React.createContext<{
-  current: LoggedInUser;
-  loggedIn: () => boolean;
-  update: (u: LoggedInUser) => void;
-}>({
-  current: 'Loading',
-  loggedIn: () => false,
-  update: (_) => console.error('override me'),
-});
-
-const probablyCorsError = (e: Error) =>
-  e instanceof TypeError &&
-  e.message === 'NetworkError when attempting to fetch resource.';
-
 function App() {
-  const [user, setUser] = useState<LoggedInUser>('Loading');
   const { error } = useContext(NoticeContext);
+
+  const [user, setUser] = useState<LoggedInUser>('Loading');
+  const loggedIn = () => user instanceof User;
+  const userContext = { current: user, loggedIn, update: setUser };
 
   useEffect(() => {
     userApi
       .whoami()
       .then(setUser)
-      .catch((e) => {
-        if (probablyCorsError(e)) {
-          error('Probable CORS error. Is the backend running?');
-        } else {
-          error(e.message);
-        }
-      });
+      .catch((e) => error(`Failed to fetch current user: ${e.message}`));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loggedIn = () => user instanceof User;
-  const userContext = { current: user, loggedIn, update: setUser };
 
   return (
     <UserContext.Provider value={userContext}>

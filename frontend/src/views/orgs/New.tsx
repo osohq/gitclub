@@ -8,10 +8,9 @@ import {
 } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { UserContext } from '../../App';
 import { org as orgApi, repo as repoApi } from '../../api';
-import { OrgParams } from '../../models';
-import { NoticeContext } from '..';
+import { OrgParams, UserContext } from '../../models';
+import { NoticeContext } from '../../components';
 
 export function New(_: RouteComponentProps) {
   const user = useContext(UserContext);

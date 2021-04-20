@@ -1,5 +1,5 @@
 import { FlashNotice } from './FlashNotice';
-import type { Notice } from './FlashNotice';
+import { Notice, NoticeContext, noticeTypeToColor } from './Notice';
 
-export { FlashNotice };
+export { FlashNotice, NoticeContext, noticeTypeToColor };
 export type { Notice };

@@ -1,13 +1,8 @@
 import { RouteComponentProps } from '@reach/router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { FlashNotice, Notice } from '../components';
+import { FlashNotice, Notice, NoticeContext } from '../components';
 import { isObj, obj, popField } from '../helpers';
-
-export const NoticeContext = React.createContext({
-  error: (_: string) => console.error('override me'),
-  redirectWithError: (_?: string) => console.error('override me'),
-});
 
 const popState = (state: obj, field: string) =>
   window.history.replaceState(popField(state, field), document.title);

@@ -9,11 +9,9 @@ import {
 } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Org, User, UserRole } from '../../models';
-import type { UserRoleParams } from '../../models';
+import { Org, User, UserContext, UserRole, UserRoleParams } from '../../models';
 import { org as orgApi } from '../../api';
-import { UserContext } from '../../App';
-import { NoticeContext } from '..';
+import { NoticeContext } from '../../components';
 
 type ShowProps = RouteComponentProps & { orgId?: string };
 
