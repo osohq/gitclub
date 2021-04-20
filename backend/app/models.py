@@ -1,23 +1,16 @@
-import json
 import datetime
-from enum import Enum
-
-from flask import current_app
-from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy.types import Integer, String, DateTime
-from sqlalchemy.schema import Table, Column, ForeignKey
-from sqlalchemy.orm import relationship, scoped_session, backref
+from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.orm import relationship, backref
 
 from sqlalchemy.ext.declarative import declarative_base
-
-from sqlalchemy_oso import authorized_sessionmaker
-from sqlalchemy_utils.types.choice import ChoiceType
 
 from sqlalchemy_oso.roles import resource_role_class
 
 
 Base = declarative_base()
+
 
 ## MODELS ##
 
@@ -94,6 +87,8 @@ class Issue(Base):
 
 
 ## ROLE MODELS ##
+
+
 RepositoryRoleMixin = resource_role_class(
     declarative_base=Base,
     user_model=User,

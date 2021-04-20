@@ -1,4 +1,4 @@
-from .models import User, Organization, Team, Repository, Issue
+from .models import User, Organization, Team, Repository
 from .models import RepositoryRole, OrganizationRole, TeamRole
 
 
