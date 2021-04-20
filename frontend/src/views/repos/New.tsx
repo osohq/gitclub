@@ -1,16 +1,15 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
+import { NoticeContext } from '..';
 import { repo as repoApi } from '../../api';
 
-interface NewProps extends RouteComponentProps {
-  orgId?: string;
-}
+type NewProps = RouteComponentProps & { orgId?: string };
 
 export function New({ orgId }: NewProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { error } = useContext(NoticeContext);
   const [name, setName] = useState<string>('');
   const navigate = useNavigate();
   const index = `/orgs/${orgId}/repos`;
@@ -28,7 +27,7 @@ export function New({ orgId }: NewProps) {
       const repo = await repoApi.create({ name }, orgId);
       await navigate(`${index}/${repo.id}`);
     } catch (e) {
-      error(e);
+      error(`Failed to create new repo: ${e.message}`);
     }
   }
 

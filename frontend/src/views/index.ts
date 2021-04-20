@@ -1,6 +1,8 @@
 import { Home } from './Home';
 import { Login } from './Login';
 import { Nav } from './Nav';
+import { NotFound } from './NotFound';
+import { NoticeContext, Notices } from './Notices';
 import { Index as IssueIndex } from './issues/Index';
 import { New as IssueNew } from './issues/New';
 import { Show as IssueShow } from './issues/Show';
@@ -16,6 +18,9 @@ export {
   Home,
   Login,
   Nav,
+  NotFound,
+  NoticeContext,
+  Notices,
   IssueIndex,
   IssueNew,
   IssueShow,

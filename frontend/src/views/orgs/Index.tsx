@@ -3,18 +3,19 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org } from '../../models';
 import { org as orgApi } from '../../api';
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
+import { NoticeContext } from '..';
 
 export function Index(_: RouteComponentProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { redirectWithError } = useContext(NoticeContext);
   const [orgs, setOrgs] = useState<Org[]>([]);
 
   useEffect(() => {
     orgApi
       .index()
       .then((os) => setOrgs(os))
-      .catch(error);
+      .catch(redirectWithError);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maybeNewLink = !user.loggedIn() ? null : (

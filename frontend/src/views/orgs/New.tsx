@@ -8,13 +8,14 @@ import {
 } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
 import { org as orgApi, repo as repoApi } from '../../api';
 import { OrgParams } from '../../models';
+import { NoticeContext } from '..';
 
 export function New(_: RouteComponentProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { error, redirectWithError } = useContext(NoticeContext);
   const [details, setDetails] = useState<OrgParams>({
     name: '',
     billingAddress: '',
@@ -34,7 +35,9 @@ export function New(_: RouteComponentProps) {
           }));
           setRepoRoleChoices(cs);
         })
-        .catch(error);
+        .catch((e) =>
+          redirectWithError(`Failed to fetch role choices: ${e.message}`)
+        );
     }
   }, [user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -55,7 +58,7 @@ export function New(_: RouteComponentProps) {
       const org = await orgApi.create(details);
       await navigate(`/orgs/${org.id}`);
     } catch (e) {
-      error(e.message);
+      error(`Failed to create new org: ${e.message}`);
     }
   }
 

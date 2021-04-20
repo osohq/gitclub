@@ -3,24 +3,29 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
+import { NoticeContext } from '..';
 
-interface IndexProps extends RouteComponentProps {
-  orgId?: string;
-}
+type IndexProps = RouteComponentProps & { orgId?: string };
 
 export function Index({ orgId }: IndexProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repos, setRepos] = useState<Repo[]>([]);
 
   useEffect(() => {
-    orgApi.show(orgId).then(setOrg).catch(error);
+    orgApi
+      .show(orgId)
+      .then(setOrg)
+      .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi.index(orgId).then(setRepos).catch(error);
+    repoApi
+      .index(orgId)
+      .then(setRepos)
+      .catch((e) => redirectWithError(`Failed to fetch repos: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org) return null;

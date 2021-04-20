@@ -12,14 +12,13 @@ import { Link, RouteComponentProps } from '@reach/router';
 import { Org, User, UserRole } from '../../models';
 import type { UserRoleParams } from '../../models';
 import { org as orgApi } from '../../api';
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
+import { NoticeContext } from '..';
 
-interface ShowProps extends RouteComponentProps {
-  orgId?: string;
-}
+type ShowProps = RouteComponentProps & { orgId?: string };
 
-export function Show({ navigate, orgId }: ShowProps) {
-  const { error } = useContext(NotifyContext);
+export function Show({ orgId }: ShowProps) {
+  const { error, redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
@@ -29,16 +28,14 @@ export function Show({ navigate, orgId }: ShowProps) {
     orgApi
       .show(orgId)
       .then((o) => setOrg(o))
-      .catch(() =>
-        navigate!('/', { state: { error: `Failed to load /orgs/${orgId}.` } })
-      );
+      .catch(redirectWithError);
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     orgApi
       .roleChoices()
       .then((rs) => setRoles(rs))
-      .catch(error);
+      .catch((e) => error(`Failed to fetch role choices: ${e.message}`));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!orgId || !org) return null;
@@ -85,12 +82,13 @@ function UserRoles({
   setRefetch,
 }: UserRolesProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { error } = useContext(NoticeContext);
+
   useEffect(() => {
     orgApi
       .userRoleIndex(orgId)
       .then((urs) => setUserRoles(urs))
-      .catch(error);
+      .catch((e) => error(`Failed to fetch user roles: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function updateRole(user: User, role: string) {
@@ -102,7 +100,7 @@ function UserRoles({
         urs.map((old) => (old.user.id === updated.user.id ? updated : old))
       );
     } catch (e) {
-      error(e);
+      error(`Failed to update user role: ${e.message}`);
     }
   }
 
@@ -114,7 +112,7 @@ function UserRoles({
         setUserRoles((urs) => urs.filter((ur) => ur.user.id !== user.id));
         setRefetch((x) => !x);
       })
-      .catch(error);
+      .catch((e) => error(`Failed to delete user role: ${e.message}`));
   }
 
   return (
@@ -172,7 +170,7 @@ function NewUserRole({
   setRefetch,
 }: NewUserRoleProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { error } = useContext(NoticeContext);
   const [users, setUsers] = useState<User[]>([]);
   const [details, setDetails] = useState<UserRoleParams>({
     userId: 0,
@@ -187,7 +185,7 @@ function NewUserRole({
           setUsers(users);
           setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
         })
-        .catch(error);
+        .catch((e) => error(`Failed to fetch potential users: ${e.message}`));
     }
   }, [orgId, refetch, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -201,7 +199,7 @@ function NewUserRole({
       setDetails((ur) => ({ ...ur, userId: 0 }));
       setUserRoles((urs) => [...urs, { ...newUserRole }]);
     } catch (e) {
-      error(e);
+      error(`Failed to create new user role: ${e.message}`);
     }
   }
 

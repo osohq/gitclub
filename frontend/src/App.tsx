@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Redirect, RouteComponentProps, Router } from '@reach/router';
+import React, { useContext, useEffect, useState } from 'react';
+import { Router } from '@reach/router';
 
 import { User } from './models';
 import {
   Home,
   Login,
   Nav,
+  NotFound,
+  Notices,
   IssueIndex,
   IssueNew,
   IssueShow,
@@ -18,8 +20,7 @@ import {
   UserShow,
 } from './views';
 import { user as userApi } from './api';
-import { FlashNotice } from './components';
-import type { Notice } from './components';
+import { NoticeContext } from './views';
 
 import './App.css';
 
@@ -35,32 +36,13 @@ export const UserContext = React.createContext<{
   update: (_) => console.error('override me'),
 });
 
-export const NotifyContext = React.createContext({
-  error: (text: string) => console.error(text),
-});
-
-const NotFound = (_: RouteComponentProps) => <Redirect to="/" noThrow />;
-
 const probablyCorsError = (e: Error) =>
   e instanceof TypeError &&
   e.message === 'NetworkError when attempting to fetch resource.';
 
 function App() {
   const [user, setUser] = useState<LoggedInUser>('Loading');
-  const [notices, setNotices] = useState<Map<string, Notice>>(new Map());
-
-  const pushNotice = (n: Notice) => {
-    if (!notices.has(n.type + n.text))
-      setNotices((ns) => new Map(ns.set(n.type + n.text, n)));
-  };
-  const popNotice = (n: Notice) =>
-    setNotices((ns) => {
-      ns.delete(n.type + n.text);
-      return new Map(ns);
-    });
-  const notify = {
-    error: (text: string) => pushNotice({ type: 'error', text }),
-  };
+  const { error } = useContext(NoticeContext);
 
   useEffect(() => {
     userApi
@@ -68,29 +50,21 @@ function App() {
       .then(setUser)
       .catch((e) => {
         if (probablyCorsError(e)) {
-          notify.error('Probable CORS error. Is the backend running?');
+          error('Probable CORS error. Is the backend running?');
         } else {
-          notify.error(e.message);
+          error(e.message);
         }
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const flashNotices = [...notices].map(([, notice], i) => (
-    <FlashNotice key={i} notice={notice} clear={() => popNotice(notice)} />
-  ));
-
-  const userContext = {
-    current: user,
-    loggedIn: () => user instanceof User,
-    update: setUser,
-  };
+  const loggedIn = () => user instanceof User;
+  const userContext = { current: user, loggedIn, update: setUser };
 
   return (
-    <NotifyContext.Provider value={notify}>
-      <UserContext.Provider value={userContext}>
-        <>{flashNotices}</>
-        <Nav />
-        <Router>
+    <UserContext.Provider value={userContext}>
+      <Nav />
+      <Router>
+        <Notices path="/">
           <Home path="/" />
           <Login path="/login" />
 
@@ -109,9 +83,9 @@ function App() {
           <UserShow path="/users/:userId" />
 
           <NotFound default />
-        </Router>
-      </UserContext.Provider>
-    </NotifyContext.Provider>
+        </Notices>
+      </Router>
+    </UserContext.Provider>
   );
 }
 

@@ -4,14 +4,20 @@ import { Link } from '@reach/router';
 import { UserContext } from '../App';
 import { user as userApi } from '../api';
 import { User } from '../models';
+import { NoticeContext } from '.';
 
 export function Nav() {
+  const { error } = useContext(NoticeContext);
   const user = useContext(UserContext);
 
   async function handleLogout(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
-    await userApi.logout();
-    user.update('Guest');
+    try {
+      await userApi.logout();
+      user.update('Guest');
+    } catch (e) {
+      error('Failed to log out.');
+    }
   }
 
   const login = <Link to="/login">Login</Link>;

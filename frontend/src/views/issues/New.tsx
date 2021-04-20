@@ -1,17 +1,15 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
 import { issue as issueApi } from '../../api';
+import { NoticeContext } from '..';
 
-interface NewProps extends RouteComponentProps {
-  orgId?: string;
-  repoId?: string;
-}
+type NewProps = RouteComponentProps & { orgId?: string; repoId?: string };
 
 export function New({ orgId, repoId }: NewProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { error } = useContext(NoticeContext);
   const [title, setTitle] = useState<string>('');
   const navigate = useNavigate();
   const index = `/orgs/${orgId}/repos/${repoId}/issues`;
@@ -29,7 +27,7 @@ export function New({ orgId, repoId }: NewProps) {
       const issue = await issueApi.create({ title }, orgId, repoId);
       await navigate(`${index}/${issue.id}`);
     } catch (e) {
-      error(e);
+      error(`Failed to create new issue: ${e.message}`);
     }
   }
 

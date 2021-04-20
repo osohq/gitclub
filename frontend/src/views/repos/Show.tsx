@@ -3,24 +3,27 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
-import { NotifyContext } from '../../App';
+import { NoticeContext } from '..';
 
-interface ShowProps extends RouteComponentProps {
-  orgId?: string;
-  repoId?: string;
-}
+type ShowProps = RouteComponentProps & { orgId?: string; repoId?: string };
 
 export function Show({ orgId, repoId }: ShowProps) {
-  const { error } = useContext(NotifyContext);
+  const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();
 
   useEffect(() => {
-    orgApi.show(orgId).then(setOrg).catch(error);
+    orgApi
+      .show(orgId)
+      .then(setOrg)
+      .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi.show(orgId, repoId).then(setRepo).catch(error);
+    repoApi
+      .show(orgId, repoId)
+      .then(setRepo)
+      .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org || !repo) return null;

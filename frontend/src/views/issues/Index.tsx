@@ -3,30 +3,37 @@ import { Link, RouteComponentProps } from '@reach/router';
 
 import { Issue, Org, Repo } from '../../models';
 import { issue as issueApi, org as orgApi, repo as repoApi } from '../../api';
-import { NotifyContext, UserContext } from '../../App';
+import { UserContext } from '../../App';
+import { NoticeContext } from '..';
 
-interface IndexProps extends RouteComponentProps {
-  orgId?: string;
-  repoId?: string;
-}
+type IndexProps = RouteComponentProps & { orgId?: string; repoId?: string };
 
 export function Index({ orgId, repoId }: IndexProps) {
   const user = useContext(UserContext);
-  const { error } = useContext(NotifyContext);
+  const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();
   const [issues, setIssues] = useState<Issue[]>();
 
   useEffect(() => {
-    orgApi.show(orgId).then(setOrg).catch(error);
+    orgApi
+      .show(orgId)
+      .then(setOrg)
+      .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi.show(orgId, repoId).then(setRepo).catch(error);
+    repoApi
+      .show(orgId, repoId)
+      .then(setRepo)
+      .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    issueApi.index(orgId, repoId).then(setIssues).catch(error);
+    issueApi
+      .index(orgId, repoId)
+      .then(setIssues)
+      .catch((e) => redirectWithError(`Failed to fetch issues: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org || !repo || !issues) return null;

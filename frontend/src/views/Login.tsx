@@ -1,12 +1,13 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps } from '@reach/router';
 
-import { NotifyContext, UserContext } from '../App';
+import { UserContext } from '../App';
+import { NoticeContext } from '.';
 import { user as userApi } from '../api';
 
 export function Login(_: RouteComponentProps) {
   const user = useContext(UserContext);
-  const notify = useContext(NotifyContext);
+  const { error } = useContext(NoticeContext);
   const [email, setEmail] = useState<string>('');
 
   // If a logged-in user navigates to this page, redirect to home.
@@ -18,7 +19,7 @@ export function Login(_: RouteComponentProps) {
       const u = await userApi.login({ user: email });
       user.update(u);
     } catch (e) {
-      notify.error('Failed to log in.');
+      error('Failed to log in.');
     }
   }
 
