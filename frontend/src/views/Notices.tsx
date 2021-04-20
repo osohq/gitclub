@@ -24,7 +24,7 @@ export function Notices({ children, location, navigate }: NoticesProps) {
     const segments = pathname.slice(1).split('/').filter(Boolean);
     const to = '/' + segments.reverse().slice(1).reverse().join('/');
     const error = typeof e === 'string' ? e : `Failed to load ${pathname}`;
-    navigate!(to, { state: { error } });
+    navigate!(to, { state: { error }, replace: true });
   };
 
   useEffect(() => {
