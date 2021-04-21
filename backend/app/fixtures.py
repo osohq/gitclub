@@ -1,5 +1,4 @@
 from .models import User, Organization, Team, Repository
-from .models import RepositoryRole, OrganizationRole, TeamRole
 
 
 def load_fixture_data(session):
@@ -58,50 +57,50 @@ def load_fixture_data(session):
     # TODO: issues
 
     # CREATE ROLE DATA
-    roles = [
-        RepositoryRole(name="READ", repository=abby_road, user=john),
-        RepositoryRole(name="READ", repository=abby_road, user=paul),
-        RepositoryRole(name="WRITE", repository=abby_road, team=percussion),
-        RepositoryRole(name="READ", repository=paperwork, user=mike),
-        RepositoryRole(name="READ", repository=paperwork, user=sully),
-        OrganizationRole(
-            name="OWNER",
-            organization=beatles,
-            user=john,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=beatles,
-            user=paul,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=beatles,
-            user=ringo,
-        ),
-        OrganizationRole(
-            name="OWNER",
-            organization=monsters,
-            user=mike,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=monsters,
-            user=sully,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=monsters,
-            user=randall,
-        ),
-        TeamRole(name="MEMBER", team=vocalists, user=paul),
-        TeamRole(name="MAINTAINER", team=vocalists, user=john),
-        TeamRole(name="MAINTAINER", team=percussion, user=ringo),
-        TeamRole(name="MEMBER", team=scarers, user=randall),
-        TeamRole(name="MAINTAINER", team=scarers, user=sully),
-    ]
+    # roles = [
+    #     RepositoryRole(name="READ", repository=abby_road, user=john),
+    #     RepositoryRole(name="READ", repository=abby_road, user=paul),
+    #     RepositoryRole(name="WRITE", repository=abby_road, team=percussion),
+    #     RepositoryRole(name="READ", repository=paperwork, user=mike),
+    #     RepositoryRole(name="READ", repository=paperwork, user=sully),
+    #     OrganizationRole(
+    #         name="OWNER",
+    #         organization=beatles,
+    #         user=john,
+    #     ),
+    #     OrganizationRole(
+    #         name="MEMBER",
+    #         organization=beatles,
+    #         user=paul,
+    #     ),
+    #     OrganizationRole(
+    #         name="MEMBER",
+    #         organization=beatles,
+    #         user=ringo,
+    #     ),
+    #     OrganizationRole(
+    #         name="OWNER",
+    #         organization=monsters,
+    #         user=mike,
+    #     ),
+    #     OrganizationRole(
+    #         name="MEMBER",
+    #         organization=monsters,
+    #         user=sully,
+    #     ),
+    #     OrganizationRole(
+    #         name="MEMBER",
+    #         organization=monsters,
+    #         user=randall,
+    #     ),
+    #     TeamRole(name="MEMBER", team=vocalists, user=paul),
+    #     TeamRole(name="MAINTAINER", team=vocalists, user=john),
+    #     TeamRole(name="MAINTAINER", team=percussion, user=ringo),
+    #     TeamRole(name="MEMBER", team=scarers, user=randall),
+    #     TeamRole(name="MAINTAINER", team=scarers, user=sully),
+    # ]
 
-    for role in roles:
-        session.add(role)
+    # for role in roles:
+    #     session.add(role)
 
     session.commit()

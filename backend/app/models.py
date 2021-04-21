@@ -6,8 +6,6 @@ from sqlalchemy.orm import relationship, backref
 
 from sqlalchemy.ext.declarative import declarative_base
 
-from sqlalchemy_oso.roles import resource_role_class
-
 
 Base = declarative_base()
 
@@ -84,40 +82,3 @@ class Issue(Base):
 
     def repr(self):
         return {"id": self.id, "title": self.title}
-
-
-## ROLE MODELS ##
-
-
-RepositoryRoleMixin = resource_role_class(
-    declarative_base=Base,
-    user_model=User,
-    resource_model=Repository,
-    role_choices=["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"],
-)
-
-
-class RepositoryRole(Base, RepositoryRoleMixin):
-    team_id = Column(Integer, ForeignKey("teams.id"))
-    team = relationship("Team", backref="repository_roles", lazy=True)
-
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
-
-
-OrganizationRoleMixin = resource_role_class(
-    Base, User, Organization, ["OWNER", "MEMBER", "BILLING"]
-)
-
-
-class OrganizationRole(Base, OrganizationRoleMixin):
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
-
-
-TeamRoleMixin = resource_role_class(Base, User, Team, ["MAINTAINER", "MEMBER"])
-
-
-class TeamRole(Base, TeamRoleMixin):
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
