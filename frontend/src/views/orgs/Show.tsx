@@ -48,6 +48,14 @@ export function Show({ orgId }: ShowProps) {
         <Link to={`/orgs/${orgId}/repos`}>Repos</Link>
       </h2>
 
+      <UserRoles
+        orgId={orgId}
+        userRoles={userRoles}
+        setUserRoles={setUserRoles}
+        roles={roles}
+        setRefetch={setRefetch}
+      />
+
       {roles.length && (
         <NewUserRole
           orgId={orgId}
@@ -57,13 +65,6 @@ export function Show({ orgId }: ShowProps) {
           setRefetch={setRefetch}
         />
       )}
-      <UserRoles
-        orgId={orgId}
-        userRoles={userRoles}
-        setUserRoles={setUserRoles}
-        roles={roles}
-        setRefetch={setRefetch}
-      />
     </>
   );
 }
