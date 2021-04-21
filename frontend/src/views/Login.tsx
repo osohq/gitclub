@@ -18,8 +18,10 @@ export function Login(_: RouteComponentProps) {
     try {
       const u = await userApi.login({ user: email });
       user.update(u);
+      // TODO(gj): navigate(-1) throws errors that I don't feel like debugging.
+      window.history.back();
     } catch (e) {
-      error('Failed to log in.');
+      error(`Failed to log in: ${e.message}`);
     }
   }
 
