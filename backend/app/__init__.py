@@ -21,7 +21,6 @@ def create_app(db_path=None, load_fixtures=False):
         engine = create_engine(
             "sqlite:///roles.db", connect_args={"check_same_thread": False}
         )
-    Base.metadata.create_all(engine)
 
     # init app
     app = Flask(__name__)
@@ -34,6 +33,11 @@ def create_app(db_path=None, load_fixtures=False):
     oso.load_file("app/roles.polar")
     oso.load_file("app/roles_demo.polar")
     roles.enable(oso, Base, User)
+
+    # subtlety warning - you have to call roles.enable(oso, Base, User)
+    # prior to this or organization_roles doesn't get created. This is
+    # particularly subtle since other things in our demos create this table
+    Base.metadata.create_all(engine)
 
     # init sessions
     AuthorizedSession = authorized_sessionmaker(
