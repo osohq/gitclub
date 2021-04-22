@@ -13,12 +13,13 @@ def login():
     payload = request.get_json(force=True)
     if "user" not in payload:
         return jsonify(None), 400
-    user = g.basic_session.query(User).filter_by(email=payload["user"]).first()
-    if user is None:
+    user = g.basic_session.query(User).filter_by(email=payload["user"]).one_or_none()
+    if user:
+        flask_session["current_user_id"] = user.id
+        return user.repr()
+    else:
         flask_session.pop("current_user_id", None)
         return jsonify(None), 401
-    flask_session["current_user_id"] = user.id
-    return user.repr()
 
 
 @bp.route("/whoami", methods=["GET"])
@@ -32,12 +33,12 @@ def whoami():
 @bp.route("/logout", methods=["GET"])
 def logout():
     flask_session.pop("current_user_id", None)
-    return {}
+    return jsonify(None)
 
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
 def users_show(user_id):
-    user = g.basic_session.query(User).filter_by(id=user_id).first()
+    user = g.auth_session.query(User).filter_by(id=user_id).one_or_none()
     if user:
         return user.repr()
     else:
@@ -46,7 +47,7 @@ def users_show(user_id):
 
 @bp.route("/orgs", methods=["GET"])
 def orgs_index():
-    orgs = g.basic_session.query(Organization).all()
+    orgs = g.auth_session.query(Organization)
     return jsonify([org.repr() for org in orgs])
 
 
@@ -54,17 +55,19 @@ def orgs_index():
 def orgs_create():
     payload = request.get_json(force=True)
     org = Organization(**payload)
-    oso_roles.add_user_role(g.basic_session, g.current_user, org, "OWNER", commit=True)
-    # current_app.oso.authorize(org)
+    current_app.oso.authorize(org, action="CREATE")
     g.basic_session.add(org)
-    g.basic_session.commit()
+    oso_roles.add_user_role(g.basic_session, g.current_user, org, "OWNER", commit=True)
     return org.repr(), 201
 
 
 @bp.route("/orgs/<int:org_id>", methods=["GET"])
 def orgs_show(org_id):
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    return org.repr()
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org:
+        return org.repr()
+    else:
+        return jsonify(None), 404
 
 
 # TODO(gj): maybe in the future each org can customize its repo roles.
@@ -81,62 +84,70 @@ def org_role_choices_index():
 
 @bp.route("/orgs/<int:org_id>/potential_users", methods=["GET"])
 def org_potential_users_index(org_id):
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    user_roles = oso_roles.get_resource_roles(g.basic_session, org)
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    user_roles = oso_roles.get_resource_roles(g.auth_session, org)
     existing = [ur.user.id for ur in user_roles]
     potentials = g.basic_session.query(User).filter(column("id").notin_(existing))
-    return jsonify([p.repr() for p in potentials.all()])
+    return jsonify([p.repr() for p in potentials])
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
 def repos_index(org_id):
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    # current_app.oso.authorize(org, actor=g.current_user, action="LIST_REPOS")
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    current_app.oso.authorize(org, action="LIST_REPOS")
 
-    repos = g.basic_session.query(Repository).filter_by(organization=org)
+    repos = g.auth_session.query(Repository).filter_by(organization=org)
     return jsonify([repo.repr() for repo in repos])
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
 def repos_create(org_id):
     payload = request.get_json(force=True)
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
     repo = Repository(name=payload.get("name"), organization=org)
 
     # # Authorize repo creation + save
-    # current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
+    current_app.oso.authorize(repo, action="CREATE")
     g.basic_session.add(repo)
     g.basic_session.commit()
     return repo.repr(), 201
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>", methods=["GET"])
-def repos_show(org_id, repo_id):
-    # Get repo
-    repo = g.basic_session.query(Repository).filter_by(id=repo_id).one()
-
-    # # Authorize repo access
-    # current_app.oso.authorize(repo, actor=g.current_user, action="READ")
+def repos_show(_org_id, repo_id):
+    repo = g.auth_session.query(Repository).filter_by(id=repo_id).one_or_none()
+    if repo is None:
+        return jsonify(None), 404
     return repo.repr()
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
-def issues_index(org_id, repo_id):
-    repo = g.basic_session.query(Repository).filter(Repository.id == repo_id).one()
-    # current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ISSUES")
-
-    issues = g.basic_session.query(Issue).filter_by(repository_id=repo_id).all()
+def issues_index(_org_id, repo_id):
+    repo = g.auth_session.query(Repository).filter_by(id=repo_id).one_or_none()
+    if repo is None:
+        return jsonify(None), 404
+    # TODO(gj): do we need authorize *and* auth_session? They're technically
+    # checking two different things --- whether the user is allowed to
+    # LIST_ISSUES vs. which issues the user has access to.
+    current_app.oso.authorize(repo, action="LIST_ISSUES")
+    issues = g.auth_session.query(Issue).filter_by(repository_id=repo_id)
     return jsonify([issue.repr() for issue in issues])
 
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["POST"])
-def issues_create(org_id, repo_id):
+def issues_create(_org_id, repo_id):
     payload = request.get_json(force=True)
-    repo = g.basic_session.query(Repository).filter_by(id=repo_id).one()
+    repo = g.auth_session.query(Repository).filter_by(id=repo_id).one_or_none()
+    if repo is None:
+        return jsonify(None), 404
     issue = Issue(title=payload.get("title"), repository=repo)
-
-    # # Authorize repo creation + save
-    # current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
+    current_app.oso.authorize(issue, action="CREATE")
     g.basic_session.add(issue)
     g.basic_session.commit()
     return issue.repr(), 201
@@ -145,49 +156,64 @@ def issues_create(org_id, repo_id):
 @bp.route(
     "/orgs/<int:org_id>/repos/<int:repo_id>/issues/<int:issue_id>", methods=["GET"]
 )
-def issues_show(org_id, repo_id, issue_id):
-    issue = g.basic_session.query(Issue).filter_by(id=issue_id).one()
+def issues_show(_org_id, _repo_id, issue_id):
+    issue = g.auth_session.query(Issue).filter_by(id=issue_id).one_or_none()
+    if issue is None:
+        return jsonify(None), 404
     return issue.repr()
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 def org_roles_index(org_id):
-    # Get authorized roles for this organization
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    # current_app.oso.authorize(org, actor=g.current_user, action="LIST_ROLES")
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    current_app.oso.authorize(org, action="LIST_ROLES")
 
-    roles = oso_roles.get_resource_roles(g.basic_session, org)
+    roles = oso_roles.get_resource_roles(g.auth_session, org)
     return jsonify([{"user": role.user.repr(), "role": role.repr()} for role in roles])
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["POST"])
 def org_roles_create(org_id):
     payload = request.get_json(force=True)
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    user = g.basic_session.query(User).filter_by(id=payload["user_id"]).first()
-    oso_roles.add_user_role(g.basic_session, user, org, payload["role"], commit=True)
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    user = g.auth_session.query(User).filter_by(id=payload["user_id"]).one_or_none()
+    if user is None:
+        return jsonify(None), 404
+    oso_roles.add_user_role(g.auth_session, user, org, payload["role"], commit=True)
     # TODO(gj): it would be nice if add_user_role() returned the persisted role.
-    role = oso_roles.get_user_roles(g.basic_session, user, Organization, org.id)[0]
+    role = oso_roles.get_user_roles(g.auth_session, user, Organization, org.id)[0]
     return {"user": role.user.repr(), "role": role.repr()}, 201
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["PATCH"])
 def user_org_role_update(org_id):
     payload = request.get_json(force=True)
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    user = g.basic_session.query(User).filter_by(id=payload["user_id"]).first()
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    user = g.auth_session.query(User).filter_by(id=payload["user_id"]).one_or_none()
+    if user is None:
+        return jsonify(None), 404
     oso_roles.reassign_user_role(
-        g.basic_session, user, org, payload["role"], commit=True
+        g.auth_session, user, org, payload["role"], commit=True
     )
     # TODO(gj): it would be nice if reassign_user_role() returned the updated role.
-    role = oso_roles.get_user_roles(g.basic_session, user, Organization, org.id)[0]
+    role = oso_roles.get_user_roles(g.auth_session, user, Organization, org.id)[0]
     return {"user": role.user.repr(), "role": role.repr()}, 200
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["DELETE"])
 def user_org_role_delete(org_id):
     payload = request.get_json(force=True)
-    org = g.basic_session.query(Organization).filter_by(id=org_id).first()
-    user = g.basic_session.query(User).filter_by(id=payload["user_id"]).first()
-    oso_roles.delete_user_role(g.basic_session, user, org, payload["role"], commit=True)
+    org = g.auth_session.query(Organization).filter_by(id=org_id).one_or_none()
+    if org is None:
+        return jsonify(None), 404
+    user = g.auth_session.query(User).filter_by(id=payload["user_id"]).one_or_none()
+    if user is None:
+        return jsonify(None), 404
+    oso_roles.delete_user_role(g.auth_session, user, org, payload["role"], commit=True)
     return {}, 204
