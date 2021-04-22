@@ -92,7 +92,7 @@ def org_potential_users_index(org_id):
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
 def repos_index(org_id):
-    repos = g.session.query(Repository).filter_by(organization_id=org_id)
+    repos = g.auth_session.query(Repository).filter_by(organization_id=org_id)
     return jsonify([repo.repr() for repo in repos])
 
 
@@ -100,15 +100,20 @@ def repos_index(org_id):
 @required_action("create_repo")
 def repos_create(org_id):
     payload = request.get_json(force=True)
-    org = g.session.query(Organization).filter_by(id=org_id).first()
+    # this does allow(user, "create_repo", org: Organization)
+    ### Future work: skip this, make it just happen below on add
+    org = g.auth_session.query(Organization).filter_by(id=org_id).first()
     if not org:
         return jsonify(None), 403
     repo = Repository(name=payload.get("name"), organization=org)
 
     # # Authorize repo creation + save
     # current_app.oso.authorize(repo, actor=g.current_user, action="CREATE")
-    g.session.add(repo)
-    g.session.commit()
+    # import pdb; pdb.set_trace()
+
+    ## TODO: would like it to call `allow(user, "create", repo)` here instead
+    g.auth_session.add(repo)
+    g.auth_session.commit()
     return repo.repr(), 201
 
 
@@ -127,10 +132,11 @@ def repos_show(org_id, repo_id):
 
 @bp.route("/orgs/<int:org_id>/repos/<int:repo_id>/issues", methods=["GET"])
 def issues_index(org_id, repo_id):
-    repo = g.session.query(Repository).filter(Repository.id == repo_id).one()
+    # repo = g.session.query(Repository).filter(Repository.id == repo_id).one()
     # current_app.oso.authorize(repo, actor=g.current_user, action="LIST_ISSUES")
-
-    issues = g.session.query(Issue).filter_by(repository_id=repo_id).all()
+    # current_app.oso.register_constant(g.current_user, "user")
+    # current_app.oso.repl()
+    issues = g.auth_session.query(Issue).filter_by(repository_id=repo_id).all()
     return jsonify([issue.repr() for issue in issues])
 
 
