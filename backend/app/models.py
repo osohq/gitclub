@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy.types import Integer, String, DateTime
-from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -19,9 +19,10 @@ class Organization(Base):
     __tablename__ = "organizations"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String())
-    base_repo_role = Column(String())
-    billing_address = Column(String())
+    name = Column(String, unique=True)
+    # TODO(gj): enum?
+    base_repo_role = Column(String)
+    billing_address = Column(String)
 
     def repr(self):
         return {
@@ -36,7 +37,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    email = Column(String())
+    email = Column(String, unique=True)
 
     def repr(self):
         return {"id": self.id, "email": self.email}
@@ -52,6 +53,8 @@ class Team(Base):
     organization_id = Column(Integer, ForeignKey("organizations.id"))
     organization = relationship("Organization", backref="teams", lazy=True)
 
+    unique_name_in_organization = UniqueConstraint(name, organization_id)
+
     def repr(self):
         return {"id": self.id, "name": self.name}
 
@@ -66,6 +69,8 @@ class Repository(Base):
     organization_id = Column(Integer, ForeignKey("organizations.id"))
     organization = relationship("Organization", backref="repositories", lazy=True)
 
+    unique_name_in_organization = UniqueConstraint(name, organization_id)
+
     # time info
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     updated_date = Column(DateTime, default=datetime.datetime.utcnow)
@@ -77,8 +82,10 @@ class Repository(Base):
 class Issue(Base):
     __tablename__ = "issues"
 
+    # TODO(gj): Real UUIDs & start issue count at 1 for every repo.
     id = Column(Integer, primary_key=True)
     title = Column(String(256))
+
     repository_id = Column(Integer, ForeignKey("repositories.id"))
     repository = relationship("Repository", backref="issues", lazy=True)
 
