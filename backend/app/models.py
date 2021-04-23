@@ -2,12 +2,9 @@ import datetime
 
 from sqlalchemy.types import Integer, String, DateTime
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 from sqlalchemy.ext.declarative import declarative_base
-
-from sqlalchemy_oso.roles import resource_role_class
-
 
 Base = declarative_base()
 
@@ -15,8 +12,8 @@ Base = declarative_base()
 ## MODELS ##
 
 
-class Organization(Base):
-    __tablename__ = "organizations"
+class Org(Base):
+    __tablename__ = "orgs"
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
@@ -49,27 +46,27 @@ class Team(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(256))
 
-    # many-to-one relationship with organizations
-    organization_id = Column(Integer, ForeignKey("organizations.id"))
-    organization = relationship("Organization", backref="teams", lazy=True)
+    # many-to-one relationship with orgs
+    org_id = Column(Integer, ForeignKey("orgs.id"))
+    org = relationship("Org", backref="teams", lazy=True)
 
-    unique_name_in_organization = UniqueConstraint(name, organization_id)
+    unique_name_in_org = UniqueConstraint(name, org_id)
 
     def repr(self):
         return {"id": self.id, "name": self.name}
 
 
-class Repository(Base):
-    __tablename__ = "repositories"
+class Repo(Base):
+    __tablename__ = "repos"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(256))
 
-    # many-to-one relationship with organizations
-    organization_id = Column(Integer, ForeignKey("organizations.id"))
-    organization = relationship("Organization", backref="repositories", lazy=True)
+    # many-to-one relationship with orgs
+    org_id = Column(Integer, ForeignKey("orgs.id"))
+    org = relationship("Org", backref="repos", lazy=True)
 
-    unique_name_in_organization = UniqueConstraint(name, organization_id)
+    unique_name_in_org = UniqueConstraint(name, org_id)
 
     # time info
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
@@ -86,45 +83,16 @@ class Issue(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String(256))
 
-    repository_id = Column(Integer, ForeignKey("repositories.id"))
-    repository = relationship("Repository", backref="issues", lazy=True)
+    repo_id = Column(Integer, ForeignKey("repos.id"))
+    repo = relationship("Repo", backref="issues", lazy=True)
 
     def repr(self):
         return {"id": self.id, "title": self.title}
 
 
-## ROLE MODELS ##
-
-
-RepositoryRoleMixin = resource_role_class(
-    declarative_base=Base,
-    user_model=User,
-    resource_model=Repository,
-    role_choices=["READ", "TRIAGE", "WRITE", "MAINTAIN", "ADMIN"],
-)
-
-
-class RepositoryRole(Base, RepositoryRoleMixin):
-    team_id = Column(Integer, ForeignKey("teams.id"))
-    team = relationship("Team", backref="repository_roles", lazy=True)
-
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
-
-
-OrganizationRoleMixin = resource_role_class(
-    Base, User, Organization, ["OWNER", "MEMBER", "BILLING"]
-)
-
-
-class OrganizationRole(Base, OrganizationRoleMixin):
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
-
-
-TeamRoleMixin = resource_role_class(Base, User, Team, ["MAINTAINER", "MEMBER"])
-
-
-class TeamRole(Base, TeamRoleMixin):
-    def repr(self):
-        return {"id": self.id, "name": str(self.name)}
+# TeamRoleMixin = resource_role_class(Base, User, Team, ["MAINTAINER", "MEMBER"])
+#
+#
+# class TeamRole(Base, TeamRoleMixin):
+#     def repr(self):
+#         return {"id": self.id, "name": str(self.name)}

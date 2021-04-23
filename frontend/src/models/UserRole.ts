@@ -1,13 +1,13 @@
-import { Role, User } from '.';
+import { User } from '.';
 
 export type UserRoleParams = { userId: number; role: string };
 
 export class UserRole {
   user: User;
-  role: Role;
+  role: string;
 
   constructor({ user, role }: UserRole) {
     this.user = new User(user);
-    this.role = new Role(role);
+    this.role = role;
   }
 }

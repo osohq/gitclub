@@ -1,119 +1,58 @@
-# ALLOW RULES
+# ## Users can see themselves.
+# allow(user: User, "READ", user);
+# 
+# ## Users can see other users in their org.
+# allow(user: User, "READ", other: User) if
+#     org in user.orgs and org in other.orgs;
+# 
 
-### Users can see other users in their organization
-allow(user: User, _action, resource: User) if
-    org in user.organizations and org in resource.organizations;
+# Any logged-in user can create a new org.
+allow(_: User, "create", _: Org);
 
-# RBAC RULES
+# ROLES
 
-# USER-ROLE RELATIONSHIPS
+# XXX(gj): should there be a permission for viewing org/repo role choices?
 
-### Users inherit repository roles from their teams
-user_in_role(user: User, role, repo: Repository) if
-	team in user.teams and
-	role in team.repository_roles and
-	role.repository.id = repo.id;
+# XXX(gj): should there be a permission for viewing the user role assignments for a particular resource?
 
-# RESOURCE-ROLE RELATIONSHIPS
+## Org Roles
 
-## These rules allow roles to apply to resources other than those that they are scoped to.
-## The most common example of this is nested resources, e.g. Repository roles should apply to the Issues
-## nested in that repository.
+# XXX(gj): what's up with the string "org"?
+resource(_type: Org, "org", actions, roles) if
+    actions = ["read", "create_repo", "read_role", "create_role", "update_role", "delete_role"] and
+    roles = {
+        org_member: {
+            perms: ["read", "read_role"],
+            implies: ["repo_read"]
+        },
+        org_owner: {
+            perms: ["create_repo", "create_role", "update_role", "delete_role"],
+            implies: ["org_member", "repo_write"]
+        }
+    };
 
+## Repo Roles
 
-### An organization's roles apply to its child repositories
-resource_role_applies_to(repo: Repository, parent_org) if
-    parent_org = repo.organization and
-    parent_org matches Organization;
+resource(_type: Repo, "repo", actions, roles) if
+    actions = ["read", "create_issue"] and
+    roles = {
+        repo_write: {
+            perms: ["create_issue", "issue:read"],
+            implies: ["repo_read"]
+        },
+        repo_read: {
+            perms: ["read"]
+        }
+    };
 
-### An organization's roles apply to its child teams
-resource_role_applies_to(team: Team, parent_org) if
-    parent_org = team.organization and
-    parent_org matches Organization;
+resource(_type: Issue, "issue", actions, _) if
+    actions = ["read"];
 
-### An organization's roles apply to its child roles
-resource_role_applies_to(role: OrganizationRole, parent_org) if
-    parent_org = role.organization and
-    parent_org matches Organization;
+parent(repo: Repo, parent_org: Org) if
+    repo.org = parent_org;
+parent(issue: Issue, parent_repo: Repo) if
+    issue.repo = parent_repo;
 
-### A repository's roles apply to its child roles
-resource_role_applies_to(role: RepositoryRole, parent_repo) if
-    parent_repo = role.repository and
-    parent_repo matches Repository;
-
-### An organization's roles apply to its child repository's roles
-resource_role_applies_to(role: RepositoryRole, parent_org) if
-    parent_org = role.repository.organization and
-    parent_org matches Organization;
-
-### A repository's roles apply to its child issues
-resource_role_applies_to(issue: Issue, parent_repo) if
-    parent_repo = issue.repository;
-
-# ROLE-PERMISSION RELATIONSHIPS
-
-## Record-level Organization Permissions
-
-### All organization roles let users read organizations
-role_allow(_role: OrganizationRole, "READ", _org: Organization);
-
-role_allow(_role: OrganizationRole{name: "BILLING"}, "READ_BILLING", _organization: Organization);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", _organization: Organization);
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_REPOS", _organization: Organization);
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "LIST_TEAMS", _organization: Organization);
-
-## OrganizationRole Permissions
-
-### Organization owners can access the Organization's roles
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _role_resource: OrganizationRole);
-
-## Repository Permissions
-
-### Read role can read the repository
-role_allow(_role: RepositoryRole{name: "READ"}, "READ", _repo: Repository);
-
-### All organization members can create repositories
-role_allow(_role: OrganizationRole{name: "MEMBER"}, "CREATE", _repository: Repository);
-
-### Organization "Read" base roles
-role_allow(role: OrganizationRole{name: "MEMBER"}, "READ", repo: Repository) if
-    role.organization.id = repo.organization.id and
-    repo.organization.base_repo_role = "READ";
-
-### RepositoryRoles with read access can also read the repository's issues
-role_allow(role: RepositoryRole, "READ", issue: Issue) if
-    repo = issue.repository and
-    repo matches Repository and
-    role_allow(role, "READ", repo);
-
-role_allow(_role: RepositoryRole{name: "READ"}, "LIST_ISSUES", _repository: Repository);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "LIST_ROLES", _repository: Repository);
-role_allow(_role: RepositoryRole{name: "ADMIN"}, "LIST_ROLES", _repository: Repository);
-
-
-## RepositoryRole Permissions
-
-role_allow(_role: RepositoryRole{name: "ADMIN"}, "READ", _role_resource: RepositoryRole);
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _role_resource: RepositoryRole);
-
-## Team Permissions
-
-### Organization owners can view all teams in the org
-role_allow(_role: OrganizationRole{name: "OWNER"}, "READ", _team: Team);
-
-### Team members are able to see their own teams
-role_allow(_role: TeamRole{name: "MEMBER"}, "READ", _team: Team);
-
-# ROLE-ROLE RELATIONSHIPS
-
-## Role Hierarchies
-
-### Specify repository role order (most senior on left)
-repository_role_order(["ADMIN", "MAINTAIN", "WRITE", "TRIAGE", "READ"]);
-
-### Specify organization role order (most senior on left)
-organization_role_order(["OWNER", "MEMBER"]);
-organization_role_order(["OWNER", "BILLING"]);
-
-### Specify team role order (most senior on left)
-team_role_order(["MAINTAINER", "MEMBER"]);
+# TODO(gj): blows up w/o `User` specializer if no current user (None / guest).
+allow(actor: User, action, resource) if
+    Roles.role_allows(actor, action, resource);

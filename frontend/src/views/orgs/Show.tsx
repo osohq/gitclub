@@ -105,7 +105,7 @@ function UserRoles({
 
   async function deleteRole({ user, role }: UserRole) {
     orgApi
-      .userRoleDelete({ userId: user.id, role: role.name }, orgId)
+      .userRoleDelete({ userId: user.id, role }, orgId)
       .then(() => {
         // Assumes a user has a single role per org.
         setUserRoles((urs) => urs.filter((ur) => ur.user.id !== user.id));
@@ -124,7 +124,7 @@ function UserRoles({
             <select
               disabled={!user.loggedIn()}
               name="role"
-              value={ur.role.name}
+              value={ur.role}
               onChange={({ target: { value } }) => updateRole(ur.user, value)}
             >
               {roles.map((r) => (

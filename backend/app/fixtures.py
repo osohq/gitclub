@@ -1,8 +1,9 @@
-from .models import User, Organization, Team, Repository
-from .models import RepositoryRole, OrganizationRole, TeamRole
+from sqlalchemy_oso.roles2 import OsoRoles
+
+from .models import User, Org, Team, Repo
 
 
-def load_fixture_data(session):
+def load_fixture_data(session, roles: OsoRoles):
     # CREATE USER DATA
     john = User(email="john@beatles.com")
     paul = User(email="paul@beatles.com")
@@ -24,22 +25,22 @@ def load_fixture_data(session):
         session.add(user)
 
     # CREATE RESOURCE DATA
-    beatles = Organization(
+    beatles = Org(
         name="The Beatles",
         billing_address="64 Penny Ln Liverpool, UK",
         base_repo_role="READ",
     )
-    monsters = Organization(
+    monsters = Org(
         name="Monsters Inc.",
         billing_address="123 Scarers Rd Monstropolis, USA",
         base_repo_role="READ",
     )
-    organizations = [beatles, monsters]
-    for org in organizations:
+    orgs = [beatles, monsters]
+    for org in orgs:
         session.add(org)
-    vocalists = Team(name="Vocalists", organization=beatles)
-    percussion = Team(name="Percussion", organization=beatles)
-    scarers = Team(name="Scarers", organization=monsters)
+    vocalists = Team(name="Vocalists", org=beatles)
+    percussion = Team(name="Percussion", org=beatles)
+    scarers = Team(name="Scarers", org=monsters)
     teams = [
         vocalists,
         percussion,
@@ -47,61 +48,42 @@ def load_fixture_data(session):
     ]
     for team in teams:
         session.add(team)
-    abby_road = Repository(name="Abbey Road", organization=beatles)
-    paperwork = Repository(name="Paperwork", organization=monsters)
-    repositories = [
+    abby_road = Repo(name="Abbey Road", org=beatles)
+    paperwork = Repo(name="Paperwork", org=monsters)
+    repos = [
         abby_road,
         paperwork,
     ]
-    for repo in repositories:
+    for repo in repos:
         session.add(repo)
+
     # TODO: issues
 
-    # CREATE ROLE DATA
-    roles = [
-        RepositoryRole(name="READ", repository=abby_road, user=john),
-        RepositoryRole(name="READ", repository=abby_road, user=paul),
-        RepositoryRole(name="WRITE", repository=abby_road, team=percussion),
-        RepositoryRole(name="READ", repository=paperwork, user=mike),
-        RepositoryRole(name="READ", repository=paperwork, user=sully),
-        OrganizationRole(
-            name="OWNER",
-            organization=beatles,
-            user=john,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=beatles,
-            user=paul,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=beatles,
-            user=ringo,
-        ),
-        OrganizationRole(
-            name="OWNER",
-            organization=monsters,
-            user=mike,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=monsters,
-            user=sully,
-        ),
-        OrganizationRole(
-            name="MEMBER",
-            organization=monsters,
-            user=randall,
-        ),
-        TeamRole(name="MEMBER", team=vocalists, user=paul),
-        TeamRole(name="MAINTAINER", team=vocalists, user=john),
-        TeamRole(name="MAINTAINER", team=percussion, user=ringo),
-        TeamRole(name="MEMBER", team=scarers, user=randall),
-        TeamRole(name="MAINTAINER", team=scarers, user=sully),
-    ]
-
-    for role in roles:
-        session.add(role)
-
+    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L132-L133
     session.commit()
+
+    # XXX(gj): it would be nice if `roles.assign_role()` had a `commit` kwarg
+    # that defaulted to `False`, like the previous APIs. Don't always want to
+    # commit on every single role assignment.
+
+    # Repo roles
+    roles.assign_role(john, abby_road, "repo_read", session=session)
+    roles.assign_role(paul, abby_road, "repo_read", session=session)
+    roles.assign_role(percussion, abby_road, "repo_write", session=session)
+    roles.assign_role(mike, paperwork, "repo_read", session=session)
+    roles.assign_role(sully, paperwork, "repo_read", session=session)
+
+    # Org roles
+    roles.assign_role(john, beatles, "org_owner", session=session)
+    roles.assign_role(paul, beatles, "org_member", session=session)
+    roles.assign_role(ringo, beatles, "org_member", session=session)
+    roles.assign_role(mike, monsters, "org_owner", session=session)
+    roles.assign_role(sully, monsters, "org_member", session=session)
+    roles.assign_role(randall, monsters, "org_member", session=session)
+
+    # # Team roles
+    # roles.assign_role(paul, vocalists, "MEMBER", session=session)
+    # roles.assign_role(john, vocalists, "MAINTAINER", session=session)
+    # roles.assign_role(ringo, percussion, "MAINTAINER", session=session)
+    # roles.assign_role(randall, scarers, "MEMBER", session=session)
+    # roles.assign_role(sully, scarers, "MAINTAINER", session=session)

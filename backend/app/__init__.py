@@ -8,8 +8,8 @@ from .fixtures import load_fixture_data
 
 from flask_oso import FlaskOso
 from oso import Oso
-from sqlalchemy_oso import authorized_sessionmaker, register_models, set_get_session
-from sqlalchemy_oso.roles import enable_roles
+from sqlalchemy_oso import authorized_sessionmaker, register_models
+from sqlalchemy_oso.roles2 import OsoRoles
 
 
 def create_app(db_path=None, load_fixtures=False):
@@ -20,29 +20,36 @@ def create_app(db_path=None, load_fixtures=False):
         engine = create_engine(db_path)
     else:
         engine = create_engine("sqlite:///roles.db")
-    Base.metadata.create_all(engine)
 
     # init app
     app = Flask(__name__)
     app.secret_key = b"ball outside of the school"
     app.register_blueprint(routes.bp)
 
-    # init oso
-    oso = init_oso(app)
+    # init basic session factory
+    Session = sessionmaker(bind=engine)
 
-    # init sessions
+    # init oso
+    oso = init_oso(app, Session)
+
+    # init authorized session factory
     AuthorizedSession = authorized_sessionmaker(
         bind=engine,
         get_oso=lambda: oso,
         get_user=lambda: g.current_user,
         get_action=lambda: g.current_action,
     )
-    Session = sessionmaker(bind=engine)
+
+    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
+    Base.metadata.create_all(engine)
+
+    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
+    app.roles.configure()
 
     # optionally load fixture data
     if load_fixtures:
         session = Session()
-        load_fixture_data(session)
+        load_fixture_data(session, app.roles)
         session.close()
 
     @app.before_request
@@ -61,9 +68,22 @@ def create_app(db_path=None, load_fixtures=False):
         # Set basic (non-auth) session for this request
         g.basic_session = session
 
+        # TODO(gj): this is not great. Need to set `g.current_action` *before*
+        # constructing the `AuthorizedSession()`.
+        #
         # Set action for this request
-        actions = {"GET": "READ", "POST": "CREATE"}
-        g.current_action = actions.get(request.method)
+        if request.endpoint:
+            actions = {
+                "routes.org_role_index": "read_role",
+                "routes.org_role_create": "create_role",
+                "routes.org_role_update": "update_role",
+                "routes.org_role_delete": "delete_role",
+                "routes.repo_create": "create_repo",
+                "routes.issue_create": "create_issue",
+            }
+            g.current_action = actions.get(request.endpoint, "read")
+        else:
+            g.current_action = None
 
         # Set auth session for this request
         g.auth_session = AuthorizedSession()
@@ -85,14 +105,13 @@ def create_app(db_path=None, load_fixtures=False):
     return app
 
 
-def init_oso(app):
-    base_oso = Oso()
-    oso = FlaskOso(base_oso)
+def init_oso(app, Session: sessionmaker):
+    oso = Oso()
+    register_models(oso, Base)
+    roles = OsoRoles(oso, Base, User, Session)
+    roles.enable()
+    oso.load_file("app/authorization.polar")
+    app.oso = FlaskOso(oso)
+    app.roles = roles
 
-    register_models(base_oso, Base)
-    set_get_session(base_oso, lambda: g.basic_session)
-    enable_roles(base_oso)
-    base_oso.load_file("app/authorization.polar")
-    app.oso = oso
-
-    return base_oso
+    return oso

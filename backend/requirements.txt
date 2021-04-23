@@ -1,7 +1,6 @@
-oso
-sqlalchemy-oso
 flask
 Flask-SQLAlchemy
 sqlalchemy-utils
-flask-oso
-
+-e ../../oso/languages/python/oso
+-e ../../oso/languages/python/sqlalchemy-oso
+-e ../../oso/languages/python/flask-oso

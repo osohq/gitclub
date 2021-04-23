@@ -2,7 +2,7 @@ from .conftest import test_client, test_db_session
 from flask import json
 import pytest
 
-from app.models import User, Repository, RepositoryRole
+from app.models import User
 
 
 def test_db_loads(test_db_session):
