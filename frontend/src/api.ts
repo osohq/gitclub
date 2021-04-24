@@ -170,7 +170,7 @@ export const repo = {
   roleChoices: repoRoleChoices,
 };
 
-const login = (body: { user: string }) => create('/login', 200, body, User);
+const login = (body: { email: string }) => create('/login', 200, body, User);
 
 const logout = () => get('/logout', 200);
 

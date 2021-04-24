@@ -16,7 +16,7 @@ export function Login(_: RouteComponentProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const u = await userApi.login({ user: email });
+      const u = await userApi.login({ email });
       user.update(u);
       // TODO(gj): navigate(-1) throws errors that I don't feel like debugging.
       window.history.back();

@@ -29,9 +29,9 @@ def handle_not_found(_error):
 @bp.route("/login", methods=["POST"])
 def login():
     payload = request.get_json(force=True)
-    if "user" not in payload:
+    if "email" not in payload:
         raise BadRequest
-    user = g.basic_session.query(User).filter_by(email=payload["user"]).one_or_none()
+    user = g.basic_session.query(User).filter_by(email=payload["email"]).one_or_none()
     if user is None:
         flask_session.pop("current_user_id", None)
         raise NotFound
