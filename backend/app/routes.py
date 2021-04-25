@@ -70,10 +70,18 @@ def org_create():
     payload = request.get_json(force=True)
     org = Org(**payload)
     current_app.oso.authorize(org, action="create")
+    # TODO(gj): I can't use `assign_role()` without first persisting the org or
+    # else the 'resource_id' field in the 'user_roles' table will be None. I
+    # would prefer to make both changes as part of the same transaction so I
+    # don't need to manually roll org creation back if `assign_role()` fails.
     g.basic_session.add(org)
-    current_app.roles.assign_role(
-        g.current_user, org, "org_owner", session=g.basic_session
-    )
+    g.basic_session.commit()
+    try:
+        current_app.roles.assign_role(
+            g.current_user, org, "org_owner", session=g.basic_session
+        )
+    except:
+        g.basic_session.delete(org)
     return org.repr(), 201
 
 
