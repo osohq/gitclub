@@ -1,5 +1,5 @@
 ## Users can see themselves.
-allow(user: User, "read", user);
+allow(user: User, "read", user: User);
 
 ## Users can see other users in their org.
 allow(user: User, "read", other: User) if
