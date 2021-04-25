@@ -28,12 +28,12 @@ def load_fixture_data(session, roles: OsoRoles):
     beatles = Org(
         name="The Beatles",
         billing_address="64 Penny Ln Liverpool, UK",
-        base_repo_role="READ",
+        base_repo_role="repo_read",
     )
     monsters = Org(
         name="Monsters Inc.",
         billing_address="123 Scarers Rd Monstropolis, USA",
-        base_repo_role="READ",
+        base_repo_role="repo_read",
     )
     orgs = [beatles, monsters]
     for org in orgs:

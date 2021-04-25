@@ -1,5 +1,4 @@
 from flask import Blueprint, g, request, current_app, jsonify, session as flask_session
-
 from sqlalchemy import column
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 from typing import Any, Type
@@ -7,8 +6,6 @@ from typing import Any, Type
 from .models import User, Org, Repo, Issue
 
 bp = Blueprint("routes", __name__)
-
-NoContent = {"message": "No Content"}, 204
 
 
 @bp.errorhandler(BadRequest)
@@ -26,7 +23,12 @@ def handle_not_found(_error):
     return {"message": "Not Found"}, 404
 
 
-@bp.route("/login", methods=["POST"])
+@bp.route("/session", methods=["GET"])
+def whoami():
+    return jsonify(g.current_user.repr() if g.current_user else None)
+
+
+@bp.route("/session", methods=["POST"])
 def login():
     payload = request.get_json(force=True)
     if "email" not in payload:
@@ -36,18 +38,13 @@ def login():
         flask_session.pop("current_user_id", None)
         raise NotFound
     flask_session["current_user_id"] = user.id
-    return user.repr()
+    return user.repr(), 201
 
 
-@bp.route("/whoami", methods=["GET"])
-def whoami():
-    return jsonify(g.current_user.repr() if g.current_user else None)
-
-
-@bp.route("/logout", methods=["GET"])
+@bp.route("/session", methods=["DELETE"])
 def logout():
     flask_session.pop("current_user_id", None)
-    return NoContent
+    return current_app.response_class(status=204, mimetype="application/json")
 
 
 def get_resource_by(session, cls: Type[Any], **kwargs):
@@ -92,6 +89,8 @@ def repo_role_choices_index():
 
 
 # TODO(gj): maybe in the future each org can customize its own roles.
+# TODO(gj): should folks who can't create/update/delete org roles be able to
+# fetch this list?
 @bp.route("/org_role_choices", methods=["GET"])
 def org_role_choices_index():
     return jsonify(["org_owner", "org_member"])
@@ -218,4 +217,4 @@ def org_role_delete(org_id):
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
     delete_org_role(g.basic_session, org_id, user.id)
     g.basic_session.commit()
-    return NoContent
+    return current_app.response_class(status=204, mimetype="application/json")

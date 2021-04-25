@@ -5,7 +5,6 @@ import { LoggedInUser, User, UserContext } from './models';
 import {
   Home,
   Login,
-  Nav,
   NotFound,
   Notices,
   IssueIndex,
@@ -40,7 +39,6 @@ function App() {
 
   return (
     <UserContext.Provider value={userContext}>
-      <Nav />
       <Router>
         <Notices path="/">
           <Home path="/" />

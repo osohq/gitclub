@@ -15,7 +15,7 @@ export function Nav() {
       await userApi.logout();
       user.update('Guest');
     } catch (e) {
-      error('Failed to log out.');
+      error(`Failed to log out: ${e.message}`);
     }
   }
 
