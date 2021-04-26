@@ -70,7 +70,8 @@ def org_create():
     payload = request.get_json(force=True)
     org = Org(**payload)
     if not current_app.oso.is_allowed(g.current_user, "create", org):
-        raise Forbidden
+        raise Forbidden("Not authorized")
+
     # TODO(gj): I can't use `assign_role()` without first persisting the org or
     # else the 'resource_id' field in the 'user_roles' table will be None. I
     # would prefer to make both changes as part of the same transaction so I
