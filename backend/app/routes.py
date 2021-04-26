@@ -65,12 +65,14 @@ def org_index():
     return jsonify([org.repr() for org in orgs])
 
 
+# docs: begin-is-allowed
 @bp.route("/orgs", methods=["POST"])
 def org_create():
     payload = request.get_json(force=True)
     org = Org(**payload)
     if not current_app.oso.is_allowed(g.current_user, "create", org):
         raise Forbidden("Not authorized")
+    # docs: end-is-allowed
 
     # TODO(gj): I can't use `assign_role()` without first persisting the org or
     # else the 'resource_id' field in the 'user_roles' table will be None. I
