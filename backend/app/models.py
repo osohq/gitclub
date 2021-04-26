@@ -54,7 +54,6 @@ class Repo(Base):
 class Issue(Base):
     __tablename__ = "issues"
 
-    # TODO(gj): Real UUIDs & start issue count at 1 for every repo.
     id = Column(Integer, primary_key=True)
     title = Column(String(256))
 

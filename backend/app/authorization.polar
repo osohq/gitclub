@@ -1,10 +1,9 @@
-## Users can see themselves.
+# Users can see themselves.
 allow(user: User, "read", user: User);
 
-## Users can see other users in their org.
+# Users can see other users in their org.
 allow(user: User, "read", other: User) if
     org in user.orgs and org in other.orgs;
-
 
 # Any logged-in user can create a new org.
 allow(_: User, "create", _: Org);
@@ -15,9 +14,6 @@ allow(_: User, "create", _: Org);
 
 # XXX(gj): should there be a permission for viewing the user role assignments for a particular resource?
 
-## Org Roles
-
-# XXX(gj): what's up with the string "org"?
 resource(_type: Org, "org", actions, roles) if
     actions = ["read", "create_repo", "read_role", "create_role", "update_role", "delete_role"] and
     roles = {
@@ -30,8 +26,6 @@ resource(_type: Org, "org", actions, roles) if
             implies: ["org_member", "repo_write"]
         }
     };
-
-## Repo Roles
 
 resource(_type: Repo, "repo", actions, roles) if
     actions = ["read", "create_issue"] and

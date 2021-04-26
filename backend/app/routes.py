@@ -189,7 +189,6 @@ def org_role_create(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
-    # TODO(gj): it would be nice if assign_role() returned the persisted role.
     current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
     return {"user": user.repr(), "role": payload["role"]}, 201
 
@@ -213,7 +212,6 @@ def org_role_update(org_id):
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
     # TODO(gj): maybe a reassign-style method that deletes & assigns?
     delete_org_role(g.basic_session, org_id, user.id)
-    # TODO(gj): it would be nice if assign_user_role() returned the updated role.
     current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
     return {"user": user.repr(), "role": payload["role"]}
 
