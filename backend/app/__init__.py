@@ -61,7 +61,9 @@ def create_app(db_path=None, load_fixtures=False):
         if "current_user" not in g:
             if "current_user_id" in flask_session:
                 user_id = flask_session.get("current_user_id")
-                user = session.query(User).filter(User.id == user_id).first()
+                user = session.query(User).filter(id=user_id).one_or_none()
+                if user is None:
+                    flask_session.pop("current_user_id")
                 g.current_user = user
             else:
                 g.current_user = None
