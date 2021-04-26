@@ -43,7 +43,9 @@ def create_app(db_path=None, load_fixtures=False):
     Base.metadata.create_all(engine)
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
+    # docs: begin-configure
     app.roles.configure()
+    # docs: end-configure
 
     # optionally load fixture data
     if load_fixtures:
