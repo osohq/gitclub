@@ -34,7 +34,7 @@ class User(Base):
     def repr(self):
         return {"id": self.id, "email": self.email}
 
-
+# docs: begin-repo-model
 class Repo(Base):
     __tablename__ = "repos"
 
@@ -49,7 +49,7 @@ class Repo(Base):
 
     def repr(self):
         return {"id": self.id, "name": self.name}
-
+# docs: end-repo-model
 
 class Issue(Base):
     __tablename__ = "issues"

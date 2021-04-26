@@ -32,6 +32,7 @@ resource(_type: Org, "org", actions, roles) if
     };
 # docs: end-org-resource
 
+# docs: begin-repo-resource
 resource(_type: Repo, "repo", actions, roles) if
     actions = ["read", "create_issue"] and
     roles = {
@@ -43,14 +44,21 @@ resource(_type: Repo, "repo", actions, roles) if
             perms: ["read"]
         }
     };
+# docs: end-repo-resource
 
+# docs: begin-issue-resource
 resource(_type: Issue, "issue", actions, _) if
     actions = ["read"];
 
-parent(repo: Repo, parent_org: Org) if
-    repo.org = parent_org;
 parent(issue: Issue, parent_repo: Repo) if
     issue.repo = parent_repo;
+# docs: end-issue-resource
+
+# docs: begin-repo-parent
+parent(repo: Repo, parent_org: Org) if
+    repo.org = parent_org;
+# docs: end-repo-parent
+
 
 # docs: begin-role-allow
 allow(actor, action, resource) if
