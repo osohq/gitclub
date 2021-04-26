@@ -105,13 +105,22 @@ def create_app(db_path=None, load_fixtures=False):
     return app
 
 
+# docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
+    # Initialize oso instance
     oso = Oso()
+
+    # Register authorization data
     register_models(oso, Base)
     roles = OsoRoles(oso, Base, User, Session)
     roles.enable()
+
+    # Load authorization policy.
     oso.load_file("app/authorization.polar")
+
+    # Attach Oso to Flask application.
     app.oso = FlaskOso(oso)
     app.roles = roles
 
     return oso
+# docs: end-init-oso

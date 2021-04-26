@@ -5,8 +5,11 @@ allow(user: User, "read", user: User);
 allow(user: User, "read", other: User) if
     org in user.orgs and org in other.orgs;
 
+# docs: org-create-rule
 # Any logged-in user can create a new org.
 allow(_: User, "create", _: Org);
+
+# end: org-create-rule
 
 # ROLES
 
