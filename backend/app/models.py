@@ -1,6 +1,4 @@
-import datetime
-
-from sqlalchemy.types import Integer, String, DateTime
+from sqlalchemy.types import Integer, String
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 
@@ -48,10 +46,6 @@ class Repo(Base):
     org = relationship("Org", backref="repos", lazy=True)
 
     unique_name_in_org = UniqueConstraint(name, org_id)
-
-    # time info
-    created_date = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_date = Column(DateTime, default=datetime.datetime.utcnow)
 
     def repr(self):
         return {"id": self.id, "name": self.name}
