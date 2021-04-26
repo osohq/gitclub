@@ -9,9 +9,6 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-## MODELS ##
-
-
 class Org(Base):
     __tablename__ = "orgs"
 
@@ -38,22 +35,6 @@ class User(Base):
 
     def repr(self):
         return {"id": self.id, "email": self.email}
-
-
-class Team(Base):
-    __tablename__ = "teams"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(256))
-
-    # many-to-one relationship with orgs
-    org_id = Column(Integer, ForeignKey("orgs.id"))
-    org = relationship("Org", backref="teams", lazy=True)
-
-    unique_name_in_org = UniqueConstraint(name, org_id)
-
-    def repr(self):
-        return {"id": self.id, "name": self.name}
 
 
 class Repo(Base):
@@ -88,11 +69,3 @@ class Issue(Base):
 
     def repr(self):
         return {"id": self.id, "title": self.title}
-
-
-# TeamRoleMixin = resource_role_class(Base, User, Team, ["MAINTAINER", "MEMBER"])
-#
-#
-# class TeamRole(Base, TeamRoleMixin):
-#     def repr(self):
-#         return {"id": self.id, "name": str(self.name)}
