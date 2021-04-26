@@ -194,8 +194,7 @@ def org_role_create(org_id):
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
     current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
     return {"user": user.repr(), "role": payload["role"]}, 201
-
-# docs: end-role-assignment
+    # docs: end-role-assignment
 
 
 def delete_org_role(session, org_id, user_id):
