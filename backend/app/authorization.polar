@@ -52,10 +52,8 @@ parent(repo: Repo, parent_org: Org) if
 parent(issue: Issue, parent_repo: Repo) if
     issue.repo = parent_repo;
 
-# TODO(gj): blows up w/o `User` specializer if no current user (None / guest).
-
 # docs: begin-role-allow
-allow(actor: User, action, resource) if
+allow(actor, action, resource) if
     Roles.role_allows(actor, action, resource);
 
 # docs: end-role-allow
