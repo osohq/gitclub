@@ -69,7 +69,8 @@ def org_index():
 def org_create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    current_app.oso.authorize(org, action="create")
+    if not current_app.oso.is_allowed(g.current_user, "create", org):
+        raise Forbidden
     # TODO(gj): I can't use `assign_role()` without first persisting the org or
     # else the 'resource_id' field in the 'user_roles' table will be None. I
     # would prefer to make both changes as part of the same transaction so I
@@ -121,7 +122,6 @@ def org_potential_users_index(org_id):
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
 def repo_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
-    # current_app.oso.authorize(org, action="LIST_REPOS")
     repos = g.auth_session.query(Repo).filter_by(org=org)
     return jsonify([repo.repr() for repo in repos])
 
@@ -148,7 +148,6 @@ def issue_index(_org_id, repo_id):
     # # TODO(gj): do we need authorize *and* auth_session? They're technically
     # # checking two different things --- whether the user is allowed to
     # # LIST_ISSUES vs. which issues the user has access to.
-    # current_app.oso.authorize(repo, action="LIST_ISSUES")
     issues = g.auth_session.query(Issue).filter_by(repo_id=repo_id)
     return jsonify([issue.repr() for issue in issues])
 

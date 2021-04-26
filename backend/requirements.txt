@@ -3,4 +3,3 @@ Flask-SQLAlchemy
 sqlalchemy-utils
 -e ../../oso/languages/python/oso
 -e ../../oso/languages/python/sqlalchemy-oso
--e ../../oso/languages/python/flask-oso

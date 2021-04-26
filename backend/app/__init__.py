@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base, User
 from .fixtures import load_fixture_data
 
-from flask_oso import FlaskOso
 from oso import Oso
 from sqlalchemy_oso import authorized_sessionmaker, register_models
 from sqlalchemy_oso.roles2 import OsoRoles
@@ -118,9 +117,9 @@ def init_oso(app, Session: sessionmaker):
     # Load authorization policy.
     oso.load_file("app/authorization.polar")
 
-    # Attach Oso to Flask application.
-    app.oso = FlaskOso(oso)
+    # Attach Oso and OsoRoles instances to Flask application.
+    app.oso = oso
     app.roles = roles
 
     return oso
-# docs: end-init-oso
+    # docs: end-init-oso
