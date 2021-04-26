@@ -44,7 +44,7 @@ def create_app(db_path=None, load_fixtures=False):
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
     # docs: begin-configure
-    app.roles.configure()
+    app.roles.synchronize_data()
     # docs: end-configure
 
     # optionally load fixture data
@@ -116,7 +116,6 @@ def init_oso(app, Session: sessionmaker):
     # Register authorization data
     register_models(oso, Base)
     roles = OsoRoles(oso, Base, User, Session)
-    roles.enable()
 
     # Load authorization policy.
     oso.load_file("app/authorization.polar")

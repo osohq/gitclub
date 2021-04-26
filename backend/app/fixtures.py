@@ -68,3 +68,5 @@ def load_fixture_data(session, roles: OsoRoles):
     roles.assign_role(mike, monsters, "org_owner", session=session)
     roles.assign_role(sully, monsters, "org_member", session=session)
     roles.assign_role(randall, monsters, "org_member", session=session)
+
+    session.commit()
