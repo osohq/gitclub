@@ -183,6 +183,7 @@ def org_role_index(org_id):
     return jsonify(roles)
 
 
+# docs: begin-role-assignment
 @bp.route("/orgs/<int:org_id>/roles", methods=["POST"])
 def org_role_create(org_id):
     payload = request.get_json(force=True)
@@ -190,6 +191,8 @@ def org_role_create(org_id):
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
     current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
     return {"user": user.repr(), "role": payload["role"]}, 201
+
+# docs: end-role-assignment
 
 
 def delete_org_role(session, org_id, user_id):

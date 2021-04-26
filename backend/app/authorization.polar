@@ -17,6 +17,7 @@ allow(_: User, "create", _: Org);
 
 # XXX(gj): should there be a permission for viewing the user role assignments for a particular resource?
 
+# docs: begin-org-resource
 resource(_type: Org, "org", actions, roles) if
     actions = ["read", "create_repo", "read_role", "create_role", "update_role", "delete_role"] and
     roles = {
@@ -29,6 +30,7 @@ resource(_type: Org, "org", actions, roles) if
             implies: ["org_member", "repo_write"]
         }
     };
+# docs: end-org-resource
 
 resource(_type: Repo, "repo", actions, roles) if
     actions = ["read", "create_issue"] and
@@ -51,5 +53,9 @@ parent(issue: Issue, parent_repo: Repo) if
     issue.repo = parent_repo;
 
 # TODO(gj): blows up w/o `User` specializer if no current user (None / guest).
+
+# docs: begin-role-allow
 allow(actor: User, action, resource) if
     Roles.role_allows(actor, action, resource);
+
+# docs: end-role-allow
