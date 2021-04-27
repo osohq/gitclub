@@ -1,10 +1,6 @@
 # Users can see themselves.
 allow(user: User, "read", user: User);
 
-# Users can see other users in their org.
-allow(user: User, "read", other: User) if
-    org in user.orgs and org in other.orgs;
-
 # docs: org-create-rule
 # Any logged-in user can create a new org.
 allow(_: User, "create", _: Org);

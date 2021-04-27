@@ -53,7 +53,7 @@ def get_resource_by(session, cls: Type[Any], **kwargs):
     if resource is None:
         raise NotFound
     return resource
-# docs: end-get-resource-by
+    # docs: end-get-resource-by
 
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
@@ -96,7 +96,8 @@ def org_show(org_id):
 # TODO(gj): maybe in the future each org can customize its repo roles.
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_role_choices_index():
-    return jsonify(["repo_read", "repo_write"])
+    roles = current_app.roles.for_resource(Repo)
+    return jsonify(roles)
 
 
 # TODO(gj): maybe in the future each org can customize its own roles.
@@ -104,19 +105,15 @@ def repo_role_choices_index():
 # fetch this list?
 @bp.route("/org_role_choices", methods=["GET"])
 def org_role_choices_index():
-    return jsonify(["org_owner", "org_member"])
+    roles = current_app.roles.for_resource(Org)
+    return jsonify(roles)
 
 
 @bp.route("/orgs/<int:org_id>/potential_users", methods=["GET"])
 def org_potential_users_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
-    # FIXME(gj): once there's an API for getting user role assignments for a
-    # particular resource.
-    existing = g.basic_session.execute(
-        "select distinct user_id from user_roles where resource_type = 'Org' and resource_id = :resource_id;",
-        {"resource_id": org_id},
-    ).fetchall()
-    existing = [rec[0] for rec in existing]
+    assignments = current_app.roles.assignments_for_resource(org)
+    existing = [assignment["user_id"] for assignment in assignments]
     potentials = g.basic_session.query(User).filter(column("id").notin_(existing))
     return jsonify([p.repr() for p in potentials])
 
@@ -127,7 +124,7 @@ def repo_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
     repos = g.auth_session.query(Repo).filter_by(org=org)
     return jsonify([repo.repr() for repo in repos])
-# docs: end-repo-index
+    # docs: end-repo-index
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
@@ -177,14 +174,14 @@ def issues_show(_org_id, _repo_id, issue_id):
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 def org_role_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
-    roles = g.basic_session.execute(
-        """select u.*, ur.role from users u
-           inner join user_roles ur on u.id = ur.user_id
-           where ur.resource_type = 'Org' and ur.resource_id = :resource_id;""",
-        {"resource_id": org_id},
-    ).fetchall()
-    roles = [{"user": {"id": r[0], "email": r[1]}, "role": r[2]} for r in roles]
-    return jsonify(roles)
+    assignments = current_app.roles.assignments_for_resource(org)
+    ids = [assignment["user_id"] for assignment in assignments]
+    users = {u.id: u for u in g.basic_session.query(User).filter(column("id").in_(ids))}
+    assignments = [
+        {"user": users[assignment["user_id"]].repr(), "role": assignment["role"]}
+        for assignment in assignments
+    ]
+    return jsonify(assignments)
 
 
 # docs: begin-role-assignment
@@ -204,26 +201,14 @@ def org_role_create(org_id):
     # docs: end-role-assignment
 
 
-def delete_org_role(session, org_id, user_id):
-    query = """delete from user_roles
-               where resource_type = 'Org' and
-               resource_id = :resource_id and
-               user_id = :user_id;"""
-    params = {
-        "resource_id": str(org_id),
-        "user_id": user_id,
-    }
-    session.execute(query, params)
-
-
 @bp.route("/orgs/<int:org_id>/roles", methods=["PATCH"])
 def org_role_update(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
-    # TODO(gj): maybe a reassign-style method that deletes & assigns?
-    delete_org_role(g.basic_session, org_id, user.id)
-    current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
+    current_app.roles.assign_role(
+        user, org, payload["role"], session=g.basic_session, reassign=True
+    )
     g.basic_session.commit()
     return {"user": user.repr(), "role": payload["role"]}
 
@@ -233,6 +218,10 @@ def org_role_delete(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
-    delete_org_role(g.basic_session, org_id, user.id)
+    removed = current_app.roles.remove_role(
+        user, org, payload["role"], session=g.basic_session
+    )
     g.basic_session.commit()
+    if not removed:
+        raise NotFound
     return current_app.response_class(status=204, mimetype="application/json")
