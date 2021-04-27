@@ -61,10 +61,12 @@ def user_show(user_id):
     return get_resource_by(g.auth_session, User, id=user_id).repr()
 
 
+# docs: begin-org-index
 @bp.route("/orgs", methods=["GET"])
 def org_index():
     orgs = g.auth_session.query(Org)
     return jsonify([org.repr() for org in orgs])
+    # docs: end-org-index
 
 
 # docs: begin-is-allowed
