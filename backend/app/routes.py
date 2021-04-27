@@ -171,6 +171,7 @@ def issues_show(_org_id, _repo_id, issue_id):
     return get_resource_by(g.auth_session, Issue, id=issue_id).repr()
 
 
+# docs: begin-org-role-index
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 def org_role_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
@@ -182,6 +183,7 @@ def org_role_index(org_id):
         for assignment in assignments
     ]
     return jsonify(assignments)
+# docs: end-org-role-index
 
 
 # docs: begin-role-assignment
@@ -198,7 +200,7 @@ def org_role_create(org_id):
     g.basic_session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201
-    # docs: end-role-assignment
+# docs: end-role-assignment
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["PATCH"])
