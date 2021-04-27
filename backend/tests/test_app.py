@@ -6,9 +6,7 @@ from app.models import User
 
 
 def test_db_loads(test_db_session):
-    just_john = (
-        test_db_session.query(User).filter(User.email == "john@beatles.com").all()
-    )
+    just_john = test_db_session.query(User).filter_by(email="john@beatles.com").all()
     assert len(just_john) == 1
 
 
