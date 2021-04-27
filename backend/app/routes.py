@@ -47,11 +47,13 @@ def logout():
     return current_app.response_class(status=204, mimetype="application/json")
 
 
+# docs: begin-get-resource-by
 def get_resource_by(session, cls: Type[Any], **kwargs):
     resource = session.query(cls).filter_by(**kwargs).one_or_none()
     if resource is None:
         raise NotFound
     return resource
+# docs: end-get-resource-by
 
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
@@ -117,11 +119,13 @@ def org_potential_users_index(org_id):
     return jsonify([p.repr() for p in potentials])
 
 
+# docs: begin-repo-index
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
 def repo_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
     repos = g.auth_session.query(Repo).filter_by(org=org)
     return jsonify([repo.repr() for repo in repos])
+# docs: end-repo-index
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
@@ -186,9 +190,14 @@ def org_role_index(org_id):
 def org_role_create(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
+
+    # Use basic session since this user does not need to be authorized.
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
+
+    # Assign user the role in org.
     current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
     g.basic_session.commit()
+
     return {"user": user.repr(), "role": payload["role"]}, 201
     # docs: end-role-assignment
 

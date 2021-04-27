@@ -57,6 +57,7 @@ def create_app(db_path=None, load_fixtures=False):
     def set_current_user_and_session():
         flask_session.permanent = True
 
+        # docs: begin-authn
         session = Session()
         if "current_user" not in g:
             if "current_user_id" in flask_session:
@@ -70,6 +71,7 @@ def create_app(db_path=None, load_fixtures=False):
 
         # Set basic (non-auth) session for this request
         g.basic_session = session
+        # docs: end-authn
 
         # TODO(gj): this is not great. Need to set `g.current_action` *before*
         # constructing the `AuthorizedSession()`.
