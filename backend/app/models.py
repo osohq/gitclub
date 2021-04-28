@@ -12,7 +12,6 @@ class Org(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    # TODO(gj): enum?
     base_repo_role = Column(String)
     billing_address = Column(String)
 
@@ -34,6 +33,7 @@ class User(Base):
     def repr(self):
         return {"id": self.id, "email": self.email}
 
+
 # docs: begin-repo-model
 class Repo(Base):
     __tablename__ = "repos"
@@ -49,7 +49,8 @@ class Repo(Base):
 
     def repr(self):
         return {"id": self.id, "name": self.name}
-# docs: end-repo-model
+        # docs: end-repo-model
+
 
 class Issue(Base):
     __tablename__ = "issues"

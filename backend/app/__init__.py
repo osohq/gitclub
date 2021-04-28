@@ -73,9 +73,6 @@ def create_app(db_path=None, load_fixtures=False):
         g.basic_session = session
         # docs: end-authn
 
-        # TODO(gj): this is not great. Need to set `g.current_action` *before*
-        # constructing the `AuthorizedSession()`.
-        #
         # Set action for this request
         if request.endpoint:
             actions = {

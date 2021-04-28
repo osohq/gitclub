@@ -93,16 +93,12 @@ def org_show(org_id):
     return get_resource_by(g.auth_session, Org, id=org_id).repr()
 
 
-# TODO(gj): maybe in the future each org can customize its repo roles.
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_role_choices_index():
     roles = current_app.roles.for_resource(Repo)
     return jsonify(roles)
 
 
-# TODO(gj): maybe in the future each org can customize its own roles.
-# TODO(gj): should folks who can't create/update/delete org roles be able to
-# fetch this list?
 @bp.route("/org_role_choices", methods=["GET"])
 def org_role_choices_index():
     roles = current_app.roles.for_resource(Org)
@@ -146,9 +142,6 @@ def repo_show(_org_id, repo_id):
 @bp.route("/orgs/<int:_org_id>/repos/<int:repo_id>/issues", methods=["GET"])
 def issue_index(_org_id, repo_id):
     repo = get_resource_by(g.auth_session, Repo, id=repo_id)
-    # # TODO(gj): do we need authorize *and* auth_session? They're technically
-    # # checking two different things --- whether the user is allowed to
-    # # LIST_ISSUES vs. which issues the user has access to.
     issues = g.auth_session.query(Issue).filter_by(repo_id=repo_id)
     return jsonify([issue.repr() for issue in issues])
 
@@ -183,7 +176,7 @@ def org_role_index(org_id):
         for assignment in assignments
     ]
     return jsonify(assignments)
-# docs: end-org-role-index
+    # docs: end-org-role-index
 
 
 # docs: begin-role-assignment
@@ -200,7 +193,7 @@ def org_role_create(org_id):
     g.basic_session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201
-# docs: end-role-assignment
+    # docs: end-role-assignment
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["PATCH"])

@@ -9,10 +9,6 @@ allow(_: User, "create", _: Org);
 
 # ROLES
 
-# XXX(gj): should there be a permission for viewing org/repo role choices?
-
-# XXX(gj): should there be a permission for viewing the user role assignments for a particular resource?
-
 # docs: begin-org-resource
 resource(_type: Org, "org", actions, roles) if
     actions = ["read", "create_repo", "read_role", "create_role", "update_role", "delete_role"] and
@@ -54,7 +50,6 @@ parent(issue: Issue, parent_repo: Repo) if
 parent(repo: Repo, parent_org: Org) if
     repo.org = parent_org;
 # docs: end-repo-parent
-
 
 # docs: begin-role-allow
 allow(actor, action, resource) if
