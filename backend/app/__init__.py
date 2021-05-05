@@ -1,4 +1,6 @@
-from flask import g, Flask, request, session as flask_session
+import functools
+
+from flask import g, Flask, session as flask_session
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,11 +34,8 @@ def create_app(db_path=None, load_fixtures=False):
     oso = init_oso(app, Session)
 
     # init authorized session factory
-    AuthorizedSession = authorized_sessionmaker(
-        bind=engine,
-        get_oso=lambda: oso,
-        get_user=lambda: g.current_user,
-        get_action=lambda: g.current_action,
+    app.authorized_sessionmaker = functools.partial(
+        authorized_sessionmaker, bind=engine
     )
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
@@ -73,23 +72,6 @@ def create_app(db_path=None, load_fixtures=False):
         g.basic_session = session
         # docs: end-authn
 
-        # Set action for this request
-        if request.endpoint:
-            actions = {
-                "routes.org_role_index": "read_role",
-                "routes.org_role_create": "create_role",
-                "routes.org_role_update": "update_role",
-                "routes.org_role_delete": "delete_role",
-                "routes.repo_create": "create_repo",
-                "routes.issue_create": "create_issue",
-            }
-            g.current_action = actions.get(request.endpoint, "read")
-        else:
-            g.current_action = None
-
-        # Set auth session for this request
-        g.auth_session = AuthorizedSession()
-
     @app.after_request
     def add_cors_headers(res):
         res.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
@@ -101,7 +83,8 @@ def create_app(db_path=None, load_fixtures=False):
     @app.after_request
     def close_sessions(res):
         g.basic_session.close()
-        g.auth_session.close()
+        if "auth_session" in g:
+            g.auth_session.close()
         return res
 
     return app

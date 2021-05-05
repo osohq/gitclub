@@ -2,10 +2,28 @@ from flask import Blueprint, g, request, current_app, jsonify, session as flask_
 from sqlalchemy import column
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 from typing import Any, Type
+import functools
 
 from .models import User, Org, Repo, Issue
 
 bp = Blueprint("routes", __name__)
+
+
+def get_auth_session(action: str = "read"):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            AuthorizedSession = current_app.authorized_sessionmaker(
+                get_oso=lambda: current_app.oso,
+                get_user=lambda: g.current_user,
+                get_action=lambda: action,
+            )
+            g.auth_session = AuthorizedSession()
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @bp.errorhandler(BadRequest)
@@ -57,12 +75,14 @@ def get_resource_by(session, cls: Type[Any], **kwargs):
 
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
+@get_auth_session()
 def user_show(user_id):
     return get_resource_by(g.auth_session, User, id=user_id).repr()
 
 
 # docs: begin-org-index
 @bp.route("/orgs", methods=["GET"])
+@get_auth_session()
 def org_index():
     orgs = g.auth_session.query(Org)
     return jsonify([org.repr() for org in orgs])
@@ -89,6 +109,7 @@ def org_create():
 
 
 @bp.route("/orgs/<int:org_id>", methods=["GET"])
+@get_auth_session()
 def org_show(org_id):
     return get_resource_by(g.auth_session, Org, id=org_id).repr()
 
@@ -106,6 +127,7 @@ def org_role_choices_index():
 
 
 @bp.route("/orgs/<int:org_id>/potential_users", methods=["GET"])
+@get_auth_session()
 def org_potential_users_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
     assignments = current_app.roles.assignments_for_resource(org)
@@ -116,6 +138,7 @@ def org_potential_users_index(org_id):
 
 # docs: begin-repo-index
 @bp.route("/orgs/<int:org_id>/repos", methods=["GET"])
+@get_auth_session()
 def repo_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
     repos = g.auth_session.query(Repo).filter_by(org=org)
@@ -124,6 +147,7 @@ def repo_index(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/repos", methods=["POST"])
+@get_auth_session(action="create_repo")
 def repo_create(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
@@ -135,11 +159,13 @@ def repo_create(org_id):
 
 
 @bp.route("/orgs/<int:_org_id>/repos/<int:repo_id>", methods=["GET"])
+@get_auth_session()
 def repo_show(_org_id, repo_id):
     return get_resource_by(g.auth_session, Repo, id=repo_id).repr()
 
 
 @bp.route("/orgs/<int:_org_id>/repos/<int:repo_id>/issues", methods=["GET"])
+@get_auth_session()
 def issue_index(_org_id, repo_id):
     repo = get_resource_by(g.auth_session, Repo, id=repo_id)
     issues = g.auth_session.query(Issue).filter_by(repo_id=repo_id)
@@ -147,6 +173,7 @@ def issue_index(_org_id, repo_id):
 
 
 @bp.route("/orgs/<int:_org_id>/repos/<int:repo_id>/issues", methods=["POST"])
+@get_auth_session(action="create_issue")
 def issue_create(_org_id, repo_id):
     payload = request.get_json(force=True)
     repo = get_resource_by(g.auth_session, Repo, id=repo_id)
@@ -160,12 +187,14 @@ def issue_create(_org_id, repo_id):
 @bp.route(
     "/orgs/<int:_org_id>/repos/<int:_repo_id>/issues/<int:issue_id>", methods=["GET"]
 )
+@get_auth_session()
 def issues_show(_org_id, _repo_id, issue_id):
     return get_resource_by(g.auth_session, Issue, id=issue_id).repr()
 
 
 # docs: begin-org-role-index
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
+@get_auth_session(action="read_role")
 def org_role_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
     assignments = current_app.roles.assignments_for_resource(org)
@@ -181,6 +210,7 @@ def org_role_index(org_id):
 
 # docs: begin-role-assignment
 @bp.route("/orgs/<int:org_id>/roles", methods=["POST"])
+@get_auth_session(action="create_role")
 def org_role_create(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
@@ -197,6 +227,7 @@ def org_role_create(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["PATCH"])
+@get_auth_session(action="update_role")
 def org_role_update(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
@@ -209,6 +240,7 @@ def org_role_update(org_id):
 
 
 @bp.route("/orgs/<int:org_id>/roles", methods=["DELETE"])
+@get_auth_session(action="delete_role")
 def org_role_delete(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
