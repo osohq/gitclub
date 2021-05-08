@@ -18,6 +18,7 @@ export function Show({ issueId, orgId, repoId }: ShowProps) {
   const [issue, setIssue] = useState<Issue>();
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then(setOrg)
@@ -25,15 +26,17 @@ export function Show({ issueId, orgId, repoId }: ShowProps) {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi
-      .show(orgId, repoId)
+    if (!orgId || !repoId) return;
+    repoApi(orgId)
+      .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    issueApi
-      .show(orgId, repoId, issueId)
+    if (!orgId || !repoId || !issueId) return;
+    issueApi(orgId, repoId)
+      .show(issueId)
       .then(setIssue)
       .catch((e) => redirectWithError(`Failed to fetch issue: ${e.message}`));
   }, [issueId, orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -9,8 +9,18 @@ import {
 } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Org, User, UserContext, UserRole, UserRoleParams } from '../../models';
-import { org as orgApi } from '../../api';
+import {
+  Org,
+  RoleAssignment,
+  RoleAssignmentParams,
+  User,
+  UserContext,
+} from '../../models';
+import {
+  org as orgApi,
+  roleAssignments as roleAssignmentsApi,
+  roleChoices as roleChoicesApi,
+} from '../../api';
 import { NoticeContext } from '../../components';
 
 type ShowProps = RouteComponentProps & { orgId?: string };
@@ -18,11 +28,12 @@ type ShowProps = RouteComponentProps & { orgId?: string };
 export function Show({ orgId }: ShowProps) {
   const { error, redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-  const [roles, setRoles] = useState<string[]>([]);
+  const [roleAssignments, setRoleAssignments] = useState<RoleAssignment[]>([]);
+  const [roleChoices, setRoleChoices] = useState<string[]>([]);
   const [refetch, setRefetch] = useState(false);
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then((o) => setOrg(o))
@@ -30,11 +41,12 @@ export function Show({ orgId }: ShowProps) {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    orgApi
-      .roleChoices()
-      .then((rs) => setRoles(rs))
+    if (!orgId) return;
+    roleChoicesApi
+      .org()
+      .then((choices) => setRoleChoices(choices))
       .catch((e) => error(`Failed to fetch role choices: ${e.message}`));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!orgId || !org) return null;
 
@@ -48,19 +60,19 @@ export function Show({ orgId }: ShowProps) {
         <Link to={`/orgs/${orgId}/repos`}>Repos</Link>
       </h2>
 
-      <UserRoles
+      <RoleAssignments
         orgId={orgId}
-        userRoles={userRoles}
-        setUserRoles={setUserRoles}
-        roles={roles}
+        roleAssignments={roleAssignments}
+        setRoleAssignments={setRoleAssignments}
+        roleChoices={roleChoices}
         setRefetch={setRefetch}
       />
 
-      {roles.length && (
-        <NewUserRole
+      {roleChoices.length && (
+        <NewRoleAssignment
           orgId={orgId}
-          setUserRoles={setUserRoles}
-          roles={roles}
+          setRoleAssignments={setRoleAssignments}
+          roleChoices={roleChoices}
           refetch={refetch}
           setRefetch={setRefetch}
         />
@@ -69,65 +81,74 @@ export function Show({ orgId }: ShowProps) {
   );
 }
 
-type UserRolesProps = RolesProps & {
-  userRoles: UserRole[];
+type RoleAssignmentsProps = RolesProps & {
+  roleAssignments: RoleAssignment[];
 };
 
-function UserRoles({
+function RoleAssignments({
   orgId,
-  userRoles,
-  setUserRoles,
-  roles,
+  roleAssignments,
+  setRoleAssignments,
+  roleChoices,
   setRefetch,
-}: UserRolesProps) {
+}: RoleAssignmentsProps) {
   const user = useContext(UserContext);
   const { error } = useContext(NoticeContext);
 
   useEffect(() => {
-    orgApi
-      .userRoleIndex(orgId)
-      .then((urs) => setUserRoles(urs))
-      .catch((e) => error(`Failed to fetch user roles: ${e.message}`));
+    roleAssignmentsApi
+      .org(orgId)
+      .index()
+      .then((assignments) => setRoleAssignments(assignments))
+      .catch((e) => error(`Failed to fetch role assignments: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function updateRole(user: User, role: string) {
+  async function updateRoleAssignment(user: User, role: string) {
     const body = { userId: user.id, role };
     try {
-      const updated = await orgApi.userRoleUpdate(body, orgId);
-      setUserRoles((urs) =>
+      const updated = await roleAssignmentsApi.org(orgId).update(body);
+      setRoleAssignments((assignments) =>
         // Assumes a user has a single role per org.
-        urs.map((old) => (old.user.id === updated.user.id ? updated : old))
+        assignments.map((old) =>
+          old.user.id === updated.user.id ? updated : old
+        )
       );
     } catch (e) {
-      error(`Failed to update user role: ${e.message}`);
+      error(`Failed to update role assignment: ${e.message}`);
     }
   }
 
-  async function deleteRole({ user, role }: UserRole) {
-    orgApi
-      .userRoleDelete({ userId: user.id, role }, orgId)
+  async function deleteRoleAssignment({ user, role }: RoleAssignment) {
+    roleAssignmentsApi
+      .org(orgId)
+      .delete({ userId: user.id, role })
       .then(() => {
         // Assumes a user has a single role per org.
-        setUserRoles((urs) => urs.filter((ur) => ur.user.id !== user.id));
+        setRoleAssignments((as) => as.filter((a) => a.user.id !== user.id));
         setRefetch((x) => !x);
       })
-      .catch((e) => error(`Failed to delete user role: ${e.message}`));
+      .catch((e) => error(`Failed to delete role assignment: ${e.message}`));
   }
 
   return (
     <>
       <h2>Role assignments</h2>
       <ul>
-        {userRoles.map((ur) => (
-          <li key={'user-role-' + ur.user.id + ur.role}>
-            <Link to={`/users/${ur.user.id}`}>{ur.user.email}</Link> -{' '}
+        {roleAssignments.map((assignment) => (
+          <li key={'user-role-' + assignment.user.id + assignment.role}>
+            <Link to={`/users/${assignment.user.id}`}>
+              {assignment.user.email}
+            </Link>{' '}
+            -{' '}
             <select
               disabled={!user.loggedIn()}
               name="role"
-              value={ur.role}
-              onChange={({ target: { value } }) => updateRole(ur.user, value)}
+              value={assignment.role}
+              onChange={({ target: { value } }) =>
+                updateRoleAssignment(assignment.user, value)
+              }
             >
-              {roles.map((r) => (
+              {roleChoices.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
@@ -138,7 +159,7 @@ function UserRoles({
               disabled={!user.loggedIn()}
               onClick={(e) => {
                 e.preventDefault();
-                deleteRole(ur);
+                deleteRoleAssignment(assignment);
               }}
             >
               delete
@@ -152,39 +173,40 @@ function UserRoles({
 
 type RolesProps = {
   orgId: string;
-  setUserRoles: Dispatch<SetStateAction<UserRole[]>>;
-  roles: string[];
+  setRoleAssignments: Dispatch<SetStateAction<RoleAssignment[]>>;
+  roleChoices: string[];
   setRefetch: Dispatch<SetStateAction<boolean>>;
 };
 
-type NewUserRoleProps = RolesProps & {
+type NewRoleAssignmentProps = RolesProps & {
   refetch: boolean;
 };
 
-function NewUserRole({
+function NewRoleAssignment({
   orgId,
-  setUserRoles,
-  roles,
+  setRoleAssignments,
+  roleChoices,
   refetch,
   setRefetch,
-}: NewUserRoleProps) {
+}: NewRoleAssignmentProps) {
   const user = useContext(UserContext);
   const { error } = useContext(NoticeContext);
   const [users, setUsers] = useState<User[]>([]);
-  const [details, setDetails] = useState<UserRoleParams>({
+  const [details, setDetails] = useState<RoleAssignmentParams>({
     userId: 0,
-    role: roles[0],
+    role: roleChoices[0],
   });
 
   useEffect(() => {
     if (user.loggedIn()) {
-      orgApi
-        .potentialUsers(orgId)
+      roleAssignmentsApi
+        .org(orgId)
+        .unassignedUsers()
         .then((users) => {
           setUsers(users);
-          setDetails((ur) => ({ ...ur, userId: users[0] ? users[0].id : 0 }));
+          setDetails((ds) => ({ ...ds, userId: users[0] ? users[0].id : 0 }));
         })
-        .catch((e) => error(`Failed to fetch potential users: ${e.message}`));
+        .catch((e) => error(`Failed to fetch unassigned users: ${e.message}`));
     }
   }, [orgId, refetch, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -193,19 +215,19 @@ function NewUserRole({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const newUserRole = await orgApi.userRoleCreate(details, orgId);
+      const assignment = await roleAssignmentsApi.org(orgId).create(details);
       setRefetch((x) => !x);
-      setDetails((ur) => ({ ...ur, userId: 0 }));
-      setUserRoles((urs) => [...urs, { ...newUserRole }]);
+      setDetails((details) => ({ ...details, userId: 0 }));
+      setRoleAssignments((assignments) => [...assignments, { ...assignment }]);
     } catch (e) {
-      error(`Failed to create new user role: ${e.message}`);
+      error(`Failed to create new role assignment: ${e.message}`);
     }
   }
 
   function handleChange({
     target: { name, value },
   }: ChangeEvent<HTMLSelectElement>) {
-    setDetails((ur) => ({ ...ur, [name]: value }));
+    setDetails((details) => ({ ...details, [name]: value }));
   }
 
   return (
@@ -225,7 +247,7 @@ function NewUserRole({
         <label>
           role:{' '}
           <select name="role" value={details.role} onChange={handleChange}>
-            {roles.map((r) => (
+            {roleChoices.map((r) => (
               <option key={r} value={r}>
                 {r}
               </option>

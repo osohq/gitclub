@@ -1,4 +1,5 @@
 from flask import g, current_app
+from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import Forbidden, NotFound
 from typing import Any, Dict, Optional, Type
 import functools
@@ -29,9 +30,12 @@ def check_permission(action: str, resource: Base):
 
 
 # docs: begin-get-resource-by
-def get_resource_by(session, cls: Type[Any], **kwargs):
-    resource = session.query(cls).filter_by(**kwargs).one_or_none()
+def get_or_404(self, cls: Type[Any], **kwargs):
+    resource = self.query(cls).filter_by(**kwargs).one_or_none()
     if resource is None:
         raise NotFound
     return resource
-    # docs: end-get-resource-by
+
+
+Session.get_or_404 = get_or_404  # type: ignore
+# docs: end-get-resource-by

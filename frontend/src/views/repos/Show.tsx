@@ -13,6 +13,7 @@ export function Show({ orgId, repoId }: ShowProps) {
   const [repo, setRepo] = useState<Repo>();
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then(setOrg)
@@ -20,13 +21,14 @@ export function Show({ orgId, repoId }: ShowProps) {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi
-      .show(orgId, repoId)
+    if (!orgId || !repoId) return;
+    repoApi(orgId)
+      .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!org || !repo) return null;
+  if (!orgId || !org || !repoId || !repo) return null;
 
   return (
     <>

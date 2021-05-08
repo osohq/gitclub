@@ -3,7 +3,7 @@ import { Redirect, RouteComponentProps } from '@reach/router';
 
 import { UserContext } from '../models';
 import { NoticeContext } from '../components';
-import { user as userApi } from '../api';
+import { session as sessionApi } from '../api';
 
 export function Login(_: RouteComponentProps) {
   const user = useContext(UserContext);
@@ -16,7 +16,7 @@ export function Login(_: RouteComponentProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const u = await userApi.login({ email });
+      const u = await sessionApi.login({ email });
       user.update(u);
       // TODO(gj): navigate(-1) throws errors that I don't feel like debugging.
       window.history.back();

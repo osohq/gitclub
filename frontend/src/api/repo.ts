@@ -1,20 +1,16 @@
 import { Repo } from '../models';
-import { create, get, index, show } from './helpers';
+import { create, index, show } from './helpers';
 
-const repoCreate = (body: { name: string }, orgId?: string) =>
-  create(`/orgs/${orgId}/repos`, body, Repo);
+type Params = { name: string };
 
-const repoIndex = (orgId?: string) => index(`/orgs/${orgId}/repos`, Repo);
+export function repo(orgId: string) {
+  const path = `/orgs/${orgId}/repos`;
 
-const repoShow = (orgId?: string, repoId?: string) =>
-  show(`/orgs/${orgId}/repos/${repoId}`, Repo);
+  return {
+    create: (body: Params) => create(path, body, Repo),
 
-const repoRoleChoices = () => get('/repo_role_choices') as Promise<string[]>;
+    index: () => index(path, Repo),
 
-export const repo = {
-  create: repoCreate,
-  index: repoIndex,
-  show: repoShow,
-
-  roleChoices: repoRoleChoices,
-};
+    show: (id: string) => show(`${path}/${id}`, Repo),
+  };
+}

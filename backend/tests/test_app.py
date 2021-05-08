@@ -114,7 +114,7 @@ def test_org_show(test_client):
 
 
 def test_repo_role_choices_index(test_client):
-    resp = test_client.get("/orgs/1/repos/1/roles")
+    resp = test_client.get("/repo_role_choices")
     assert resp.status_code == 200
     repo_role_choices = json.loads(resp.data)
     assert len(repo_role_choices) == 2
@@ -122,26 +122,26 @@ def test_repo_role_choices_index(test_client):
 
 
 def test_org_role_choices_index(test_client):
-    resp = test_client.get("/orgs/1/roles")
+    resp = test_client.get("/org_role_choices")
     assert resp.status_code == 200
     org_role_choices = json.loads(resp.data)
     assert org_role_choices == ["org_member", "org_owner"]
 
 
-def test_org_potential_users_index(test_client):
-    resp = test_client.get("/orgs/1/potential_users")
+def test_org_unassigned_users_index(test_client):
+    resp = test_client.get("/orgs/1/unassigned_users")
     assert resp.status_code == 403
 
     test_client.log_in_as(john)
 
-    resp = test_client.get("/orgs/1/potential_users")
+    resp = test_client.get("/orgs/1/unassigned_users")
     assert resp.status_code == 200
-    potential_users = json.loads(resp.data)
-    assert len(potential_users) == 4
-    potential_emails = [u["email"] for u in potential_users]
-    assert john not in potential_emails
-    assert paul not in potential_emails
-    assert mike in potential_emails
+    unassigned_users = json.loads(resp.data)
+    assert len(unassigned_users) == 4
+    unassigned_emails = [u["email"] for u in unassigned_users]
+    assert john not in unassigned_emails
+    assert paul not in unassigned_emails
+    assert mike in unassigned_emails
 
 
 def test_repo_index(test_client):

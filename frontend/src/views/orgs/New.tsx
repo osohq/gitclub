@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { org as orgApi, repo as repoApi } from '../../api';
+import { org as orgApi, roleChoices as roleChoicesApi } from '../../api';
 import { OrgParams, UserContext } from '../../models';
 import { NoticeContext } from '../../components';
 
@@ -25,14 +25,14 @@ export function New(_: RouteComponentProps) {
 
   useEffect(() => {
     if (user.loggedIn()) {
-      repoApi
-        .roleChoices()
-        .then((cs) => {
+      roleChoicesApi
+        .repo()
+        .then((choices) => {
           setDetails((details) => ({
             ...details,
-            baseRepoRole: cs[0],
+            baseRepoRole: choices[0],
           }));
-          setRepoRoleChoices(cs);
+          setRepoRoleChoices(choices);
         })
         .catch((e) =>
           redirectWithError(`Failed to fetch role choices: ${e.message}`)

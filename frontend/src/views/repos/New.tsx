@@ -22,9 +22,9 @@ export function New({ orgId }: NewProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (inputEmpty) return;
+    if (inputEmpty || !orgId) return;
     try {
-      const repo = await repoApi.create({ name }, orgId);
+      const repo = await repoApi(orgId).create({ name });
       await navigate(`${index}/${repo.id}`);
     } catch (e) {
       error(`Failed to create new repo: ${e.message}`);

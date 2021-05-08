@@ -14,6 +14,7 @@ export function Index({ orgId }: IndexProps) {
   const [repos, setRepos] = useState<Repo[]>([]);
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then(setOrg)
@@ -21,8 +22,9 @@ export function Index({ orgId }: IndexProps) {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi
-      .index(orgId)
+    if (!orgId) return;
+    repoApi(orgId)
+      .index()
       .then(setRepos)
       .catch((e) => redirectWithError(`Failed to fetch repos: ${e.message}`));
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps

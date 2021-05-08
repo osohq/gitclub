@@ -15,6 +15,7 @@ export function Index({ orgId, repoId }: IndexProps) {
   const [issues, setIssues] = useState<Issue[]>();
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then(setOrg)
@@ -22,15 +23,17 @@ export function Index({ orgId, repoId }: IndexProps) {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi
-      .show(orgId, repoId)
+    if (!orgId || !repoId) return;
+    repoApi(orgId)
+      .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    issueApi
-      .index(orgId, repoId)
+    if (!orgId || !repoId) return;
+    issueApi(orgId, repoId)
+      .index()
       .then(setIssues)
       .catch((e) => redirectWithError(`Failed to fetch issues: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -18,7 +18,7 @@ import {
   RepoShow,
   UserShow,
 } from './views';
-import { user as userApi } from './api';
+import { session as sessionApi } from './api';
 import { NoticeContext } from './components';
 
 import './App.css';
@@ -31,7 +31,7 @@ function App() {
   const userContext = { current: user, loggedIn, update: setUser };
 
   useEffect(() => {
-    userApi
+    sessionApi
       .whoami()
       .then(setUser)
       .catch((e) => error(`Failed to fetch current user: ${e.message}`));

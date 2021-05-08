@@ -1,7 +1,7 @@
 import { MouseEvent, useContext } from 'react';
 import { Link } from '@reach/router';
 
-import { user as userApi } from '../api';
+import { session as sessionApi } from '../api';
 import { User, UserContext } from '../models';
 import { NoticeContext } from '../components';
 
@@ -12,7 +12,7 @@ export function Nav() {
   async function handleLogout(e: MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
     try {
-      await userApi.logout();
+      await sessionApi.logout();
       user.update('Guest');
     } catch (e) {
       error(`Failed to log out: ${e.message}`);

@@ -29,6 +29,8 @@ def create_app(db_path=None, load_fixtures=False):
     app.register_blueprint(routes.issues.bp)
     app.register_blueprint(routes.orgs.bp)
     app.register_blueprint(routes.repos.bp)
+    app.register_blueprint(routes.role_assignments.bp)
+    app.register_blueprint(routes.role_choices.bp)
     app.register_blueprint(routes.session.bp)
     app.register_blueprint(routes.users.bp)
 

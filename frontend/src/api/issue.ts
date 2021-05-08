@@ -1,18 +1,16 @@
 import { Issue } from '../models';
 import { create, index, show } from './helpers';
 
-type body = { title: string };
-const issueCreate = (body: body, orgId?: string, repoId?: string) =>
-  create(`/orgs/${orgId}/repos/${repoId}/issues`, body, Issue);
+type Params = { title: string };
 
-const issueIndex = (orgId?: string, repoId?: string) =>
-  index(`/orgs/${orgId}/repos/${repoId}/issues`, Issue);
+export function issue(orgId: string, repoId: string) {
+  const path = `/orgs/${orgId}/repos/${repoId}/issues`;
 
-const issueShow = (orgId?: string, repoId?: string, issueId?: string) =>
-  show(`/orgs/${orgId}/repos/${repoId}/issues/${issueId}`, Issue);
+  return {
+    create: (body: Params) => create(path, body, Issue),
 
-export const issue = {
-  create: issueCreate,
-  index: issueIndex,
-  show: issueShow,
-};
+    index: () => index(path, Issue),
+
+    show: (id: string) => show(`${path}/${id}`, Issue),
+  };
+}

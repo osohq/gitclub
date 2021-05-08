@@ -12,13 +12,14 @@ export function Show({ userId }: ShowProps) {
   const [user, setUser] = useState<User>();
 
   useEffect(() => {
+    if (!userId) return;
     userApi
       .show(userId)
       .then((u) => setUser(u))
       .catch(redirectWithError);
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!user) return null;
+  if (!userId || !user) return null;
 
   return <h1>{user.email}</h1>;
 }
