@@ -114,7 +114,7 @@ def test_org_show(test_client):
 
 
 def test_repo_role_choices_index(test_client):
-    resp = test_client.get("/repo_role_choices")
+    resp = test_client.get("/orgs/1/repos/1/roles")
     assert resp.status_code == 200
     repo_role_choices = json.loads(resp.data)
     assert len(repo_role_choices) == 2
@@ -122,7 +122,7 @@ def test_repo_role_choices_index(test_client):
 
 
 def test_org_role_choices_index(test_client):
-    resp = test_client.get("/org_role_choices")
+    resp = test_client.get("/orgs/1/roles")
     assert resp.status_code == 200
     org_role_choices = json.loads(resp.data)
     assert org_role_choices == ["org_member", "org_owner"]

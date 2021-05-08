@@ -1,6 +1,7 @@
 import functools
 
 from flask import g, Flask, session as flask_session
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,7 +26,24 @@ def create_app(db_path=None, load_fixtures=False):
     # init app
     app = Flask(__name__)
     app.secret_key = b"ball outside of the school"
-    app.register_blueprint(routes.bp)
+    app.register_blueprint(routes.issues.bp)
+    app.register_blueprint(routes.orgs.bp)
+    app.register_blueprint(routes.repos.bp)
+    app.register_blueprint(routes.session.bp)
+    app.register_blueprint(routes.users.bp)
+
+    # Set up error handlers.
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(*_):
+        return {"message": "Bad Request"}, 400
+
+    @app.errorhandler(Forbidden)
+    def handle_forbidden(*_):
+        return {"message": "Forbidden"}, 403
+
+    @app.errorhandler(NotFound)
+    def handle_not_found(*_):
+        return {"message": "Not Found"}, 404
 
     # init basic session factory
     Session = sessionmaker(bind=engine)
