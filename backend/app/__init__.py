@@ -87,7 +87,7 @@ def create_app(db_path=None, load_fixtures=False):
                 user = session.query(User).filter_by(id=user_id).one_or_none()
                 if user is None:
                     flask_session.pop("current_user_id")
-                g.current_user = user
+                g.current_user = User(**user.repr())
                 session.close()
             else:
                 g.current_user = None
