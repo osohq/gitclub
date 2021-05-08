@@ -16,7 +16,7 @@ from sqlalchemy_oso.roles2 import OsoRoles
 def create_app(db_path=None, load_fixtures=False):
     from . import routes
 
-    # init engine and session
+    # init engine
     if db_path:
         engine = create_engine(db_path)
     else:
@@ -35,7 +35,10 @@ def create_app(db_path=None, load_fixtures=False):
 
     # init authorized session factory
     app.authorized_sessionmaker = functools.partial(
-        authorized_sessionmaker, bind=engine
+        authorized_sessionmaker,
+        bind=engine,
+        get_oso=lambda: oso,
+        get_user=lambda: g.current_user,
     )
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
@@ -57,19 +60,17 @@ def create_app(db_path=None, load_fixtures=False):
         flask_session.permanent = True
 
         # docs: begin-authn
-        session = Session()
         if "current_user" not in g:
             if "current_user_id" in flask_session:
                 user_id = flask_session.get("current_user_id")
+                session = Session()
                 user = session.query(User).filter_by(id=user_id).one_or_none()
                 if user is None:
                     flask_session.pop("current_user_id")
                 g.current_user = user
+                session.close()
             else:
                 g.current_user = None
-
-        # Set basic (non-auth) session for this request
-        g.basic_session = session
         # docs: end-authn
 
     @app.after_request
@@ -81,10 +82,9 @@ def create_app(db_path=None, load_fixtures=False):
         return res
 
     @app.after_request
-    def close_sessions(res):
-        g.basic_session.close()
-        if "auth_session" in g:
-            g.auth_session.close()
+    def close_session(res):
+        if "session" in g:
+            g.session.close()
         return res
 
     return app

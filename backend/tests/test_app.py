@@ -38,25 +38,21 @@ def test_user_sessions(test_client):
     assert json.loads(resp.data) == None
 
 
-def log_in_as(email, test_client):
-    test_client.post("/session", json={"email": email})
-
-
 def test_user_show(test_client):
     john_profile = "/users/1"
     resp = test_client.get(john_profile)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(john_profile)
     assert resp.status_code == 200
     assert json.loads(resp.data).get("email") == john
 
-    log_in_as(paul, test_client)
+    test_client.log_in_as(paul)
 
     resp = test_client.get(john_profile)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_org_index(test_client):
@@ -64,7 +60,7 @@ def test_org_index(test_client):
     assert resp.status_code == 200
     assert len(json.loads(resp.data)) == 0
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get("/orgs")
     assert resp.status_code == 200
@@ -72,7 +68,7 @@ def test_org_index(test_client):
     assert len(orgs) == 1
     assert orgs[0]["name"] == "The Beatles"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get("/orgs")
     assert resp.status_code == 200
@@ -91,7 +87,7 @@ def test_org_create(test_client):
     resp = test_client.post("/orgs", json=org_params)
     assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.post("/orgs", json=org_params)
     assert resp.status_code == 201
@@ -102,19 +98,19 @@ def test_org_create(test_client):
 def test_org_show(test_client):
     the_beatles = "/orgs/1"
     resp = test_client.get(the_beatles)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(the_beatles)
     assert resp.status_code == 200
     org = json.loads(resp.data)
     assert org["name"] == "The Beatles"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(the_beatles)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_repo_role_choices_index(test_client):
@@ -134,9 +130,9 @@ def test_org_role_choices_index(test_client):
 
 def test_org_potential_users_index(test_client):
     resp = test_client.get("/orgs/1/potential_users")
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get("/orgs/1/potential_users")
     assert resp.status_code == 200
@@ -151,9 +147,9 @@ def test_org_potential_users_index(test_client):
 def test_repo_index(test_client):
     beatles_repos = "/orgs/1/repos"
     resp = test_client.get(beatles_repos)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(beatles_repos)
     assert resp.status_code == 200
@@ -161,19 +157,19 @@ def test_repo_index(test_client):
     assert len(repos) == 1
     assert repos[0]["name"] == "Abbey Road"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(beatles_repos)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_repo_create(test_client):
     repo_params = {"name": "new repo"}
     beatles_repos = "/orgs/1/repos"
     resp = test_client.post(beatles_repos, json=repo_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.post(beatles_repos, json=repo_params)
     assert resp.status_code == 201
@@ -182,33 +178,33 @@ def test_repo_create(test_client):
 
     monsters_repos = "/orgs/2/repos"
     resp = test_client.post(monsters_repos, json=repo_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_repo_show(test_client):
     abbey_road = "/orgs/1/repos/1"
     resp = test_client.get(abbey_road)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(abbey_road)
     assert resp.status_code == 200
     repo = json.loads(resp.data)
     assert repo["name"] == "Abbey Road"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(abbey_road)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_issue_index(test_client):
     abbey_road_issues = "/orgs/1/repos/1/issues"
     resp = test_client.get(abbey_road_issues)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(abbey_road_issues)
     assert resp.status_code == 200
@@ -216,19 +212,19 @@ def test_issue_index(test_client):
     assert len(issues) == 1
     assert issues[0]["title"] == "Too much critical acclaim"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(abbey_road_issues)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_issue_create(test_client):
     issue_params = {"title": "new issue"}
     abbey_road_issues = "/orgs/1/repos/1/issues"
     resp = test_client.post(abbey_road_issues, json=issue_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.post(abbey_road_issues, json=issue_params)
     assert resp.status_code == 201
@@ -237,33 +233,33 @@ def test_issue_create(test_client):
 
     paperwork_issues = "/orgs/2/repos/2/issues"
     resp = test_client.post(paperwork_issues, json=issue_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_issue_show(test_client):
     too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
     resp = test_client.get(too_much_critical_acclaim)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(too_much_critical_acclaim)
     assert resp.status_code == 200
     issue = json.loads(resp.data)
     assert issue["title"] == "Too much critical acclaim"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(too_much_critical_acclaim)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
-def test_org_role_index(test_client):
-    beatles_roles = "/orgs/1/roles"
+def test_org_role_assignment_index(test_client):
+    beatles_roles = "/orgs/1/role_assignments"
     resp = test_client.get(beatles_roles)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     resp = test_client.get(beatles_roles)
     assert resp.status_code == 200
@@ -276,22 +272,22 @@ def test_org_role_index(test_client):
     assert ringo_role["user"]["email"] == ringo
     assert ringo_role["role"] == "org_member"
 
-    log_in_as(mike, test_client)
+    test_client.log_in_as(mike)
 
     resp = test_client.get(beatles_roles)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
-def test_org_role_create(test_client):
+def test_org_role_assignment_create(test_client):
     mike_id = 4
     role_params = {"user_id": mike_id, "role": "org_member"}
-    beatles_roles = "/orgs/1/roles"
+    beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot assign a role in any org.
     resp = test_client.post(beatles_roles, json=role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     # John can assign a new role in the Beatles org.
     resp = test_client.post(beatles_roles, json=role_params)
@@ -301,21 +297,21 @@ def test_org_role_create(test_client):
     assert user_role["role"] == role_params["role"]
 
     # But John can't assign a new role in the Monsters org.
-    monsters_roles = "/orgs/2/roles"
+    monsters_roles = "/orgs/2/role_assignments"
     resp = test_client.post(monsters_roles, json=role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
-def test_org_role_update(test_client):
+def test_org_role_assignment_update(test_client):
     paul_id = 2
     role_params = {"user_id": paul_id, "role": "org_owner"}
-    beatles_roles = "/orgs/1/roles"
+    beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot update a role in any org.
     resp = test_client.patch(beatles_roles, json=role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     # Paul is currently an 'org_member' in the Beatles org.
     resp = test_client.get(beatles_roles)
@@ -340,21 +336,21 @@ def test_org_role_update(test_client):
     assert paul_role == "org_owner"
 
     # But John can't update a role in the Monsters org.
-    monsters_roles = "/orgs/2/roles"
+    monsters_roles = "/orgs/2/role_assignments"
     resp = test_client.patch(monsters_roles, json=role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
-def test_org_role_delete(test_client):
+def test_org_role_assignment_delete(test_client):
     paul_id = 2
     paul_role_params = {"user_id": paul_id, "role": "org_member"}
-    beatles_roles = "/orgs/1/roles"
+    beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot delete a role in any org.
     resp = test_client.delete(beatles_roles, json=paul_role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
-    log_in_as(john, test_client)
+    test_client.log_in_as(john)
 
     # Paul is currently an 'org_member' in the Beatles org.
     resp = test_client.get(beatles_roles)
@@ -378,6 +374,6 @@ def test_org_role_delete(test_client):
     # And John can't delete a role in the Monsters org.
     sully_id = 5
     sully_role_params = {"user_id": sully_id}
-    monsters_roles = "/orgs/2/roles"
+    monsters_roles = "/orgs/2/role_assignments"
     resp = test_client.delete(monsters_roles, json=sully_role_params)
-    assert resp.status_code == 404
+    assert resp.status_code == 403

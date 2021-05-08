@@ -1,5 +1,5 @@
 # Users can see themselves.
-allow(user: User, "read", user: User);
+allow(_: User{id: id}, "read", _: User{id: id});
 
 # docs: org-create-rule
 # Any logged-in user can create a new org.
@@ -11,14 +11,16 @@ allow(_: User, "create", _: Org);
 
 # docs: begin-org-resource
 resource(_type: Org, "org", actions, roles) if
-    actions = ["read", "create_repo", "read_role", "create_role", "update_role", "delete_role"] and
+    # TODO(gj): might be able to cut down on some repetition with namespacing, e.g., `role_assignments::{create, list, update, delete}`
+    actions = ["read", "create_repos", "list_repos",
+               "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
         org_member: {
-            perms: ["read", "read_role"],
+            perms: ["read", "list_repos", "list_role_assignments"],
             implies: ["repo_read"]
         },
         org_owner: {
-            perms: ["create_repo", "create_role", "update_role", "delete_role"],
+            perms: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
             implies: ["org_member", "repo_write"]
         }
     };
@@ -26,14 +28,14 @@ resource(_type: Org, "org", actions, roles) if
 
 # docs: begin-repo-resource
 resource(_type: Repo, "repo", actions, roles) if
-    actions = ["read", "create_issue"] and
+    actions = ["read", "create_issues", "list_issues"] and
     roles = {
         repo_write: {
-            perms: ["create_issue", "issue:read"],
+            perms: ["create_issues"],
             implies: ["repo_read"]
         },
         repo_read: {
-            perms: ["read"]
+            perms: ["read", "list_issues", "issue:read"]
         }
     };
 # docs: end-repo-resource

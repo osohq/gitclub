@@ -8,27 +8,30 @@ from sqlalchemy_oso.roles2 import OsoRoles
 from app import create_app, models
 from app.fixtures import load_fixture_data
 
-
-@pytest.fixture
-def db_path(tmp_path):
-    d = tmp_path / "roles.db"
-    d = "sqlite:///" + str(d.absolute())
-    return d
+db_path = "sqlite:///:memory:"
 
 
 @pytest.fixture
-def test_app(db_path):
+def test_app():
     return create_app(db_path, True)
 
 
 @pytest.fixture
 def test_client(test_app):
+    from flask.testing import FlaskClient
+
     test_client = test_app.test_client()
+
+    def log_in_as(self, email):
+        self.post("/session", json={"email": email})
+
+    FlaskClient.log_in_as = log_in_as  # type: ignore
+
     return test_client
 
 
 @pytest.fixture
-def engine(db_path):
+def engine():
     return create_engine(db_path)
 
 
