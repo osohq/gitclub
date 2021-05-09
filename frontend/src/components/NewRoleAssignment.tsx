@@ -73,29 +73,26 @@ export function NewRoleAssignment({
   }
 
   return (
-    <>
-      <h2>Assign new role</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          user:{' '}
-          <select name="userId" value={details.userId} onChange={handleChange}>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.email}
-              </option>
-            ))}
-          </select>
-        </label>{' '}
-        <label>
-          role:{' '}
-          <RoleSelector
-            choices={roleChoices}
-            selected={details.role}
-            update={handleChange}
-          />
-        </label>{' '}
-        <input type="submit" value="assign" />
-      </form>
-    </>
+    <form onSubmit={handleSubmit}>
+      <label>
+        user:{' '}
+        <select name="userId" value={details.userId} onChange={handleChange}>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.email}
+            </option>
+          ))}
+        </select>
+      </label>{' '}
+      <label>
+        role:{' '}
+        <RoleSelector
+          choices={roleChoices}
+          selected={details.role}
+          update={handleChange}
+        />
+      </label>{' '}
+      <input type="submit" value="assign" />
+    </form>
   );
 }

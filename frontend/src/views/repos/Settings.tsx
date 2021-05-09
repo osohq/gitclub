@@ -77,6 +77,8 @@ export function Settings({ orgId, repoId }: Props) {
         setRefetch={setRefetch}
       />
 
+      <h3>Invite people</h3>
+
       {roleChoices.length && (
         <NewRoleAssignment
           api={api}

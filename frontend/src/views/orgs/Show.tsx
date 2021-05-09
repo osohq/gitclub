@@ -48,6 +48,8 @@ export function Show({ orgId }: Props) {
         <Link to={`/orgs/${orgId}/repos`}>Repos</Link>
       </h2>
 
+      <h2>People</h2>
+
       <RoleAssignments
         api={api}
         assignments={roleAssignments}
@@ -55,6 +57,8 @@ export function Show({ orgId }: Props) {
         setAssignments={setRoleAssignments}
         setRefetch={setRefetch}
       />
+
+      <h3>Invite new members</h3>
 
       {roleChoices.length && (
         <NewRoleAssignment
