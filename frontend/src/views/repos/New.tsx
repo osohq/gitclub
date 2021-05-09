@@ -5,9 +5,9 @@ import { UserContext } from '../../models';
 import { NoticeContext } from '../../components';
 import { repo as repoApi } from '../../api';
 
-type NewProps = RouteComponentProps & { orgId?: string };
+type Props = RouteComponentProps & { orgId?: string };
 
-export function New({ orgId }: NewProps) {
+export function New({ orgId }: Props) {
   const user = useContext(UserContext);
   const { error } = useContext(NoticeContext);
   const [name, setName] = useState<string>('');

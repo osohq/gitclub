@@ -5,9 +5,9 @@ import { Org, Repo } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
 import { NoticeContext } from '../../components';
 
-type ShowProps = RouteComponentProps & { orgId?: string; repoId?: string };
+type Props = RouteComponentProps & { orgId?: string; repoId?: string };
 
-export function Show({ orgId, repoId }: ShowProps) {
+export function Show({ orgId, repoId }: Props) {
   const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();

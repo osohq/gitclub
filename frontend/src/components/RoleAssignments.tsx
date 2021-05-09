@@ -26,7 +26,7 @@ export function RoleAssignments({
   useEffect(() => {
     api
       .index()
-      .then((assignments) => setAssignments(assignments))
+      .then(setAssignments)
       .catch((e) => error(`Failed to fetch role assignments: ${e.message}`));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

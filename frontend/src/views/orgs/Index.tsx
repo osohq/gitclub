@@ -11,10 +11,7 @@ export function Index(_: RouteComponentProps) {
   const [orgs, setOrgs] = useState<Org[]>([]);
 
   useEffect(() => {
-    orgApi
-      .index()
-      .then((os) => setOrgs(os))
-      .catch(redirectWithError);
+    orgApi.index().then(setOrgs).catch(redirectWithError);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maybeNewLink = !user.loggedIn() ? null : (

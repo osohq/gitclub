@@ -5,9 +5,9 @@ import { Issue, Org, Repo, UserContext } from '../../models';
 import { issue as issueApi, org as orgApi, repo as repoApi } from '../../api';
 import { NoticeContext } from '../../components';
 
-type IndexProps = RouteComponentProps & { orgId?: string; repoId?: string };
+type Props = RouteComponentProps & { orgId?: string; repoId?: string };
 
-export function Index({ orgId, repoId }: IndexProps) {
+export function Index({ orgId, repoId }: Props) {
   const user = useContext(UserContext);
   const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
