@@ -20,7 +20,7 @@ export function RoleAssignments({
   roleChoices,
   setRefetch,
 }: Props) {
-  const { loggedIn } = useContext(UserContext);
+  const { current: currentUser, loggedIn } = useContext(UserContext);
   const { error } = useContext(NoticeContext);
 
   useEffect(() => {
@@ -28,21 +28,20 @@ export function RoleAssignments({
       .index()
       .then(setAssignments)
       .catch((e) => error(`Failed to fetch role assignments: ${e.message}`));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function updateAssignment(user: User, role: string) {
-    try {
-      const next = await api.update({ userId: user.id, role });
-      // NOTE(gj): Assumes a user has a single role per resource.
-      setAssignments((assignments) =>
-        assignments.map((old) => (old.user.id === next.user.id ? next : old))
-      );
-    } catch (e) {
-      error(`Failed to update role assignment: ${e.message}`);
-    }
+  function update(user: User, role: string) {
+    api
+      .update({ userId: user.id, role })
+      .then((next) => {
+        const { id } = next.user;
+        // NOTE(gj): Assumes a user has a single role per resource.
+        setAssignments((as) => as.map((a) => (a.user.id === id ? next : a)));
+      })
+      .catch((e) => error(`Failed to update role assignment: ${e.message}`));
   }
 
-  async function deleteAssignment({ user, role }: RoleAssignment) {
+  function remove({ user, role }: RoleAssignment) {
     api
       .delete({ userId: user.id, role })
       .then(() => {
@@ -60,7 +59,7 @@ export function RoleAssignments({
           <Link to={`/users/${user.id}`}>{user.email}</Link> -{' '}
           <RoleSelector
             choices={roleChoices}
-            update={({ target: { value } }) => updateAssignment(user, value)}
+            update={({ target: { value } }) => update(user, value)}
             selected={role}
           />{' '}
           -{' '}
@@ -68,7 +67,7 @@ export function RoleAssignments({
             disabled={!loggedIn()}
             onClick={(e) => {
               e.preventDefault();
-              deleteAssignment({ user, role });
+              remove({ user, role });
             }}
           >
             delete

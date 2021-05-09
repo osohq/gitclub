@@ -20,7 +20,7 @@ export function Index({ orgId, repoId }: Props) {
       .show(orgId)
       .then(setOrg)
       .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !repoId) return;
@@ -28,7 +28,7 @@ export function Index({ orgId, repoId }: Props) {
       .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
-  }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, repoId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !repoId) return;
@@ -36,7 +36,7 @@ export function Index({ orgId, repoId }: Props) {
       .index()
       .then(setIssues)
       .catch((e) => redirectWithError(`Failed to fetch issues: ${e.message}`));
-  }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, repoId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org || !repo || !issues) return null;
 

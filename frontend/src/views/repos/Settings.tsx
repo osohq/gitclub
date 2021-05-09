@@ -17,7 +17,7 @@ import {
 type Props = RouteComponentProps & { orgId?: string; repoId?: string };
 
 export function Settings({ orgId, repoId }: Props) {
-  const user = useContext(UserContext);
+  const { current: currentUser } = useContext(UserContext);
   const { error, redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();
@@ -31,7 +31,7 @@ export function Settings({ orgId, repoId }: Props) {
       .show(orgId)
       .then(setOrg)
       .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !repoId) return;
@@ -39,21 +39,21 @@ export function Settings({ orgId, repoId }: Props) {
       .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
-  }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     roleChoicesApi
       .repo()
       .then(setRoleChoices)
       .catch((e) => error(`Failed to fetch repo role choices: ${e.message}`));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!orgId || !repoId) return null;
   const show = `/orgs/${orgId}/repos/${repoId}`;
 
-  if (user.current === 'Loading') return null;
+  if (currentUser === 'Loading') return null;
   // If a guest navigates to this page, redirect to the repo show.
-  if (user.current === 'Guest') return <Redirect to={show} noThrow />;
+  if (currentUser === 'Guest') return <Redirect to={show} noThrow />;
 
   if (!org || !repo) return null;
 

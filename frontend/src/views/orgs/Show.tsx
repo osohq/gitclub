@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Org, RoleAssignment } from '../../models';
+import { Org, RoleAssignment, UserContext } from '../../models';
 import {
   org as orgApi,
   roleAssignments as roleAssignmentsApi,
@@ -16,6 +16,7 @@ import {
 type Props = RouteComponentProps & { orgId?: string };
 
 export function Show({ orgId }: Props) {
+  const { current: currentUser } = useContext(UserContext);
   const { error, redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [roleAssignments, setRoleAssignments] = useState<RoleAssignment[]>([]);
@@ -25,14 +26,14 @@ export function Show({ orgId }: Props) {
   useEffect(() => {
     if (!orgId) return;
     orgApi.show(orgId).then(setOrg).catch(redirectWithError);
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     roleChoicesApi
       .org()
       .then(setRoleChoices)
       .catch((e) => error(`Failed to fetch org role choices: ${e.message}`));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!orgId || !org) return null;
 

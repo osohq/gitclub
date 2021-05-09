@@ -1,20 +1,21 @@
 import { useContext, useEffect, useState } from 'react';
 import { RouteComponentProps } from '@reach/router';
 
-import { User } from '../../models';
+import { User, UserContext } from '../../models';
 import { user as userApi } from '../../api';
 import { NoticeContext } from '../../components';
 
 type Props = RouteComponentProps & { userId?: string };
 
 export function Show({ userId }: Props) {
+  const { current: currentUser } = useContext(UserContext);
   const { redirectWithError } = useContext(NoticeContext);
   const [user, setUser] = useState<User>();
 
   useEffect(() => {
     if (!userId) return;
     userApi.show(userId).then(setUser).catch(redirectWithError);
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!userId || !user) return null;
 

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, RouteComponentProps } from '@reach/router';
 
-import { Issue, Org, Repo } from '../../models';
+import { Issue, Org, Repo, UserContext } from '../../models';
 import { issue as issueApi, org as orgApi, repo as repoApi } from '../../api';
 import { NoticeContext } from '../../components';
 
@@ -12,6 +12,7 @@ type Props = RouteComponentProps & {
 };
 
 export function Show({ issueId, orgId, repoId }: Props) {
+  const { current: currentUser } = useContext(UserContext);
   const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();
@@ -23,7 +24,7 @@ export function Show({ issueId, orgId, repoId }: Props) {
       .show(orgId)
       .then(setOrg)
       .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !repoId) return;
@@ -31,7 +32,7 @@ export function Show({ issueId, orgId, repoId }: Props) {
       .show(repoId)
       .then(setRepo)
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
-  }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !repoId || !issueId) return;
@@ -39,7 +40,7 @@ export function Show({ issueId, orgId, repoId }: Props) {
       .show(issueId)
       .then(setIssue)
       .catch((e) => redirectWithError(`Failed to fetch issue: ${e.message}`));
-  }, [issueId, orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser, issueId, orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!issue || !org || !repo) return null;
 

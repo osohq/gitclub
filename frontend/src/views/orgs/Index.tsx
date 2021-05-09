@@ -12,7 +12,7 @@ export function Index(_: RouteComponentProps) {
 
   useEffect(() => {
     orgApi.index().then(setOrgs).catch(redirectWithError);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maybeNewLink = !user.loggedIn() ? null : (
     <Link to={`/orgs/new`}>Create new org</Link>

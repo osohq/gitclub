@@ -19,7 +19,7 @@ export function Index({ orgId }: Props) {
       .show(orgId)
       .then(setOrg)
       .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId) return;
@@ -27,7 +27,7 @@ export function Index({ orgId }: Props) {
       .index()
       .then(setRepos)
       .catch((e) => redirectWithError(`Failed to fetch repos: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org) return null;
 
