@@ -2,7 +2,7 @@ import { RouteComponentProps } from '@reach/router';
 import { useEffect, useState } from 'react';
 
 import { FlashNotice, Notice, NoticeContext } from '../components';
-import { Nav } from '.';
+import { View } from '.';
 
 type NoticesProps = RouteComponentProps & { children: JSX.Element[] };
 
@@ -35,9 +35,10 @@ export function Notices({ children, location }: NoticesProps) {
   const flashNotices = [...notices.values()].map((notice, i) => (
     <FlashNotice key={i} notice={notice} clear={() => pop(notice)} />
   ));
+
   return (
     <NoticeContext.Provider value={{ error, redirectWithError }}>
-      <Nav />
+      <View.Nav />
       {flashNotices}
       {children}
     </NoticeContext.Provider>

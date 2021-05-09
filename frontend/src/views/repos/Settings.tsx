@@ -1,13 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
-import { Link, RouteComponentProps } from '@reach/router';
+import { Link, Redirect, RouteComponentProps } from '@reach/router';
 
-import { Org, Repo } from '../../models';
-import { org as orgApi, repo as repoApi } from '../../api';
+import { Org, Repo, UserContext } from '../../models';
 import { NoticeContext } from '../../components';
+import { org as orgApi, repo as repoApi } from '../../api';
 
-type ShowProps = RouteComponentProps & { orgId?: string; repoId?: string };
+type Props = RouteComponentProps & { orgId?: string; repoId?: string };
 
-export function Show({ orgId, repoId }: ShowProps) {
+export function Settings({ orgId, repoId }: Props) {
+  const user = useContext(UserContext);
   const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repo, setRepo] = useState<Repo>();
@@ -28,19 +29,22 @@ export function Show({ orgId, repoId }: ShowProps) {
       .catch((e) => redirectWithError(`Failed to fetch repo: ${e.message}`));
   }, [orgId, repoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!orgId || !org || !repoId || !repo) return null;
+  if (!orgId || !repoId) return null;
+  const show = `/orgs/${orgId}/repos/${repoId}`;
+
+  if (user.current === 'Loading') return null;
+  // If a guest navigates to this page, redirect to the repo show.
+  if (user.current === 'Guest') return <Redirect to={show} noThrow />;
+
+  if (!org || !repo) return null;
 
   return (
     <>
       <h1>
-        <Link to={`/orgs/${org.id}`}>{org.name}</Link> / {repo.name}
+        <Link to={`/orgs/${org.id}`}>{org.name}</Link> / {repo.name} / settings
       </h1>
-      <h2>
-        <Link to={`/orgs/${orgId}/repos/${repoId}/issues`}>Issues</Link>
-      </h2>
-      <h2>
-        <Link to={`/orgs/${orgId}/repos/${repoId}/settings`}>Settings</Link>
-      </h2>
+
+      <h2>Manage Access</h2>
     </>
   );
 }

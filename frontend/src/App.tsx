@@ -2,22 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Router } from '@reach/router';
 
 import { LoggedInUser, User, UserContext } from './models';
-import {
-  Home,
-  Login,
-  NotFound,
-  Notices,
-  IssueIndex,
-  IssueNew,
-  IssueShow,
-  OrgIndex,
-  OrgNew,
-  OrgShow,
-  RepoIndex,
-  RepoNew,
-  RepoShow,
-  UserShow,
-} from './views';
+import { View } from './views';
 import { session as sessionApi } from './api';
 import { NoticeContext } from './components';
 
@@ -40,26 +25,27 @@ function App() {
   return (
     <UserContext.Provider value={userContext}>
       <Router>
-        <Notices path="/">
-          <Home path="/" />
-          <Login path="/login" />
+        <View.Notices path="/">
+          <View.Home path="/" />
+          <View.Login path="/login" />
 
-          <IssueIndex path="/orgs/:orgId/repos/:repoId/issues" />
-          <IssueNew path="/orgs/:orgId/repos/:repoId/issues/new" />
-          <IssueShow path="/orgs/:orgId/repos/:repoId/issues/:issueId" />
+          <View.Issue.Index path="/orgs/:orgId/repos/:repoId/issues" />
+          <View.Issue.New path="/orgs/:orgId/repos/:repoId/issues/new" />
+          <View.Issue.Show path="/orgs/:orgId/repos/:repoId/issues/:issueId" />
 
-          <OrgIndex path="/orgs" />
-          <OrgNew path="/orgs/new" />
-          <OrgShow path="/orgs/:orgId" />
+          <View.Org.Index path="/orgs" />
+          <View.Org.New path="/orgs/new" />
+          <View.Org.Show path="/orgs/:orgId" />
 
-          <RepoIndex path="/orgs/:orgId/repos" />
-          <RepoNew path="/orgs/:orgId/repos/new" />
-          <RepoShow path="/orgs/:orgId/repos/:repoId" />
+          <View.Repo.Index path="/orgs/:orgId/repos" />
+          <View.Repo.New path="/orgs/:orgId/repos/new" />
+          <View.Repo.Settings path="/orgs/:orgId/repos/:repoId/settings" />
+          <View.Repo.Show path="/orgs/:orgId/repos/:repoId" />
 
-          <UserShow path="/users/:userId" />
+          <View.User.Show path="/users/:userId" />
 
-          <NotFound default />
-        </Notices>
+          <View.NotFound default />
+        </View.Notices>
       </Router>
     </UserContext.Provider>
   );
