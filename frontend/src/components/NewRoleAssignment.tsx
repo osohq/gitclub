@@ -15,7 +15,7 @@ import {
   UserContext,
 } from '../models';
 import type { RoleAssignmentsApi } from '../api';
-import { NoticeContext } from '.';
+import { NoticeContext, RoleSelector } from '.';
 
 type Props = {
   api: RoleAssignmentsApi;
@@ -88,13 +88,11 @@ export function NewRoleAssignment({
         </label>{' '}
         <label>
           role:{' '}
-          <select name="role" value={details.role} onChange={handleChange}>
-            {roleChoices.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+          <RoleSelector
+            choices={roleChoices}
+            selected={details.role}
+            update={handleChange}
+          />
         </label>{' '}
         <input type="submit" value="Assign" />
       </form>

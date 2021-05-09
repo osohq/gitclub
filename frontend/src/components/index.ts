@@ -1,7 +1,8 @@
 import { FlashNotice } from './FlashNotice';
 import { Notice, NoticeContext, noticeTypeToColor } from './Notice';
-import { RoleAssignments } from './RoleAssignments';
 import { NewRoleAssignment } from './NewRoleAssignment';
+import { RoleAssignments } from './RoleAssignments';
+import { RoleSelector } from './RoleSelector';
 
 export {
   FlashNotice,
@@ -9,5 +10,6 @@ export {
   NoticeContext,
   noticeTypeToColor,
   RoleAssignments,
+  RoleSelector,
 };
 export type { Notice };

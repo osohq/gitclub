@@ -10,7 +10,7 @@ import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
 import { org as orgApi, roleChoices as roleChoicesApi } from '../../api';
 import { OrgParams, UserContext } from '../../models';
-import { NoticeContext } from '../../components';
+import { NoticeContext, RoleSelector } from '../../components';
 
 export function New(_: RouteComponentProps) {
   const user = useContext(UserContext);
@@ -85,17 +85,12 @@ export function New(_: RouteComponentProps) {
       {repoRoleChoices.length && (
         <label>
           base repo role:{' '}
-          <select
+          <RoleSelector
+            choices={repoRoleChoices}
             name="baseRepoRole"
-            value={details.baseRepoRole}
-            onChange={handleChange}
-          >
-            {repoRoleChoices.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            update={handleChange}
+            selected={details.baseRepoRole}
+          />
         </label>
       )}{' '}
       <input type="submit" value="Create" disabled={!validInputs()} />

@@ -3,7 +3,7 @@ import { Link } from '@reach/router';
 
 import { RoleAssignment, User, UserContext } from '../models';
 import { RoleAssignmentsApi } from '../api';
-import { NoticeContext } from '.';
+import { NoticeContext, RoleSelector } from '.';
 
 type Props = {
   api: RoleAssignmentsApi;
@@ -58,18 +58,11 @@ export function RoleAssignments({
       {assignments.map(({ user, role }) => (
         <li key={'user-role-' + user.id + role}>
           <Link to={`/users/${user.id}`}>{user.email}</Link> -{' '}
-          <select
-            disabled={!loggedIn() || !roleChoices.length}
-            name="role"
-            value={role}
-            onChange={({ target: { value } }) => updateAssignment(user, value)}
-          >
-            {roleChoices.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>{' '}
+          <RoleSelector
+            choices={roleChoices}
+            update={({ target: { value } }) => updateAssignment(user, value)}
+            selected={role}
+          />{' '}
           -{' '}
           <button
             disabled={!loggedIn()}
