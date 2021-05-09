@@ -21,15 +21,20 @@ resource(_type: Org, "org", actions, roles) if
         },
         org_owner: {
             perms: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
-            implies: ["org_member", "repo_write"]
+            implies: ["org_member", "repo_admin"]
         }
     };
 # docs: end-org-resource
 
 # docs: begin-repo-resource
 resource(_type: Repo, "repo", actions, roles) if
-    actions = ["read", "create_issues", "list_issues"] and
+    actions = ["read", "create_issues", "list_issues",
+               "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
+        repo_admin: {
+            perms: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
+            implies: ["repo_write"]
+        },
         repo_write: {
             perms: ["create_issues"],
             implies: ["repo_read"]
