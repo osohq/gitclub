@@ -40,7 +40,7 @@ export function New({ orgId }: Props) {
       <label>
         name: <input type="text" value={name} onChange={handleChange} />
       </label>{' '}
-      <input type="submit" value="Create" disabled={inputEmpty} />
+      <input type="submit" value="create" disabled={inputEmpty} />
     </form>
   );
 }

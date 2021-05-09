@@ -94,7 +94,7 @@ export function NewRoleAssignment({
             update={handleChange}
           />
         </label>{' '}
-        <input type="submit" value="Assign" />
+        <input type="submit" value="assign" />
       </form>
     </>
   );

@@ -38,7 +38,7 @@ export function Login(_: RouteComponentProps) {
         </label>{' '}
         <input
           type="submit"
-          value="Log in"
+          value="log in"
           disabled={!email.replaceAll(' ', '')}
         />
       </form>

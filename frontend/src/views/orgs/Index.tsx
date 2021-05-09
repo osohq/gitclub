@@ -20,7 +20,6 @@ export function Index(_: RouteComponentProps) {
 
   return (
     <>
-      {maybeNewLink}
       <h1>Orgs</h1>
       <ul>
         {orgs.map((o) => (
@@ -29,6 +28,7 @@ export function Index(_: RouteComponentProps) {
           </li>
         ))}
       </ul>
+      {maybeNewLink}
     </>
   );
 }

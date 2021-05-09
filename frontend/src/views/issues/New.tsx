@@ -40,7 +40,7 @@ export function New({ orgId, repoId }: Props) {
       <label>
         title: <input type="text" value={title} onChange={handleChange} />
       </label>{' '}
-      <input type="submit" value="Create" disabled={inputEmpty} />
+      <input type="submit" value="create" disabled={inputEmpty} />
     </form>
   );
 }

@@ -93,7 +93,7 @@ export function New(_: RouteComponentProps) {
           />
         </label>
       )}{' '}
-      <input type="submit" value="Create" disabled={!validInputs()} />
+      <input type="submit" value="create" disabled={!validInputs()} />
     </form>
   );
 }
