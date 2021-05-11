@@ -6,52 +6,50 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base, User
 from .fixtures import load_fixture_data
 
-from oso import Oso
-from sqlalchemy_oso import authorized_sessionmaker, register_models
-from sqlalchemy_oso.roles2 import OsoRoles
+from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyOso
 
 
 def create_app(db_path=None, load_fixtures=False):
     from . import routes
 
-    # init engine and session
+    # Init DB engine.
     if db_path:
         engine = create_engine(db_path)
     else:
         engine = create_engine("sqlite:///roles.db")
 
-    # init app
+    # Init Flask app.
     app = Flask(__name__)
     app.secret_key = b"ball outside of the school"
     app.register_blueprint(routes.bp)
 
-    # init basic session factory
+    # Init session factory that SQLAlchemyOso will use to manage role data.
     Session = sessionmaker(bind=engine)
 
-    # init oso
-    oso = init_oso(app, Session)
-
-    # init authorized session factory
-    AuthorizedSession = authorized_sessionmaker(
-        bind=engine,
-        get_oso=lambda: oso,
-        get_user=lambda: g.current_user,
-        get_action=lambda: g.current_action,
-    )
+    # Init Oso.
+    init_oso(app, Session)
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
     Base.metadata.create_all(engine)
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
     # docs: begin-configure
-    app.roles.synchronize_data()
+    app.oso.roles.synchronize_data()
     # docs: end-configure
 
     # optionally load fixture data
     if load_fixtures:
         session = Session()
-        load_fixture_data(session, app.roles)
+        load_fixture_data(session, app.oso.roles)
         session.close()
+
+    # Init authorized session factory.
+    AuthorizedSession = authorized_sessionmaker(
+        bind=engine,
+        get_oso=lambda: app.oso,
+        get_user=lambda: g.current_user,
+        get_action=lambda: g.current_action,
+    )
 
     @app.before_request
     def set_current_user_and_session():
@@ -109,19 +107,17 @@ def create_app(db_path=None, load_fixtures=False):
 
 # docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
-    # Initialize oso instance
-    oso = Oso()
+    # Initialize SQLAlchemyOso instance.
+    oso = SQLAlchemyOso(Base)
 
-    # Register authorization data
-    register_models(oso, Base)
-    roles = OsoRoles(oso, Base, User, Session)
+    # Enable roles features.
+    oso.enable_roles(User, Session)
 
     # Load authorization policy.
     oso.load_file("app/authorization.polar")
 
-    # Attach Oso and OsoRoles instances to Flask application.
+    # Attach SQLAlchemyOso instance to Flask application.
     app.oso = oso
-    app.roles = roles
 
     return oso
     # docs: end-init-oso
