@@ -80,7 +80,7 @@ def org_create():
 
     g.basic_session.add(org)
     g.basic_session.flush()
-    current_app.roles.assign_role(
+    current_app.oso.roles.assign_role(
         g.current_user, org, "org_owner", session=g.basic_session
     )
 
@@ -95,20 +95,20 @@ def org_show(org_id):
 
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_role_choices_index():
-    roles = current_app.roles.for_resource(Repo)
+    roles = current_app.oso.roles.for_resource(Repo)
     return jsonify(roles)
 
 
 @bp.route("/org_role_choices", methods=["GET"])
 def org_role_choices_index():
-    roles = current_app.roles.for_resource(Org)
+    roles = current_app.oso.roles.for_resource(Org)
     return jsonify(roles)
 
 
 @bp.route("/orgs/<int:org_id>/potential_users", methods=["GET"])
 def org_potential_users_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
-    assignments = current_app.roles.assignments_for_resource(org)
+    assignments = current_app.oso.roles.assignments_for_resource(org)
     existing = [assignment["user_id"] for assignment in assignments]
     potentials = g.basic_session.query(User).filter(column("id").notin_(existing))
     return jsonify([p.repr() for p in potentials])
@@ -168,7 +168,7 @@ def issues_show(_org_id, _repo_id, issue_id):
 @bp.route("/orgs/<int:org_id>/roles", methods=["GET"])
 def org_role_index(org_id):
     org = get_resource_by(g.auth_session, Org, id=org_id)
-    assignments = current_app.roles.assignments_for_resource(org)
+    assignments = current_app.oso.roles.assignments_for_resource(org)
     ids = [assignment["user_id"] for assignment in assignments]
     users = {u.id: u for u in g.basic_session.query(User).filter(column("id").in_(ids))}
     assignments = [
@@ -189,7 +189,9 @@ def org_role_create(org_id):
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
 
     # Assign user the role in org.
-    current_app.roles.assign_role(user, org, payload["role"], session=g.basic_session)
+    current_app.oso.roles.assign_role(
+        user, org, payload["role"], session=g.basic_session
+    )
     g.basic_session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201
@@ -201,7 +203,7 @@ def org_role_update(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
-    current_app.roles.assign_role(
+    current_app.oso.roles.assign_role(
         user, org, payload["role"], session=g.basic_session, reassign=True
     )
     g.basic_session.commit()
@@ -213,7 +215,7 @@ def org_role_delete(org_id):
     payload = request.get_json(force=True)
     org = get_resource_by(g.auth_session, Org, id=org_id)
     user = get_resource_by(g.basic_session, User, id=payload["user_id"])
-    removed = current_app.roles.remove_role(
+    removed = current_app.oso.roles.remove_role(
         user, org, payload["role"], session=g.basic_session
     )
     g.basic_session.commit()

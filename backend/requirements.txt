@@ -1,6 +1,3 @@
 flask
 SQLAlchemy~=1.3.20
-Flask-SQLAlchemy
-sqlalchemy-utils
-oso
 sqlalchemy-oso-preview
