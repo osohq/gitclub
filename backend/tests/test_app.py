@@ -117,8 +117,8 @@ def test_repo_role_choices_index(test_client):
     resp = test_client.get("/repo_role_choices")
     assert resp.status_code == 200
     repo_role_choices = json.loads(resp.data)
-    assert len(repo_role_choices) == 2
-    assert repo_role_choices[0] == "repo_read"
+    assert len(repo_role_choices) == 3
+    assert repo_role_choices[0] == "repo_admin"
 
 
 def test_org_role_choices_index(test_client):
