@@ -118,6 +118,4 @@ def init_oso(app, Session: sessionmaker):
 
     # Attach SQLAlchemyOso instance to Flask application.
     app.oso = oso
-
-    return oso
     # docs: end-init-oso
