@@ -1,0 +1,23 @@
+entity: Issue
+items:
+  issue1:
+    repo: "@abbey_road"
+    title: "Come Together"
+  issue2:
+    repo: "@abbey_road"
+    title: "Something"
+  issue3:
+    repo: "@abbey_road"
+    title: "Maxwell's Silver Hammer"
+  issue4:
+    repo: "@abbey_road"
+    title: "Oh! Darling"
+  issue5:
+    repo: "@abbey_road"
+    title: "Octopus's Garden"
+  issue6:
+    repo: "@abbey_road"
+    title: "I Want You (She's So Heavy)"
+  issue7:
+    repo: "@abbey_road"
+    title: "Here Comes the Sun"

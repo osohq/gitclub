@@ -1,0 +1,27 @@
+entity: OrgRole
+items:
+  role1:
+    user: "@john"
+    org: "@beatles"
+    role: "org_owner"
+  role2:
+    user: "@paul"
+    org: "@beatles"
+    role: "org_member"
+  role3:
+    user: "@ringo"
+    org: "@beatles"
+    role: "org_member"
+  role4:
+    user: "@mike"
+    org: "@monsters"
+    role: "org_owner"
+  role5:
+    user: "@sully"
+    org: "@monsters"
+    role: "org_member"
+  role6:
+    user: "@randall"
+    org: "@monsters"
+    role: "org_member"
+  
