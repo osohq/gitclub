@@ -14,3 +14,5 @@ fixtures:
 
 test:
 	pytest
+
+.PHONY: dev run fixtures test

@@ -9,10 +9,9 @@ bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_i
 
 
 @bp.route("/unassigned_users", methods=["GET"])
-@session()
+@session({Org: "create_role_assignments", User: "read"})
 def org_unassigned_users_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("create_role_assignments", org)
     assignments = current_app.oso.roles.assignments_for_resource(org)
     existing = [assignment["user_id"] for assignment in assignments]
     unassigned = g.session.query(User).filter(column("id").notin_(existing))
@@ -21,10 +20,9 @@ def org_unassigned_users_index(org_id):
 
 # docs: begin-org-role-index
 @bp.route("/role_assignments", methods=["GET"])
-@session()
+@session({Org: "list_role_assignments", User: "read"})
 def org_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("list_role_assignments", org)
     assignments = current_app.oso.roles.assignments_for_resource(org)
     ids = [assignment["user_id"] for assignment in assignments]
     users = {u.id: u for u in g.session.query(User).filter(column("id").in_(ids))}
@@ -38,11 +36,10 @@ def org_index(org_id):
 
 # docs: begin-role-assignment
 @bp.route("/role_assignments", methods=["POST"])
-@session()
+@session({Org: "create_role_assignments", User: "read"})
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("create_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to assign this particular
     # role to this particular user?
@@ -56,11 +53,10 @@ def org_create(org_id):
 
 
 @bp.route("/role_assignments", methods=["PATCH"])
-@session()
+@session({Org: "update_role_assignments", User: "read"})
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("update_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to update this particular
     # user's role to this particular role?
@@ -72,11 +68,10 @@ def org_update(org_id):
 
 
 @bp.route("/role_assignments", methods=["DELETE"])
-@session()
+@session({Org: "delete_role_assignments", User: "read"})
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("delete_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to delete this particular
     # user's role?

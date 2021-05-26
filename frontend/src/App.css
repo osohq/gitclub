@@ -38,6 +38,11 @@
 }
 
 body {
-  color: #c9d1d9;
-  background-color: #090c10;
+  /* color: #c9d1d9;
+  background-color: #090c10; */
+  margin: 10px;
+}
+
+a:visited {
+  color: blue;
 }
