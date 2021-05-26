@@ -19,7 +19,11 @@ def create_app(db_path=None, load_fixtures=False):
     if db_path:
         engine = create_engine(db_path)
     else:
-        engine = create_engine("sqlite:///roles.db")
+        engine = create_engine(
+            "sqlite:///roles.db",
+            # ignores errors from reusing connections across threads
+            connect_args={"check_same_thread": False},
+        )
 
     # Init Flask app.
     app = Flask(__name__)
