@@ -10,7 +10,11 @@ run:
 	flask run
 
 fixtures:
+	rm -f roles.db
 	FLASK_APP="app:create_app(None, True)" flask run
+
+fmt:
+	black .
 
 test:
 	pytest

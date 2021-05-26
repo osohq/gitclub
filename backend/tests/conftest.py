@@ -9,7 +9,7 @@ from app.fixtures import load_fixture_data
 db_path = "sqlite:///:memory:"
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def test_app():
     return create_app(db_path, True)
 
@@ -27,25 +27,10 @@ def test_client(test_app):
 
 
 @pytest.fixture
-def engine():
-    return create_engine(db_path)
-
-
-@pytest.fixture
-def Session(engine):
-    return sessionmaker(bind=engine)
-
-
-@pytest.fixture
-def oso(Session):
-    oso = SQLAlchemyOso(models.Base)
-    oso.enable_roles(models.User, Session)
-    oso.load_file("app/authorization.polar")
-    return oso
-
-
-@pytest.fixture
-def test_db_session(Session, engine, oso):
-    models.Base.metadata.create_all(engine)
-    load_fixture_data(engine, oso.roles)
-    return Session()
+def test_db_session(test_app):
+    # Get a DB session from the test app with no
+    # authorization applied
+    with test_app.app_context():
+        yield test_app.authorized_sessionmaker(
+            get_user=lambda: None, get_checked_permissions=lambda: None
+        )()
