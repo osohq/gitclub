@@ -51,19 +51,16 @@ def create_app(db_path=None, load_fixtures=False):
     # Init Oso.
     init_oso(app, Session)
 
-    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
+    # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
-    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
     # docs: begin-configure
     app.oso.roles.synchronize_data()
     # docs: end-configure
 
     # optionally load fixture data
     if load_fixtures:
-        session = Session()
-        load_fixture_data(session, app.oso.roles)
-        session.close()
+        load_fixture_data(engine, app.oso.roles)
 
     # Init authorized session factory.
     app.authorized_sessionmaker = functools.partial(
