@@ -1,5 +1,9 @@
-# Users can see themselves.
-allow(_: User{id: id}, "read", _: User{id: id});
+# Users can see each other.
+allow(_: User, "read", _: User);
+
+# Users can see their own profiles
+allow(_: User{id: id}, "read_profile", _: User{id: id});
+
 
 # docs: org-create-rule
 # Any logged-in user can create a new org.

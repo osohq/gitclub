@@ -19,7 +19,7 @@ def index(org_id, repo_id):
 
 
 @bp.route("", methods=["POST"])
-@session({Repo: "create_issues"})
+@session({Repo: "create_issues", Issue: "read"})
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)

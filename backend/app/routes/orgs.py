@@ -15,7 +15,7 @@ def index():
 
 # docs: begin-is-allowed
 @bp.route("", methods=["POST"])
-@session()
+@session(None)
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
@@ -32,8 +32,7 @@ def create():
 
 
 @bp.route("/<int:org_id>", methods=["GET"])
-@session()
+@session({Org: "read"})
 def show(org_id):
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("read", org)
     return org.repr()

@@ -17,20 +17,18 @@ def index(org_id):
 
 
 @bp.route("", methods=["POST"])
-@session({Org: "create_repos"})
+@session({Org: "create_repos", Repo: "read"})
 def create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
     repo = Repo(name=payload.get("name"), org=org)
-    # check_permission("create", repo)  # TODO(gj): validation check; maybe unnecessary.
     g.session.add(repo)
     g.session.commit()
     return repo.repr(), 201
 
 
 @bp.route("/<int:repo_id>", methods=["GET"])
-@session()
+@session({Repo: "read"})
 def show(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("read", repo)
     return repo.repr()

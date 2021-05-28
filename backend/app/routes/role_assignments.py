@@ -9,7 +9,7 @@ bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_i
 
 
 @bp.route("/unassigned_users", methods=["GET"])
-@session({Org: "create_role_assignments", User: "read"})
+@session({Org: "list_role_assignments", User: "read"})
 def org_unassigned_users_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
     assignments = current_app.oso.roles.assignments_for_resource(org)
@@ -36,16 +36,17 @@ def org_index(org_id):
 
 # docs: begin-role-assignment
 @bp.route("/role_assignments", methods=["POST"])
-@session({Org: "create_role_assignments", User: "read"})
+@session({Org: "list_role_assignments", User: "read"})
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
+    check_permission("create_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to assign this particular
     # role to this particular user?
 
     # Assign user the role in org.
-    current_app.oso.roles.assign_role(user, org, payload["role"], session=g.session)
+    current_app.oso.roles.assign_role(user, org, payload["role"])
     g.session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201
@@ -53,31 +54,29 @@ def org_create(org_id):
 
 
 @bp.route("/role_assignments", methods=["PATCH"])
-@session({Org: "update_role_assignments", User: "read"})
+@session({Org: "list_role_assignments", User: "read"})
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
+    check_permission("update_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to update this particular
     # user's role to this particular role?
-    current_app.oso.roles.assign_role(
-        user, org, payload["role"], session=g.session, reassign=True
-    )
+    current_app.oso.roles.assign_role(user, org, payload["role"], reassign=True)
     g.session.commit()
     return {"user": user.repr(), "role": payload["role"]}
 
 
 @bp.route("/role_assignments", methods=["DELETE"])
-@session({Org: "delete_role_assignments", User: "read"})
+@session({Org: "list_role_assignments", User: "read"})
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
+    check_permission("delete_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to delete this particular
     # user's role?
-    removed = current_app.oso.roles.remove_role(
-        user, org, payload["role"], session=g.session
-    )
+    removed = current_app.oso.roles.remove_role(user, org, payload["role"])
     g.session.commit()
     if not removed:
         raise NotFound
@@ -85,7 +84,7 @@ def org_delete(org_id):
 
 
 @bp.route("/repos/<int:repo_id>/unassigned_users", methods=["GET"])
-@session()
+@session({Repo: "list_role_assignments", User: "read"})
 def repo_unassigned_users_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
     check_permission("create_role_assignments", repo)
@@ -96,7 +95,7 @@ def repo_unassigned_users_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["GET"])
-@session()
+@session({Repo: "list_role_assignments", User: "read"})
 def repo_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
     check_permission("list_role_assignments", repo)
@@ -111,7 +110,7 @@ def repo_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["POST"])
-@session()
+@session({Repo: "list_role_assignments", User: "read"})
 def repo_create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
@@ -120,14 +119,14 @@ def repo_create(org_id, repo_id):
     # TODO(gj): validate that current user is allowed to assign this particular
     # role to this particular user?
 
-    current_app.oso.roles.assign_role(user, repo, payload["role"], session=g.session)
+    current_app.oso.roles.assign_role(user, repo, payload["role"])
     g.session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["PATCH"])
-@session()
+@session({Repo: "list_role_assignments", User: "read"})
 def repo_update(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
@@ -135,15 +134,13 @@ def repo_update(org_id, repo_id):
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to update this particular
     # user's role to this particular role?
-    current_app.oso.roles.assign_role(
-        user, repo, payload["role"], session=g.session, reassign=True
-    )
+    current_app.oso.roles.assign_role(user, repo, payload["role"], reassign=True)
     g.session.commit()
     return {"user": user.repr(), "role": payload["role"]}
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["DELETE"])
-@session()
+@session({Repo: "list_role_assignments", User: "read"})
 def repo_delete(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
@@ -151,9 +148,7 @@ def repo_delete(org_id, repo_id):
     user = g.session.get_or_404(User, id=payload["user_id"])
     # TODO(gj): validate that current user is allowed to delete this particular
     # user's role?
-    removed = current_app.oso.roles.remove_role(
-        user, repo, payload["role"], session=g.session
-    )
+    removed = current_app.oso.roles.remove_role(user, repo, payload["role"])
     g.session.commit()
     if not removed:
         raise NotFound
