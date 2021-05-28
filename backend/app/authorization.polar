@@ -20,11 +20,11 @@ resource(_type: Org, "org", actions, roles) if
                "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
         org_member: {
-            perms: ["read", "list_repos", "list_role_assignments"],
+            permissions: ["read", "list_repos", "list_role_assignments"],
             implies: ["repo_read"]
         },
         org_owner: {
-            perms: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
+            permissions: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
             implies: ["org_member", "repo_admin"]
         }
     };
@@ -36,15 +36,15 @@ resource(_type: Repo, "repo", actions, roles) if
                "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
         repo_admin: {
-            perms: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
+            permissions: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
             implies: ["repo_write"]
         },
         repo_write: {
-            perms: ["create_issues"],
+            permissions: ["create_issues"],
             implies: ["repo_read"]
         },
         repo_read: {
-            perms: ["read", "list_issues", "issue:read"]
+            permissions: ["read", "list_issues", "issue:read"]
         }
     };
 # docs: end-repo-resource
