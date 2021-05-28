@@ -5,27 +5,29 @@ import { Org, Repo, UserContext } from '../../models';
 import { org as orgApi, repo as repoApi } from '../../api';
 import { NoticeContext } from '../../components';
 
-type IndexProps = RouteComponentProps & { orgId?: string };
+type Props = RouteComponentProps & { orgId?: string };
 
-export function Index({ orgId }: IndexProps) {
+export function Index({ orgId }: Props) {
   const user = useContext(UserContext);
   const { redirectWithError } = useContext(NoticeContext);
   const [org, setOrg] = useState<Org>();
   const [repos, setRepos] = useState<Repo[]>([]);
 
   useEffect(() => {
+    if (!orgId) return;
     orgApi
       .show(orgId)
       .then(setOrg)
       .catch((e) => redirectWithError(`Failed to fetch org: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    repoApi
-      .index(orgId)
+    if (!orgId) return;
+    repoApi(orgId)
+      .index()
       .then(setRepos)
       .catch((e) => redirectWithError(`Failed to fetch repos: ${e.message}`));
-  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [orgId, user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!org) return null;
 

@@ -11,11 +11,8 @@ export function Index(_: RouteComponentProps) {
   const [orgs, setOrgs] = useState<Org[]>([]);
 
   useEffect(() => {
-    orgApi
-      .index()
-      .then((os) => setOrgs(os))
-      .catch(redirectWithError);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    orgApi.index().then(setOrgs).catch(redirectWithError);
+  }, [user.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maybeNewLink = !user.loggedIn() ? null : (
     <Link to={`/orgs/new`}>Create new org</Link>
@@ -23,7 +20,6 @@ export function Index(_: RouteComponentProps) {
 
   return (
     <>
-      {maybeNewLink}
       <h1>Orgs</h1>
       <ul>
         {orgs.map((o) => (
@@ -32,6 +28,7 @@ export function Index(_: RouteComponentProps) {
           </li>
         ))}
       </ul>
+      {maybeNewLink}
     </>
   );
 }

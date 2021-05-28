@@ -1,4 +1,7 @@
-from flask import g, Flask, request, session as flask_session
+import functools
+
+from flask import g, Flask, session as flask_session
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,12 +19,35 @@ def create_app(db_path=None, load_fixtures=False):
     if db_path:
         engine = create_engine(db_path)
     else:
-        engine = create_engine("sqlite:///roles.db")
+        engine = create_engine(
+            "sqlite:///roles.db",
+            # ignores errors from reusing connections across threads
+            connect_args={"check_same_thread": False},
+        )
 
     # Init Flask app.
     app = Flask(__name__)
     app.secret_key = b"ball outside of the school"
-    app.register_blueprint(routes.bp)
+    app.register_blueprint(routes.issues.bp)
+    app.register_blueprint(routes.orgs.bp)
+    app.register_blueprint(routes.repos.bp)
+    app.register_blueprint(routes.role_assignments.bp)
+    app.register_blueprint(routes.role_choices.bp)
+    app.register_blueprint(routes.session.bp)
+    app.register_blueprint(routes.users.bp)
+
+    # Set up error handlers.
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(*_):
+        return {"message": "Bad Request"}, 400
+
+    @app.errorhandler(Forbidden)
+    def handle_forbidden(*_):
+        return {"message": "Forbidden"}, 403
+
+    @app.errorhandler(NotFound)
+    def handle_not_found(*_):
+        return {"message": "Not Found"}, 404
 
     # Init session factory that SQLAlchemyOso will use to manage role data.
     Session = sessionmaker(bind=engine)
@@ -29,64 +55,44 @@ def create_app(db_path=None, load_fixtures=False):
     # Init Oso.
     init_oso(app, Session)
 
-    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L106-L107
+    # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
-    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L110-L112
     # docs: begin-configure
     app.oso.roles.synchronize_data()
     # docs: end-configure
 
     # optionally load fixture data
     if load_fixtures:
-        session = Session()
-        load_fixture_data(session, app.oso.roles)
-        session.close()
+        load_fixture_data(Session(), app.oso.roles)
 
+    # docs: begin-authorized-session
     # Init authorized session factory.
-    AuthorizedSession = authorized_sessionmaker(
+    app.authorized_sessionmaker = functools.partial(
+        authorized_sessionmaker,
         bind=engine,
         get_oso=lambda: app.oso,
         get_user=lambda: g.current_user,
-        get_action=lambda: g.current_action,
     )
+    # docs: end-authorized-session
 
     @app.before_request
     def set_current_user_and_session():
         flask_session.permanent = True
 
         # docs: begin-authn
-        session = Session()
         if "current_user" not in g:
             if "current_user_id" in flask_session:
                 user_id = flask_session.get("current_user_id")
+                session = Session()
                 user = session.query(User).filter_by(id=user_id).one_or_none()
                 if user is None:
                     flask_session.pop("current_user_id")
                 g.current_user = user
+                session.close()
             else:
                 g.current_user = None
-
-        # Set basic (non-auth) session for this request
-        g.basic_session = session
         # docs: end-authn
-
-        # Set action for this request
-        if request.endpoint:
-            actions = {
-                "routes.org_role_index": "read_role",
-                "routes.org_role_create": "create_role",
-                "routes.org_role_update": "update_role",
-                "routes.org_role_delete": "delete_role",
-                "routes.repo_create": "create_repo",
-                "routes.issue_create": "create_issue",
-            }
-            g.current_action = actions.get(request.endpoint, "read")
-        else:
-            g.current_action = None
-
-        # Set auth session for this request
-        g.auth_session = AuthorizedSession()
 
     @app.after_request
     def add_cors_headers(res):
@@ -97,9 +103,9 @@ def create_app(db_path=None, load_fixtures=False):
         return res
 
     @app.after_request
-    def close_sessions(res):
-        g.basic_session.close()
-        g.auth_session.close()
+    def close_session(res):
+        if "session" in g:
+            g.session.close()
         return res
 
     return app

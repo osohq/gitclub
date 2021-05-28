@@ -1,6 +1,6 @@
 from sqlalchemy_oso.roles2 import OsoRoles
 
-from .models import Issue, Org, Repo, User
+from .models import Base, Issue, Org, Repo, User
 
 john_email = "john@beatles.com"
 paul_email = "paul@beatles.com"
@@ -94,3 +94,4 @@ def load_fixture_data(session, roles: OsoRoles):
     roles.assign_role(randall, monsters, "org_member", session=session)
 
     session.commit()
+    session.close()

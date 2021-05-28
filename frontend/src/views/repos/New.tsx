@@ -5,9 +5,9 @@ import { UserContext } from '../../models';
 import { NoticeContext } from '../../components';
 import { repo as repoApi } from '../../api';
 
-type NewProps = RouteComponentProps & { orgId?: string };
+type Props = RouteComponentProps & { orgId?: string };
 
-export function New({ orgId }: NewProps) {
+export function New({ orgId }: Props) {
   const user = useContext(UserContext);
   const { error } = useContext(NoticeContext);
   const [name, setName] = useState<string>('');
@@ -22,9 +22,9 @@ export function New({ orgId }: NewProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (inputEmpty) return;
+    if (inputEmpty || !orgId) return;
     try {
-      const repo = await repoApi.create({ name }, orgId);
+      const repo = await repoApi(orgId).create({ name });
       await navigate(`${index}/${repo.id}`);
     } catch (e) {
       error(`Failed to create new repo: ${e.message}`);
@@ -40,7 +40,7 @@ export function New({ orgId }: NewProps) {
       <label>
         name: <input type="text" value={name} onChange={handleChange} />
       </label>{' '}
-      <input type="submit" value="Create" disabled={inputEmpty} />
+      <input type="submit" value="create" disabled={inputEmpty} />
     </form>
   );
 }

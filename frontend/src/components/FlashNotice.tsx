@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { Notice, noticeTypeToColor } from '.';
 
-type FlashNoticeProps = { notice: Notice; clear: () => void };
+type Props = { notice: Notice; clear: () => void };
 
-export function FlashNotice({ notice, clear }: FlashNoticeProps) {
+export function FlashNotice({ notice, clear }: Props) {
   const [active, setActive] = useState(true);
 
   useEffect(() => {
