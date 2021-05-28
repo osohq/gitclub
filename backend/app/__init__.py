@@ -66,6 +66,7 @@ def create_app(db_path=None, load_fixtures=False):
     if load_fixtures:
         load_fixture_data(Session(), app.oso.roles)
 
+    # docs: begin-authorized-session
     # Init authorized session factory.
     app.authorized_sessionmaker = functools.partial(
         authorized_sessionmaker,
@@ -73,6 +74,7 @@ def create_app(db_path=None, load_fixtures=False):
         get_oso=lambda: app.oso,
         get_user=lambda: g.current_user,
     )
+    # docs: end-authorized-session
 
     @app.before_request
     def set_current_user_and_session():

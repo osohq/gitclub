@@ -1,4 +1,5 @@
 from flask import Blueprint, g, request, current_app, jsonify
+from werkzeug.exceptions import Forbidden
 
 from ..models import Org
 from .helpers import check_permission, session
@@ -15,11 +16,12 @@ def index():
 
 # docs: begin-is-allowed
 @bp.route("", methods=["POST"])
-@session(None)
+@session(checked_permissions=None)
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    check_permission("create", org)
+    if not current_app.oso.is_allowed(g.current_user, "create", org):
+        raise Forbidden
     # docs: end-is-allowed
 
     g.session.add(org)

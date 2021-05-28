@@ -9,6 +9,7 @@ from ..models import Base
 Permissions = Dict[Type[Base], str]
 
 
+# docs: begin-session-decorator
 def session(checked_permissions: Optional[Permissions]):
     def decorator(func):
         @functools.wraps(func)
@@ -21,6 +22,7 @@ def session(checked_permissions: Optional[Permissions]):
         return wrapper
 
     return decorator
+    # docs: end-session-decorator
 
 
 def check_permission(action: str, resource: Base):
