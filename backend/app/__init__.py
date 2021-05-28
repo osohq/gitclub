@@ -64,7 +64,7 @@ def create_app(db_path=None, load_fixtures=False):
 
     # optionally load fixture data
     if load_fixtures:
-        load_fixture_data(engine, app.oso.roles)
+        load_fixture_data(Session(), app.oso.roles)
 
     # Init authorized session factory.
     app.authorized_sessionmaker = functools.partial(

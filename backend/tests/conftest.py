@@ -1,15 +1,12 @@
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy_oso import SQLAlchemyOso
-
-from app import create_app, models
+from app import create_app
 from app.fixtures import load_fixture_data
+import pytest
+
 
 db_path = "sqlite:///:memory:"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def test_app():
     return create_app(db_path, True)
 

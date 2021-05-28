@@ -9,14 +9,13 @@ from ..models import Base
 Permissions = Dict[Type[Base], str]
 
 
-def session(checked_permissions: Optional[Permissions] = None):
+def session(checked_permissions: Optional[Permissions]):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            AuthorizedSession = current_app.authorized_sessionmaker(
-                get_checked_permissions=lambda: checked_permissions,
-            )
-            g.session = AuthorizedSession()
+            g.session = current_app.authorized_sessionmaker(
+                get_checked_permissions=lambda: checked_permissions
+            )()
             return func(*args, **kwargs)
 
         return wrapper
