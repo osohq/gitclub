@@ -42,8 +42,6 @@ def org_create(org_id):
     org = g.session.get_or_404(Org, id=org_id)
     check_permission("create_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
-    # TODO(gj): validate that current user is allowed to assign this particular
-    # role to this particular user?
 
     # Assign user the role in org.
     current_app.oso.roles.assign_role(user, org, payload["role"])
