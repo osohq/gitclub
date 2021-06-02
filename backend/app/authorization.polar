@@ -14,43 +14,43 @@ allow(_: User, "create", _: Org);
 # ROLES
 
 # docs: begin-org-resource
-resource(_type: Org, "org", actions, roles) if
+resource(Org, "org", actions, roles) if
     # TODO(gj): might be able to cut down on some repetition with namespacing, e.g., `role_assignments::{create, list, update, delete}`
     actions = ["read", "create_repos", "list_repos",
                "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
-        org_member: {
+        member: {
             permissions: ["read", "list_repos", "list_role_assignments"],
-            implies: ["repo_read"]
+            implies: ["repo:reader"]
         },
-        org_owner: {
+        owner: {
             permissions: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
-            implies: ["org_member", "repo_admin"]
+            implies: ["member", "repo:admin"]
         }
     };
 # docs: end-org-resource
 
 # docs: begin-repo-resource
-resource(_type: Repo, "repo", actions, roles) if
+resource(Repo, "repo", actions, roles) if
     actions = ["read", "create_issues", "list_issues",
                "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
     roles = {
-        repo_admin: {
+        admin: {
             permissions: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
-            implies: ["repo_write"]
+            implies: ["repo:writer"]
         },
-        repo_write: {
+        writer: {
             permissions: ["create_issues"],
-            implies: ["repo_read"]
+            implies: ["repo:reader"]
         },
-        repo_read: {
+        reader: {
             permissions: ["read", "list_issues", "issue:read"]
         }
     };
 # docs: end-repo-resource
 
 # docs: begin-issue-resource
-resource(_type: Issue, "issue", actions, _) if
+resource(Issue, "issue", actions, _) if
     actions = ["read"];
 
 parent(issue: Issue, parent_repo: Repo) if

@@ -39,12 +39,12 @@ def load_fixture_data(session, roles: OsoRoles):
     beatles = Org(
         name="The Beatles",
         billing_address="64 Penny Ln Liverpool, UK",
-        base_repo_role="repo_read",
+        base_repo_role="reader",
     )
     monsters = Org(
         name="Monsters Inc.",
         billing_address="123 Scarers Rd Monstropolis, USA",
-        base_repo_role="repo_read",
+        base_repo_role="reader",
     )
     orgs = [beatles, monsters]
     for org in orgs:
@@ -76,22 +76,22 @@ def load_fixture_data(session, roles: OsoRoles):
     # Repo roles #
     ##############
 
-    roles.assign_role(john, abby_road, "repo_read", session=session)
-    roles.assign_role(paul, abby_road, "repo_read", session=session)
-    roles.assign_role(ringo, abby_road, "repo_write", session=session)
-    roles.assign_role(mike, paperwork, "repo_read", session=session)
-    roles.assign_role(sully, paperwork, "repo_read", session=session)
+    roles.assign_role(john, abby_road, "reader", session=session)
+    roles.assign_role(paul, abby_road, "reader", session=session)
+    roles.assign_role(ringo, abby_road, "writer", session=session)
+    roles.assign_role(mike, paperwork, "reader", session=session)
+    roles.assign_role(sully, paperwork, "reader", session=session)
 
     #############
     # Org roles #
     #############
 
-    roles.assign_role(john, beatles, "org_owner", session=session)
-    roles.assign_role(paul, beatles, "org_member", session=session)
-    roles.assign_role(ringo, beatles, "org_member", session=session)
-    roles.assign_role(mike, monsters, "org_owner", session=session)
-    roles.assign_role(sully, monsters, "org_member", session=session)
-    roles.assign_role(randall, monsters, "org_member", session=session)
+    roles.assign_role(john, beatles, "owner", session=session)
+    roles.assign_role(paul, beatles, "member", session=session)
+    roles.assign_role(ringo, beatles, "member", session=session)
+    roles.assign_role(mike, monsters, "owner", session=session)
+    roles.assign_role(sully, monsters, "member", session=session)
+    roles.assign_role(randall, monsters, "member", session=session)
 
     session.commit()
     session.close()
