@@ -81,7 +81,7 @@ def test_org_create(test_client):
     org_name = "new org"
     org_params = {
         "name": org_name,
-        "base_repo_role": "org_member",
+        "base_repo_role": "member",
         "billing_address": "123 whatever st",
     }
     resp = test_client.post("/orgs", json=org_params)
@@ -118,14 +118,14 @@ def test_repo_role_choices_index(test_client):
     assert resp.status_code == 200
     repo_role_choices = json.loads(resp.data)
     assert len(repo_role_choices) == 3
-    assert repo_role_choices[0] == "repo_admin"
+    assert repo_role_choices[0] == "admin"
 
 
 def test_org_role_choices_index(test_client):
     resp = test_client.get("/org_role_choices")
     assert resp.status_code == 200
     org_role_choices = json.loads(resp.data)
-    assert org_role_choices == ["org_member", "org_owner"]
+    assert org_role_choices == ["member", "owner"]
 
 
 def test_org_unassigned_users_index(test_client):
@@ -268,10 +268,10 @@ def test_org_role_assignment_index(test_client):
     assert len(roles) == 3
     john_role = roles[0]
     assert john_role["user"]["email"] == john
-    assert john_role["role"] == "org_owner"
+    assert john_role["role"] == "owner"
     ringo_role = roles[2]
     assert ringo_role["user"]["email"] == ringo
-    assert ringo_role["role"] == "org_member"
+    assert ringo_role["role"] == "member"
 
     test_client.log_in_as(mike)
 
@@ -281,7 +281,7 @@ def test_org_role_assignment_index(test_client):
 
 def test_org_role_assignment_create(test_client):
     mike_id = 4
-    role_params = {"user_id": mike_id, "role": "org_member"}
+    role_params = {"user_id": mike_id, "role": "member"}
     beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot assign a role in any org.
@@ -305,7 +305,7 @@ def test_org_role_assignment_create(test_client):
 
 def test_org_role_assignment_update(test_client):
     paul_id = 2
-    role_params = {"user_id": paul_id, "role": "org_owner"}
+    role_params = {"user_id": paul_id, "role": "owner"}
     beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot update a role in any org.
@@ -314,12 +314,12 @@ def test_org_role_assignment_update(test_client):
 
     test_client.log_in_as(john)
 
-    # Paul is currently an 'org_member' in the Beatles org.
+    # Paul is currently an 'member' in the Beatles org.
     resp = test_client.get(beatles_roles)
     user_roles = json.loads(resp.data)
     paul_role = user_roles[1]
     assert paul_role["user"]["email"] == paul
-    assert paul_role["role"] == "org_member"
+    assert paul_role["role"] == "member"
 
     # John can update Paul's role in the Beatles org.
     resp = test_client.patch(beatles_roles, json=role_params)
@@ -328,13 +328,13 @@ def test_org_role_assignment_update(test_client):
     assert user_role["user"]["email"] == paul
     assert user_role["role"] == role_params["role"]
 
-    # And Paul is now an 'org_owner' in the Beatles org.
+    # And Paul is now an 'owner' in the Beatles org.
     resp = test_client.get(beatles_roles)
     user_roles = json.loads(resp.data)
     paul_role = next(
         (ur["role"] for ur in user_roles if ur["user"]["email"] == paul), None
     )
-    assert paul_role == "org_owner"
+    assert paul_role == "owner"
 
     # But John can't update a role in the Monsters org.
     monsters_roles = "/orgs/2/role_assignments"
@@ -344,7 +344,7 @@ def test_org_role_assignment_update(test_client):
 
 def test_org_role_assignment_delete(test_client):
     paul_id = 2
-    paul_role_params = {"user_id": paul_id, "role": "org_member"}
+    paul_role_params = {"user_id": paul_id, "role": "member"}
     beatles_roles = "/orgs/1/role_assignments"
 
     # A guest cannot delete a role in any org.
@@ -353,12 +353,12 @@ def test_org_role_assignment_delete(test_client):
 
     test_client.log_in_as(john)
 
-    # Paul is currently an 'org_member' in the Beatles org.
+    # Paul is currently an 'member' in the Beatles org.
     resp = test_client.get(beatles_roles)
     user_roles = json.loads(resp.data)
     paul_role = user_roles[1]
     assert paul_role["user"]["email"] == paul
-    assert paul_role["role"] == "org_member"
+    assert paul_role["role"] == "member"
 
     # John can delete Paul's role in the Beatles org.
     resp = test_client.delete(beatles_roles, json=paul_role_params)
