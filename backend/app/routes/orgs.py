@@ -26,9 +26,7 @@ def create():
 
     g.session.add(org)
     g.session.flush()  # NOTE(gj): load-bearing flush.
-    current_app.oso.roles.assign_role(
-        g.current_user, org, "org_owner", session=g.session
-    )
+    current_app.oso.roles.assign_role(g.current_user, org, "owner", session=g.session)
     g.session.commit()
     return org.repr(), 201
 
