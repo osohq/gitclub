@@ -1,4 +1,4 @@
-from sqlalchemy_oso.roles2 import OsoRoles
+from sqlalchemy_oso.roles import OsoRoles
 
 from .models import Base, Issue, Org, Repo, User
 
