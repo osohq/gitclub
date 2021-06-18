@@ -53,12 +53,12 @@ resource(_type: Repo, "repo", actions, roles) if
 resource(_type: Issue, "issue", actions, _) if
     actions = ["read"];
 
-parent(issue: Issue, parent_repo: Repo) if
+child_parent(issue: Issue, parent_repo: Repo) if
     issue.repo = parent_repo;
 # docs: end-issue-resource
 
 # docs: begin-repo-parent
-parent(repo: Repo, parent_org: Org) if
+child_parent(repo: Repo, parent_org: Org) if
     repo.org = parent_org;
 # docs: end-repo-parent
 

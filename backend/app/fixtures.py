@@ -1,4 +1,4 @@
-from sqlalchemy_oso.roles2 import OsoRoles
+from sqlalchemy_oso.roles import OsoRoles
 
 from .models import Base, Issue, Org, Repo, User
 
@@ -69,7 +69,7 @@ def load_fixture_data(session, roles: OsoRoles):
     for issue in issues:
         session.add(issue)
 
-    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles2.py#L132-L133
+    # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles.py#L132-L133
     session.flush()
 
     ##############
