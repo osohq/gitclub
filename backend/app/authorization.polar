@@ -5,11 +5,11 @@ allow(_: User, "read", _: User);
 allow(_: User{id: id}, "read_profile", _: User{id: id});
 
 
-# docs: org-create-rule
+# docs: begin-org-create-rule
 # Any logged-in user can create a new org.
 allow(_: User, "create", _: Org);
 
-# end: org-create-rule
+# docs: end-org-create-rule
 
 # ROLES
 
