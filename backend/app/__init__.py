@@ -58,15 +58,12 @@ def create_app(db_path=None, load_fixtures=False):
     # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
-    # docs: begin-configure
     app.oso.roles.synchronize_data()
-    # docs: end-configure
 
     # optionally load fixture data
     if load_fixtures:
         load_fixture_data(Session(), app.oso.roles)
 
-    # docs: begin-authorized-session
     # Init authorized session factory.
     app.authorized_sessionmaker = functools.partial(
         authorized_sessionmaker,
@@ -74,13 +71,11 @@ def create_app(db_path=None, load_fixtures=False):
         get_oso=lambda: app.oso,
         get_user=lambda: g.current_user,
     )
-    # docs: end-authorized-session
 
     @app.before_request
     def set_current_user_and_session():
         flask_session.permanent = True
 
-        # docs: begin-authn
         if "current_user" not in g:
             if "current_user_id" in flask_session:
                 user_id = flask_session.get("current_user_id")
@@ -92,7 +87,6 @@ def create_app(db_path=None, load_fixtures=False):
                 session.close()
             else:
                 g.current_user = None
-        # docs: end-authn
 
     @app.after_request
     def add_cors_headers(res):
@@ -111,7 +105,6 @@ def create_app(db_path=None, load_fixtures=False):
     return app
 
 
-# docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
     oso = SQLAlchemyOso(Base)
@@ -124,4 +117,3 @@ def init_oso(app, Session: sessionmaker):
 
     # Attach SQLAlchemyOso instance to Flask application.
     app.oso = oso
-    # docs: end-init-oso

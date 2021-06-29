@@ -9,7 +9,6 @@ from ..models import Base
 Permissions = Dict[Type[Base], str]
 
 
-# docs: begin-session-decorator
 def session(checked_permissions: Optional[Permissions]):
     def decorator(func):
         @functools.wraps(func)
@@ -22,7 +21,6 @@ def session(checked_permissions: Optional[Permissions]):
         return wrapper
 
     return decorator
-    # docs: end-session-decorator
 
 
 def check_permission(action: str, resource: Base):
@@ -30,7 +28,6 @@ def check_permission(action: str, resource: Base):
         raise Forbidden
 
 
-# docs: begin-get-resource-by
 def get_or_404(self, cls: Type[Any], **kwargs):
     resource = self.query(cls).filter_by(**kwargs).one_or_none()
     if resource is None:
@@ -39,4 +36,3 @@ def get_or_404(self, cls: Type[Any], **kwargs):
 
 
 Session.get_or_404 = get_or_404  # type: ignore
-# docs: end-get-resource-by

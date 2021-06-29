@@ -24,7 +24,6 @@ def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
     issue = Issue(title=payload["title"], repo=repo)
-    # check_permission("create", issue)  # TODO(gj): validation check; maybe unnecessary.
     g.session.add(issue)
     g.session.commit()
     return issue.repr(), 201
