@@ -24,4 +24,10 @@ test:
 test_individually:
 	pytest --collect-only | for test in $$(grep -Po '<Function \K[a-z_]*'); do pytest -k $$test ; done
 
+clean_demo:
+	sd '^.*# docs:.*$$\n' '' $$(fd .py) $$(fd .polar)
+	sd '^.*TODO.*$$\n' '' $$(fd .py) $$(fd .polar)
+	black .
+
+
 .PHONY: dev run fixtures test
