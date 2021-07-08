@@ -37,7 +37,7 @@ module Gitclub
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
     
-    Rails.application.config.middleware.insert_before 0, Rack::Cors do
+    config.middleware.insert_before 0, Rack::Cors do
       allow do
         origins 'http://localhost:3000'
         resource '*',
@@ -46,5 +46,8 @@ module Gitclub
                  methods: [:get, :post, :options, :delete, :put, :patch]
       end
     end
+
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: 'gitclub'
   end
 end

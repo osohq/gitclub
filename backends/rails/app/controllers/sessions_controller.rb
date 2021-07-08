@@ -1,5 +1,7 @@
 class SessionsController < ApplicationController
   def show
+    raise ActionController::RoutingError.new('Not logged in') if current_user.nil?
+
     render json: current_user
   end
 
