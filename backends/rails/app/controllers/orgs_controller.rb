@@ -10,7 +10,7 @@ class OrgsController < ApplicationController
     # TODO: authz
     org.save
     # TODO: assign user role to org
-    render json: org
+    render json: org, status: 201
   end
 
   def show

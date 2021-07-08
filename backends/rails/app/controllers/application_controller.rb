@@ -5,7 +5,6 @@ class ApplicationController < ActionController::API
 
   # Sessions
   def current_user
-    puts session
     @current_user ||= begin
       return nil if session[:user_id].nil?
       User.find(session[:user_id])
@@ -13,9 +12,7 @@ class ApplicationController < ActionController::API
   end
 
   def current_user=(user)
-    puts user
     session[:user_id] = user&.id
-    puts session
     @current_user = user
   end
 end
