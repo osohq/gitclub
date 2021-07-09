@@ -15,7 +15,7 @@ class SessionsController < ApplicationController
     render json: current_user, status: 201
   end
 
-  def delete
+  def destroy
     self.current_user = nil
 
     head :no_content
