@@ -7,8 +7,9 @@ class RoleAssignmentsController < ApplicationController
 
   def org_index
     org = Org.find(params[:id])
+    roles = OrgRole.where(org: org).all
 
-    render json: []
+    render json: roles.map{|role| {user: role.user, role: role.name}}
   end
 
   def org_create
@@ -16,7 +17,9 @@ class RoleAssignmentsController < ApplicationController
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
-    
+
+    OrgRole.create(name: role, user: user, org: org)
+
     render json: {
       user: user,
       role: role
@@ -28,7 +31,10 @@ class RoleAssignmentsController < ApplicationController
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
-    
+
+    existing_role = OrgRole.find_by!(user: user, org: org)
+    existing_role.update(name: role)
+
     render json: {
       user: user,
       role: role
@@ -39,7 +45,8 @@ class RoleAssignmentsController < ApplicationController
     org = Org.find(params[:id])
     user_id = params.require(:user_id)
     user = User.find(user_id)
-    role = params.require(:role)
+
+    OrgRole.destroy_by(user: user, org: org)
     
     head :no_content
   end
@@ -51,16 +58,19 @@ class RoleAssignmentsController < ApplicationController
   end
 
   def repo_index
-    org = Org.find(params[:id])
+    repo = Repo.find(params[:id])
+    roles = RepoRole.where(repo: repo).all
 
-    render json: []
+    render json: roles.map{|role| {user: role.user, role: role.name}}
   end
 
   def repo_create
-    org = Org.find(params[:id])
+    repo = Repo.find(params[:id])
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
+
+    RepoRole.create(name: role, user: user, repo: repo)
     
     render json: {
       user: user,
@@ -69,11 +79,14 @@ class RoleAssignmentsController < ApplicationController
   end
 
   def repo_update
-    org = Org.find(params[:id])
+    repo = Repo.find(params[:id])
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
-    
+
+    existing_role = RepoRole.find_by!(user: user, repo: repo)
+    existing_role.update(name: role)
+
     render json: {
       user: user,
       role: role
@@ -81,10 +94,11 @@ class RoleAssignmentsController < ApplicationController
   end
 
   def repo_delete
-    org = Org.find(params[:id])
+    repo = Repo.find(params[:id])
     user_id = params.require(:user_id)
     user = User.find(user_id)
-    role = params.require(:role)
+
+    RepoRole.destroy_by(user: user, repo: repo)
     
     head :no_content
   end

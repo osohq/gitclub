@@ -1,6 +1,7 @@
 class OrgsController < ApplicationController
   def index
     orgs = Org.all
+    # orgs = orgs.filter { |org| oso.allowed?(current_user, "read", org) }
     # TODO: authz
     render json: orgs
   end

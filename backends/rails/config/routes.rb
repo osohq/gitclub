@@ -5,7 +5,7 @@ Rails.application.routes.draw do
       get :unassigned_users, to: 'role_assignments#org_unassigned_users'
       get :role_assignments, to: 'role_assignments#org_index'
       post :role_assignments, to: 'role_assignments#org_create'
-      put :role_assignments, to: 'role_assignments#org_update'
+      patch :role_assignments, to: 'role_assignments#org_update'
       delete :role_assignments, to: 'role_assignments#org_delete'
     end
 
@@ -16,7 +16,7 @@ Rails.application.routes.draw do
         get :unassigned_users, to: 'role_assignments#repo_unassigned_users'
         get :role_assignments, to: 'role_assignments#repo_index'
         post :role_assignments, to: 'role_assignments#repo_create'
-        put :role_assignments, to: 'role_assignments#repo_update'
+        patch :role_assignments, to: 'role_assignments#repo_update'
         delete :role_assignments, to: 'role_assignments#repo_delete'
       end
     end

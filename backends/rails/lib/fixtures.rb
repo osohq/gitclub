@@ -63,21 +63,21 @@ module Fixtures
   
     # TODO
   
-    # roles.assign_role(john, abbey_road, "reader", session=session)
-    # roles.assign_role(paul, abbey_road, "reader", session=session)
-    # roles.assign_role(ringo, abbey_road, "writer", session=session)
-    # roles.assign_role(mike, paperwork, "reader", session=session)
-    # roles.assign_role(sully, paperwork, "reader", session=session)
+    RepoRole.create(user: john, repo: abbey_road, name: "reader")
+    RepoRole.create(user: paul, repo: abbey_road, name: "reader")
+    RepoRole.create(user: ringo, repo: abbey_road, name: "writer")
+    RepoRole.create(user: mike, repo: paperwork, name: "reader")
+    RepoRole.create(user: sully, repo: paperwork, name: "reader")
   
     # #############
     # # Org roles #
     # #############
   
-    # roles.assign_role(john, beatles, "owner", session=session)
-    # roles.assign_role(paul, beatles, "member", session=session)
-    # roles.assign_role(ringo, beatles, "member", session=session)
-    # roles.assign_role(mike, monsters, "owner", session=session)
-    # roles.assign_role(sully, monsters, "member", session=session)
-    # roles.assign_role(randall, monsters, "member", session=session)
+    OrgRole.create(user: john, org: beatles, name: "owner")
+    OrgRole.create(user: paul, org: beatles, name: "member")
+    OrgRole.create(user: ringo, org: beatles, name: "member")
+    OrgRole.create(user: mike, org: monsters, name: "owner")
+    OrgRole.create(user: sully, org: monsters, name: "member")
+    OrgRole.create(user: randall, org: monsters, name: "member")
   end
 end
