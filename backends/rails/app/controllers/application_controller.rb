@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::API
-  def check_permission(action, resource)
-    # TODO
+  def authorize!(action, resource)
+    raise ActiveRecord::RecordNotFound unless OSO.allowed?(actor: current_user, action: action.to_s, resource: resource)
   end
 
   # Sessions

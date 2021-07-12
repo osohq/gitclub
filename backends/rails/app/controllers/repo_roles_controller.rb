@@ -3,6 +3,7 @@ class RepoRolesController < ApplicationController
     repo = Repo.find(params[:id])
     assigned_users = User.includes(:repo_roles).where({ repo_roles: { repo: repo } })
     unassigned_users = User.where('id NOT IN (?)', assigned_users.map(&:id))
+    authorize! :list_role_assignments, repo
 
     render json: unassigned_users
   end
@@ -10,12 +11,14 @@ class RepoRolesController < ApplicationController
   def show
     repo = Repo.find(params[:id])
     roles = RepoRole.where(repo: repo).all
+    authorize! :list_role_assignments, repo
 
     render json: roles.map{|role| {user: role.user, role: role.name}}
   end
 
   def create
     repo = Repo.find(params[:id])
+    authorize! :create_role_assignments, repo
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
@@ -30,6 +33,7 @@ class RepoRolesController < ApplicationController
 
   def update
     repo = Repo.find(params[:id])
+    authorize! :update_role_assignments, repo
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
@@ -45,6 +49,7 @@ class RepoRolesController < ApplicationController
 
   def destroy
     repo = Repo.find(params[:id])
+    authorize! :delete_role_assignments, repo
     user_id = params.require(:user_id)
     user = User.find(user_id)
 

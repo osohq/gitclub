@@ -1,22 +1,24 @@
 class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])
-    # TODO: authz
+    authorize! :list_repos, org
+
     render json: org.repos
   end
 
   def create
     org = Org.find(params[:org_id])
     repo = Repo.new(create_params.merge(org: org))
-    # TODO: authz
+    authorize! :create, repo
+
     repo.save
-    # TODO: assign user role to repo
     render json: repo, status: 201
   end
 
   def show
     repo = Repo.find(params[:id])
-    # TODO: authz
+    authorize! :read, repo
+
     render json: repo
   end
 
