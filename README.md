@@ -9,7 +9,7 @@ TODO: more documentation
 
 ## Backends
 - [Flask SQLAlchemy Backend](backends/flask-sqlalchemy)
-- TODO: [Rails Backend](backends/rails)
+- [Rails Backend](backends/rails)
 ## Frontend
 
 ### Running the frontend
