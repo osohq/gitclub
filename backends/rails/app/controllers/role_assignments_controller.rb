@@ -47,7 +47,7 @@ class RoleAssignmentsController < ApplicationController
     user = User.find(user_id)
 
     OrgRole.destroy_by(user: user, org: org)
-    
+
     head :no_content
   end
 
@@ -71,7 +71,7 @@ class RoleAssignmentsController < ApplicationController
     role = params.require(:role)
 
     RepoRole.create(name: role, user: user, repo: repo)
-    
+
     render json: {
       user: user,
       role: role
@@ -99,7 +99,7 @@ class RoleAssignmentsController < ApplicationController
     user = User.find(user_id)
 
     RepoRole.destroy_by(user: user, repo: repo)
-    
+
     head :no_content
   end
 end
