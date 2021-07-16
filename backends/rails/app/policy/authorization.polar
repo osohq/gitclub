@@ -5,15 +5,11 @@ allow(_: User, "read", _: User);
 allow(_: User{id: id}, "read_profile", _: User{id: id});
 
 
-# docs: begin-org-create-rule
 # Any logged-in user can create a new org.
 allow(_: User, "create", _: Org);
 
-# docs: end-org-create-rule
-
 # ROLES
 
-# docs: begin-org-resource
 resource(_type: Org, "org", actions, roles) if
     # TODO(gj): might be able to cut down on some repetition with namespacing, e.g., `role_assignments::{create, list, update, delete}`
     actions = ["read", "create_repos", "list_repos",
@@ -28,9 +24,7 @@ resource(_type: Org, "org", actions, roles) if
             implies: ["member", "repo:admin"]
         }
     };
-# docs: end-org-resource
 
-# docs: begin-repo-resource
 resource(_type: Repo, "repo", actions, roles) if
     actions = ["read", "create_issues", "list_issues",
                "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
@@ -47,9 +41,7 @@ resource(_type: Repo, "repo", actions, roles) if
             permissions: ["read", "list_issues", "issue:read"]
         }
     };
-# docs: end-repo-resource
 
-# docs: begin-issue-resource
 resource(_type: Issue, "issue", actions, _) if
     actions = ["read"];
 
@@ -62,20 +54,15 @@ parent_child(parent_repo, issue: Issue) if
     issue.repo = parent_repo and
     # TODO: use specializer in rule head
     parent_repo matches Repo;
-# docs: end-issue-resource
 
-# docs: begin-repo-parent
 parent_child(parent_org, repo: Repo) if
     repo.org = parent_org and
     # TODO: use specializer in rule head
     parent_org matches Org;
-# docs: end-repo-parent
 
-# docs: begin-role-allow
 allow(actor, action, resource) if
     role_allows(actor, action, resource);
 
-# docs: end-role-allow
 
 actor_has_role_for_resource(actor, role_name, resource: Org) if
     role in actor.org_roles and
