@@ -5,8 +5,7 @@ permissions system. The app is implemented in a number of backend languages,
 which all expose a common API that is consumed by a React frontend (in the
 `frontend/` folder).
 
-TODO: more documentation
-
+For more information, check out one of the backend implementations linked below.
 ## Backends
 - [Flask SQLAlchemy Backend](backends/flask-sqlalchemy)
 - [Rails Backend](backends/rails)
