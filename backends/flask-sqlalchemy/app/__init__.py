@@ -1,10 +1,12 @@
 import functools
+import os
 
 from flask import g, Flask, session as flask_session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from .models import Base, User
 from .fixtures import load_fixture_data
@@ -16,7 +18,9 @@ def create_app(db_path=None, load_fixtures=False):
     from . import routes
 
     # Init DB engine.
-    if db_path:
+    if os.getenv("TEST"):
+        engine = create_engine('sqlite://', connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    elif db_path:
         engine = create_engine(db_path)
     else:
         engine = create_engine(
@@ -48,6 +52,17 @@ def create_app(db_path=None, load_fixtures=False):
     @app.errorhandler(NotFound)
     def handle_not_found(*_):
         return {"message": "Not Found"}, 404
+
+    @app.route('/_reset', methods=["POST"])
+    def reset_data():
+        # Called during tests to reset the database
+        session = Session()
+        tables = session.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'").fetchall()
+        for t, in tables:
+            session.execute(f"DELETE from {t}")
+        app.oso.roles.synchronize_data()
+        load_fixture_data(session, app.oso.roles)
+        return {}
 
     # Init session factory that SQLAlchemyOso will use to manage role data.
     Session = sessionmaker(bind=engine)

@@ -9,6 +9,9 @@ dev:
 run:
 	flask run
 
+test-server:
+	FLASK_APP="app:create_app(None, True)" TEST=1 flask run
+
 fixtures:
 	rm -f roles.db
 	FLASK_APP="app:create_app(None, True)" flask run

@@ -1,9 +1,8 @@
-from .conftest import test_client, test_db_session
+from .conftest import test_client
 
 import pytest
 import json
 
-from app.models import User
 from app.fixtures import (
     john_email as john,
     paul_email as paul,
@@ -12,30 +11,25 @@ from app.fixtures import (
 )
 
 
-def test_db_loads(test_db_session):
-    just_john = test_db_session.query(User).filter_by(email=john).all()
-    assert len(just_john) == 1
-
-
 def test_user_sessions(test_client):
     resp = test_client.get("/session")
     assert resp.status_code == 200
-    assert json.loads(resp.data) == None
+    assert resp.json() == None
 
     resp = test_client.post("/session", json={"email": john})
     assert resp.status_code == 201
-    assert json.loads(resp.data).get("email") == john
+    assert resp.json().get("email") == john
 
     resp = test_client.get("/session")
     assert resp.status_code == 200
-    assert json.loads(resp.data).get("email") == john
+    assert resp.json().get("email") == john
 
     resp = test_client.delete("/session")
     assert resp.status_code == 204
 
     resp = test_client.get("/session")
     assert resp.status_code == 200
-    assert json.loads(resp.data) == None
+    assert resp.json() == None
 
 
 def test_user_show(test_client):
@@ -47,7 +41,7 @@ def test_user_show(test_client):
 
     resp = test_client.get(john_profile)
     assert resp.status_code == 200
-    assert json.loads(resp.data).get("email") == john
+    assert resp.json().get("email") == john
 
     test_client.log_in_as(paul)
 
@@ -58,13 +52,13 @@ def test_user_show(test_client):
 def test_org_index(test_client):
     resp = test_client.get("/orgs")
     assert resp.status_code == 200
-    assert len(json.loads(resp.data)) == 0
+    assert len(resp.json()) == 0
 
     test_client.log_in_as(john)
 
     resp = test_client.get("/orgs")
     assert resp.status_code == 200
-    orgs = json.loads(resp.data)
+    orgs = resp.json()
     assert len(orgs) == 1
     assert orgs[0]["name"] == "The Beatles"
 
@@ -72,7 +66,7 @@ def test_org_index(test_client):
 
     resp = test_client.get("/orgs")
     assert resp.status_code == 200
-    orgs = json.loads(resp.data)
+    orgs = resp.json()
     assert len(orgs) == 1
     assert orgs[0]["name"] == "Monsters Inc."
 
@@ -91,7 +85,7 @@ def test_org_create(test_client):
 
     resp = test_client.post("/orgs", json=org_params)
     assert resp.status_code == 201
-    org = json.loads(resp.data)
+    org = resp.json()
     assert org["name"] == org_name
 
 
@@ -104,7 +98,7 @@ def test_org_show(test_client):
 
     resp = test_client.get(the_beatles)
     assert resp.status_code == 200
-    org = json.loads(resp.data)
+    org = resp.json()
     assert org["name"] == "The Beatles"
 
     test_client.log_in_as(mike)
@@ -116,7 +110,7 @@ def test_org_show(test_client):
 def test_repo_role_choices_index(test_client):
     resp = test_client.get("/repo_role_choices")
     assert resp.status_code == 200
-    repo_role_choices = json.loads(resp.data)
+    repo_role_choices = resp.json()
     assert len(repo_role_choices) == 3
     assert repo_role_choices[0] == "admin"
 
@@ -124,7 +118,7 @@ def test_repo_role_choices_index(test_client):
 def test_org_role_choices_index(test_client):
     resp = test_client.get("/org_role_choices")
     assert resp.status_code == 200
-    org_role_choices = json.loads(resp.data)
+    org_role_choices = resp.json()
     assert org_role_choices == ["member", "owner"]
 
 
@@ -136,7 +130,7 @@ def test_org_unassigned_users_index(test_client):
 
     resp = test_client.get("/orgs/1/unassigned_users")
     assert resp.status_code == 200
-    unassigned_users = json.loads(resp.data)
+    unassigned_users = resp.json()
     assert len(unassigned_users) == 4
     unassigned_emails = [u["email"] for u in unassigned_users]
     assert john not in unassigned_emails
@@ -154,7 +148,7 @@ def test_repo_index(test_client):
 
     resp = test_client.get(beatles_repos)
     assert resp.status_code == 200
-    repos = json.loads(resp.data)
+    repos = resp.json()
     assert len(repos) == 1
     assert repos[0]["name"] == "Abbey Road"
 
@@ -174,7 +168,7 @@ def test_repo_create(test_client):
 
     resp = test_client.post(beatles_repos, json=repo_params)
     assert resp.status_code == 201
-    repo = json.loads(resp.data)
+    repo = resp.json()
     assert repo["name"] == repo_params["name"]
 
     monsters_repos = "/orgs/2/repos"
@@ -191,7 +185,7 @@ def test_repo_show(test_client):
 
     resp = test_client.get(abbey_road)
     assert resp.status_code == 200
-    repo = json.loads(resp.data)
+    repo = resp.json()
     assert repo["name"] == "Abbey Road"
 
     test_client.log_in_as(mike)
@@ -209,7 +203,7 @@ def test_issue_index(test_client):
 
     resp = test_client.get(abbey_road_issues)
     assert resp.status_code == 200
-    issues = json.loads(resp.data)
+    issues = resp.json()
     assert len(issues) == 1
     assert issues[0]["title"] == "Too much critical acclaim"
 
@@ -229,7 +223,7 @@ def test_issue_create(test_client):
 
     resp = test_client.post(abbey_road_issues, json=issue_params)
     assert resp.status_code == 201
-    issue = json.loads(resp.data)
+    issue = resp.json()
     assert issue["title"] == issue_params["title"]
 
     paperwork_issues = "/orgs/2/repos/2/issues"
@@ -246,7 +240,7 @@ def test_issue_show(test_client):
 
     resp = test_client.get(too_much_critical_acclaim)
     assert resp.status_code == 200
-    issue = json.loads(resp.data)
+    issue = resp.json()
     assert issue["title"] == "Too much critical acclaim"
 
     test_client.log_in_as(mike)
@@ -264,7 +258,7 @@ def test_org_role_assignment_index(test_client):
 
     resp = test_client.get(beatles_roles)
     assert resp.status_code == 200
-    roles = json.loads(resp.data)
+    roles = resp.json()
     assert len(roles) == 3
     john_role = roles[0]
     assert john_role["user"]["email"] == john
@@ -293,7 +287,7 @@ def test_org_role_assignment_create(test_client):
     # John can assign a new role in the Beatles org.
     resp = test_client.post(beatles_roles, json=role_params)
     assert resp.status_code == 201
-    user_role = json.loads(resp.data)
+    user_role = resp.json()
     assert user_role["user"]["email"] == mike
     assert user_role["role"] == role_params["role"]
 
@@ -316,7 +310,7 @@ def test_org_role_assignment_update(test_client):
 
     # Paul is currently an 'member' in the Beatles org.
     resp = test_client.get(beatles_roles)
-    user_roles = json.loads(resp.data)
+    user_roles = resp.json()
     paul_role = user_roles[1]
     assert paul_role["user"]["email"] == paul
     assert paul_role["role"] == "member"
@@ -324,13 +318,13 @@ def test_org_role_assignment_update(test_client):
     # John can update Paul's role in the Beatles org.
     resp = test_client.patch(beatles_roles, json=role_params)
     assert resp.status_code == 200
-    user_role = json.loads(resp.data)
+    user_role = resp.json()
     assert user_role["user"]["email"] == paul
     assert user_role["role"] == role_params["role"]
 
     # And Paul is now an 'owner' in the Beatles org.
     resp = test_client.get(beatles_roles)
-    user_roles = json.loads(resp.data)
+    user_roles = resp.json()
     paul_role = next(
         (ur["role"] for ur in user_roles if ur["user"]["email"] == paul), None
     )
@@ -355,7 +349,7 @@ def test_org_role_assignment_delete(test_client):
 
     # Paul is currently an 'member' in the Beatles org.
     resp = test_client.get(beatles_roles)
-    user_roles = json.loads(resp.data)
+    user_roles = resp.json()
     paul_role = user_roles[1]
     assert paul_role["user"]["email"] == paul
     assert paul_role["role"] == "member"
@@ -366,7 +360,7 @@ def test_org_role_assignment_delete(test_client):
 
     # And Paul no longer has a role in the Beatles org.
     resp = test_client.get(beatles_roles)
-    user_roles = json.loads(resp.data)
+    user_roles = resp.json()
     paul_role = next(
         (ur["role"] for ur in user_roles if ur["user"]["email"] == paul), None
     )
