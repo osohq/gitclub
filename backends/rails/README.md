@@ -20,7 +20,7 @@ This app also uses Oso's built-in roles functionality, which you can read about
 
 ### Running the backend
 
-First set up a virtualenv and install dependencies:
+Install dependencies, migrate and seed the database, and start the server:
 
 ```console
 $ cd backends/rails
@@ -37,9 +37,9 @@ $ bundle exec rails s
 ### Key files
 
 - [`initializers/oso.rb`][file-initializer]: Defines the `OSO` constant,
-  loads the policy file, and registers the necessary models that are used in the
-  policy. Because the app uses Oso's [built-in roles][ruby-roles-docs] feature,
-  this file also calls `OSO.enable_roles`.
+  registers the necessary models, and loads the policy. Because the app uses
+  Oso's [built-in roles][ruby-roles-docs] feature, this file also calls
+  `OSO.enable_roles`.
 - [`application_controller.rb`][file-app-controller]: Defines a small controller
   helper `authorize! :action, resource` that uses `OSO.allowed?` under the hood
   to enforce the authorization policy. Check out
