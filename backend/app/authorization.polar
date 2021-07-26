@@ -21,7 +21,9 @@ resource(_type: Org, "org", actions, roles) if
     roles = {
         member: {
             permissions: ["read", "list_repos", "list_role_assignments"],
+            # docs: begin-org-resource-highlight
             implies: ["repo:reader"]
+            # docs: end-org-resource-highlight
         },
         owner: {
             permissions: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
