@@ -1,0 +1,40 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      ## Python
+      - name: Install Python 3.6
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.6"
+      - name: Install Python formatter
+        run: pip install black
+      - name: Check Python formatting in flask-sqlalchemy backend
+        run: black --check backends/flask-sqlalchemy
+      - name: Check Python formatting in tests
+        run: black --check tests
+
+      ## Ruby
+      - name: Install Ruby + gems
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 3.0
+
+      # Run backend tests
+      - name: Flask SQLAlchemy Tests
+        working-directory: "tests"
+        run: make test-flask-sqlalchemy
+      - name: Rails Tests
+        working-directory: "tests"
+        run: make test-rails
