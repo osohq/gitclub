@@ -26,8 +26,14 @@ def create(org_id, repo_id):
     issue = Issue(title=payload["title"], repo=repo)
     # check_permission("create", issue)  # TODO(gj): validation check; maybe unnecessary.
     g.session.add(issue)
+    g.session.flush()
+    # For some reason, this method raises a sqlalchemy ObjectDeletedError
+    # if you try to call `issue.repr()` after the commit.
+    # TODO(gkaemmer): figure out why this only happens during tests, and why it
+    # only happens on this endpoint.
+    repr = issue.repr()
     g.session.commit()
-    return issue.repr(), 201
+    return repr, 201
 
 
 @bp.route("/<int:issue_id>", methods=["GET"])

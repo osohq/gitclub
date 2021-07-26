@@ -31,10 +31,22 @@ def is_port_open(port):
         return result == 0
 
 
-def ensure_port_5000_is_open():
+def ensure_port_5000_is_open(process):
     sleep(0.5)
+    total_time = 0
     while not is_port_open(5000):
         sleep(0.5)
+        total_time += 0.5
+        if total_time > 5:
+            raise RuntimeError(
+                "Server took more than 5s to start up. \n" +
+                "--- BEGIN STDOUT ---\n" +
+                process.stdout.read().decode('ascii') +
+                "\n--- END STDOUT ---\n" +
+                "\n--- BEGIN STDERR ---\n" +
+                process.stderr.read().decode('ascii') +
+                "\n--- END STDERR ---\n"
+            )
 
 
 DIRECTORIES = {
@@ -47,7 +59,7 @@ DIRECTORIES = {
 def test_app():
     directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy")]
     process = subprocess.Popen(["make", "test-server", "-C", directory], start_new_session=True)
-    ensure_port_5000_is_open()
+    ensure_port_5000_is_open(process)
     yield process
     pgrp = os.getpgid(process.pid)
     os.killpg(pgrp, signal.SIGINT)

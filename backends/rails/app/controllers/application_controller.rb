@@ -1,8 +1,11 @@
-class ApplicationController < ActionController::API
-  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+require 'exceptions'
 
-  def authorize!(action, resource)
-    raise ActiveRecord::RecordNotFound unless OSO.allowed?(actor: current_user, action: action.to_s, resource: resource)
+class ApplicationController < ActionController::API
+  rescue_from Exceptions::NotFound, with: :render_not_found
+  rescue_from Exceptions::Forbidden, with: :render_forbidden
+
+  def authorize!(action, resource, error=Exceptions::NotFound)
+    raise error unless OSO.allowed?(actor: current_user, action: action.to_s, resource: resource)
   end
 
   # Sessions
@@ -20,5 +23,9 @@ class ApplicationController < ActionController::API
 
   def render_not_found
     render json: {error: "Not found"}, status: 404
+  end
+
+  def render_forbidden
+    render json: {error: "Forbidden"}, status: 403
   end
 end

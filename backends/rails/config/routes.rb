@@ -16,6 +16,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :users, only: [:show]
+
   get :org_role_choices, to: 'role_choices#org_role_choices'
   get :repo_role_choices, to: 'role_choices#repo_role_choices'
 

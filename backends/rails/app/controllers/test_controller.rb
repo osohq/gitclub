@@ -1,5 +1,5 @@
 class TestController < ApplicationController
   def reset
-    `rails db:seed:replant`
+    Rails.application.load_seed
   end
 end

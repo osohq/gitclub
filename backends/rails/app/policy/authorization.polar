@@ -42,8 +42,9 @@ resource(_type: Repo, "repo", actions, roles) if
         }
     };
 
-resource(_type: Issue, "issue", actions, _) if
-    actions = ["read"];
+resource(_type: Issue, "issue", actions, roles) if
+    actions = ["read"] and
+    roles = {};
 
 parent_child(parent_repo, issue: Issue) if
     issue.repo = parent_repo and
@@ -64,12 +65,12 @@ allow(actor, action, resource) if
     role_allows(actor, action, resource);
 
 
-actor_has_role_for_resource(actor, role_name, resource: Org) if
+actor_has_role_for_resource(actor: User, role_name, resource: Org) if
     role in actor.org_roles and
     role_name = role.name and
     resource = role.org;
 
-actor_has_role_for_resource(actor, role_name, resource: Repo) if
+actor_has_role_for_resource(actor: User, role_name, resource: Repo) if
     role in actor.repo_roles and
     role_name = role.name and
     resource = role.repo;

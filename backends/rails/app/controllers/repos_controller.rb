@@ -9,7 +9,7 @@ class ReposController < ApplicationController
   def create
     org = Org.find(params[:org_id])
     repo = Repo.new(create_params.merge(org: org))
-    authorize! :create, repo
+    authorize! :create_repos, org
 
     repo.save
     render json: repo, status: 201

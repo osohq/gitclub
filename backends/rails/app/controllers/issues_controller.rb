@@ -8,7 +8,7 @@ class IssuesController < ApplicationController
   def create
     repo = Repo.find(params[:repo_id])
     issue = Issue.new(create_params.merge(repo: repo))
-    authorize! :create_issue, repo
+    authorize! :create_issues, repo
     issue.save
     render json: issue, status: 201
   end

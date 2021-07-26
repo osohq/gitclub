@@ -19,7 +19,6 @@ development:
 test:
   <<: *default
   database: db/test.sqlite3
-  pool: 1
 
 production:
   <<: *default
