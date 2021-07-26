@@ -33,7 +33,7 @@ class RepoRolesController < ApplicationController
 
   def update
     repo = Repo.find(params[:id])
-    authorize! :update_role_assignments, repo
+    authorize! "update_role_assignments", repo
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
@@ -49,7 +49,7 @@ class RepoRolesController < ApplicationController
 
   def destroy
     repo = Repo.find(params[:id])
-    authorize! :delete_role_assignments, repo
+    authorize! "delete_role_assignments", repo
     user_id = params.require(:user_id)
     user = User.find(user_id)
 
