@@ -19,7 +19,9 @@ def create_app(db_path=None, load_fixtures=False):
 
     # Init DB engine.
     if os.getenv("TEST"):
-        engine = create_engine('sqlite://', connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        engine = create_engine(
+            "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+        )
     elif db_path:
         engine = create_engine(db_path)
     else:
@@ -53,12 +55,14 @@ def create_app(db_path=None, load_fixtures=False):
     def handle_not_found(*_):
         return {"message": "Not Found"}, 404
 
-    @app.route('/_reset', methods=["POST"])
+    @app.route("/_reset", methods=["POST"])
     def reset_data():
         # Called during tests to reset the database
         session = Session()
-        tables = session.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'").fetchall()
-        for t, in tables:
+        tables = session.execute(
+            "SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+        ).fetchall()
+        for (t,) in tables:
             session.execute(f"DELETE from {t}")
         app.oso.roles.synchronize_data()
         load_fixture_data(session, app.oso.roles)

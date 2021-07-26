@@ -19,12 +19,4 @@ fixtures:
 fmt:
 	black .
 
-test:
-	pytest
-
-# Workaround for testing with a shared declarative base
-# Fixed by: https://github.com/osohq/oso/pull/929
-test_individually:
-	pytest --collect-only | for test in $$(grep -Po '<Function \K[a-z_]*'); do pytest -k $$test ; done
-
-.PHONY: dev run fixtures test
+.PHONY: dev run fixtures
