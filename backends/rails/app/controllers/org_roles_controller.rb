@@ -1,7 +1,7 @@
 class OrgRolesController < ApplicationController
   def unassigned_users
     org = Org.find(params[:id])
-    authorize! :list_role_assignments, org
+    authorize! "list_role_assignments", org
     assigned_users = User.includes(:org_roles).where({ org_roles: { org: org } })
     unassigned_users = User.where('id NOT IN (?)', assigned_users.map(&:id))
 
@@ -10,7 +10,7 @@ class OrgRolesController < ApplicationController
 
   def show
     org = Org.find(params[:id])
-    authorize! :list_role_assignments, org
+    authorize! "list_role_assignments", org
     roles = OrgRole.where(org: org).all
 
     render json: roles.map{|role| {user: role.user, role: role.name}}
@@ -18,7 +18,7 @@ class OrgRolesController < ApplicationController
 
   def create
     org = Org.find(params[:id])
-    authorize! :create_role_assignments, org
+    authorize! "create_role_assignments", org
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
@@ -33,7 +33,7 @@ class OrgRolesController < ApplicationController
 
   def update
     org = Org.find(params[:id])
-    authorize! :update_role_assignments, org
+    authorize! "update_role_assignments", org
     user_id = params.require(:user_id)
     user = User.find(user_id)
     role = params.require(:role)
@@ -49,7 +49,7 @@ class OrgRolesController < ApplicationController
 
   def destroy
     org = Org.find(params[:id])
-    authorize! :delete_role_assignments, org
+    authorize! "delete_role_assignments", org
     user_id = params.require(:user_id)
     user = User.find(user_id)
 

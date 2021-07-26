@@ -7,14 +7,14 @@ class OrgsController < ApplicationController
 
   def create
     org = Org.new(create_params)
-    authorize! :create, org, Exceptions::Forbidden
+    authorize! "create", org, Exceptions::Forbidden
     org.save
     render json: org, status: 201
   end
 
   def show
     org = Org.find(params[:id])
-    authorize! :read, org
+    authorize! "read", org
     render json: org
   end
 

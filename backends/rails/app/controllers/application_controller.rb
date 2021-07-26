@@ -5,7 +5,7 @@ class ApplicationController < ActionController::API
   rescue_from Exceptions::Forbidden, with: :render_forbidden
 
   def authorize!(action, resource, error=Exceptions::NotFound)
-    raise error unless OSO.allowed?(actor: current_user, action: action.to_s, resource: resource)
+    raise error unless OSO.allowed?(actor: current_user, action: action, resource: resource)
   end
 
   # Sessions

@@ -1,7 +1,7 @@
 class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])
-    authorize! :list_repos, org
+    authorize! "list_repos", org
 
     render json: org.repos
   end
@@ -9,7 +9,7 @@ class ReposController < ApplicationController
   def create
     org = Org.find(params[:org_id])
     repo = Repo.new(create_params.merge(org: org))
-    authorize! :create_repos, org
+    authorize! "create_repos", org
 
     repo.save
     render json: repo, status: 201
@@ -17,7 +17,7 @@ class ReposController < ApplicationController
 
   def show
     repo = Repo.find(params[:id])
-    authorize! :read, repo
+    authorize! "read", repo
 
     render json: repo
   end
