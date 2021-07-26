@@ -8,4 +8,12 @@
 
 require 'fixtures'
 
+# Delete everything from database
+OrgRole.destroy_all
+RepoRole.destroy_all
+Issue.destroy_all
+Repo.destroy_all
+Org.destroy_all
+User.destroy_all
+
 Fixtures.load_fixture_data()

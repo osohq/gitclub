@@ -1,5 +1,6 @@
 import subprocess
 import signal
+import socket
 import pytest
 from time import sleep
 import requests
@@ -17,21 +18,35 @@ def PrefixUrlSession(prefix=None):
         prefix = prefix.rstrip('/') + '/'
 
     def new_request(prefix, f, method, url, *args, **kwargs):
-        return f(method, prefix + url, *args, **kwargs)
+        return f(method, prefix + url.lstrip('/'), *args, **kwargs)
 
     s = requests.Session()
     s.request = partial(new_request, prefix, s.request)
     return s
 
 
+def is_port_open(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        result = sock.connect_ex(('127.0.0.1', port))
+        return result == 0
+
+
 def ensure_port_5000_is_open():
-    # TODO:
-    sleep(1)
+    sleep(0.5)
+    while not is_port_open(5000):
+        sleep(0.5)
+
+
+DIRECTORIES = {
+    "rails": "../rails",
+    "flask-sqlalchemy": "."
+}
 
 
 @pytest.fixture(scope="session")
 def test_app():
-    process = subprocess.Popen(["make", "test-server"], start_new_session=True)
+    directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy")]
+    process = subprocess.Popen(["make", "test-server", "-C", directory], start_new_session=True)
     ensure_port_5000_is_open()
     yield process
     pgrp = os.getpgid(process.pid)

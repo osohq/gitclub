@@ -11,6 +11,13 @@ from app.fixtures import (
 )
 
 
+def test_can_connect(test_client):
+    resp = test_client.get("/session")
+    print(resp.json())
+    assert resp.status_code == 200
+    assert resp.json() == None
+
+
 def test_user_sessions(test_client):
     resp = test_client.get("/session")
     assert resp.status_code == 200
