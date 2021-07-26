@@ -3,12 +3,10 @@ from .conftest import test_client
 import pytest
 import json
 
-from app.fixtures import (
-    john_email as john,
-    paul_email as paul,
-    mike_email as mike,
-    ringo_email as ringo,
-)
+john = "john@beatles.com"
+paul = "paul@beatles.com"
+mike = "mike@monsters.com"
+ringo = "ringo@beatles.com"
 
 
 def test_can_connect(test_client):
