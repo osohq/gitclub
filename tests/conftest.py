@@ -37,16 +37,10 @@ def ensure_port_5000_is_open(process):
     total_time = 0
     while not is_port_open(5000):
         sleep(0.5)
-        total_time += 0.5
-        if total_time > 5:
+        process.poll()
+        if process.returncode is not None:
             raise RuntimeError(
-                "Server took more than 5s to start up. \n"
-                + "--- BEGIN STDOUT ---\n"
-                + process.stdout.read().decode("ascii")
-                + "\n--- END STDOUT ---\n"
-                + "\n--- BEGIN STDERR ---\n"
-                + process.stderr.read().decode("ascii")
-                + "\n--- END STDERR ---\n"
+                "Server died before port 5000 was opened. Check the output above to see why."
             )
 
 
