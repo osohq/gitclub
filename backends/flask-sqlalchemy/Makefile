@@ -3,16 +3,20 @@ space := $(null) #
 colon := :#
 POLICIES := $(subst ${space},${colon},$(wildcard app/*.polar))
 
-dev:
+dev: .make.requirements-install
 	FLASK_DEBUG=1 FLASK_RUN_EXTRA_FILES="${POLICIES}" flask run --port=5000
 
-run:
+run: .make.requirements-install
 	flask run
 
-test-server:
+test-server: .make.requirements-install
 	FLASK_APP="app:create_app(None, True)" TEST=1 flask run
 
-fixtures:
+.make.requirements-install: requirements.txt
+	pip install -r requirements.txt
+	touch $@
+
+fixtures: .make.requirements-install
 	rm -f roles.db
 	FLASK_APP="app:create_app(None, True)" flask run
 
