@@ -23,7 +23,9 @@ def org_unassigned_users_index(org_id):
 @session({Org: "list_role_assignments", User: "read"})
 def org_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
+    # docs: begin-org-role-index-highlight
     assignments = current_app.oso.roles.assignments_for_resource(org)
+    # docs: end-org-role-index-highlight
     ids = [assignment["user_id"] for assignment in assignments]
     users = {u.id: u for u in g.session.query(User).filter(column("id").in_(ids))}
     assignments = [
@@ -44,7 +46,9 @@ def org_create(org_id):
     user = g.session.get_or_404(User, id=payload["user_id"])
 
     # Assign user the role in org.
+    # docs: begin-role-assignment-highlight
     current_app.oso.roles.assign_role(user, org, payload["role"])
+    # docs: end-role-assignment-highlight
     g.session.commit()
 
     return {"user": user.repr(), "role": payload["role"]}, 201

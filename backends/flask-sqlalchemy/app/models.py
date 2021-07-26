@@ -43,7 +43,9 @@ class Repo(Base):
 
     # many-to-one relationship with orgs
     org_id = Column(Integer, ForeignKey("orgs.id"))
+    # docs: begin-repo-model-highlight
     org = relationship("Org", backref="repos", lazy=True)
+    # docs: end-repo-model-highlight
 
     unique_name_in_org = UniqueConstraint(name, org_id)
 
