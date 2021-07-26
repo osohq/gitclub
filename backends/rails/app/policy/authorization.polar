@@ -31,11 +31,11 @@ resource(_type: Repo, "repo", actions, roles) if
     roles = {
         admin: {
             permissions: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
-            implies: ["repo:writer"]
+            implies: ["writer"]
         },
         writer: {
             permissions: ["create_issues"],
-            implies: ["repo:reader"]
+            implies: ["reader"]
         },
         reader: {
             permissions: ["read", "list_issues", "issue:read"]
