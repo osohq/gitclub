@@ -34,7 +34,6 @@ def is_port_open(port):
 
 def ensure_port_5000_is_open(process):
     sleep(0.5)
-    total_time = 0
     while not is_port_open(5000):
         sleep(0.5)
         process.poll()
