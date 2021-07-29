@@ -50,7 +50,6 @@ def ensure_port_5000_is_open(process):
             )
 
 
-
 DIRECTORIES = {
     "rails": "../backends/rails",
     "flask-sqlalchemy": "../backends/flask-sqlalchemy",
