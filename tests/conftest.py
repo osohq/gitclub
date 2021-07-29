@@ -33,14 +33,22 @@ def is_port_open(port):
 
 
 def ensure_port_5000_is_open(process):
-    sleep(0.5)
+    interval = 0.5
+    elapsed = interval
+    sleep(interval)
     while not is_port_open(5000):
-        sleep(0.5)
+        sleep(interval)
         process.poll()
         if process.returncode is not None:
             raise RuntimeError(
                 "Server died before port 5000 was opened. Check the output above to see why."
             )
+        elapsed += interval
+        if elapsed > 10:
+            raise RuntimeError(
+                "Server took more than 10s to start listening on port 5000, aborting."
+            )
+
 
 
 DIRECTORIES = {
