@@ -7,7 +7,6 @@ from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from .models import Base, User
 from .fixtures import load_fixture_data
@@ -19,11 +18,7 @@ def create_app(db_path=None, load_fixtures=False):
     from . import routes
 
     # Init DB engine.
-    if os.getenv("TEST"):
-        engine = create_engine(
-            "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-        )
-    elif db_path:
+    if db_path:
         engine = create_engine(db_path)
     else:
         engine = create_engine(

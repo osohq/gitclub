@@ -10,7 +10,7 @@ run: .make.requirements-install
 	flask run
 
 test-server: .make.requirements-install
-	FLASK_APP="app:create_app(None, True)" TEST=1 flask run
+	FLASK_APP="app:create_app('sqlite:///test.db', False)" flask run
 
 .make.requirements-install: requirements.txt
 	pip install -r requirements.txt
