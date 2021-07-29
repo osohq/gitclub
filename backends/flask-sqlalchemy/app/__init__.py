@@ -1,8 +1,6 @@
 import functools
-import os
 
 from flask import g, Flask, session as flask_session
-from sqlalchemy.sql.schema import Table
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
