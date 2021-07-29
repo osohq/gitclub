@@ -2,6 +2,7 @@ import functools
 import os
 
 from flask import g, Flask, session as flask_session
+from sqlalchemy.sql.schema import Table
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from sqlalchemy import create_engine
@@ -59,11 +60,8 @@ def create_app(db_path=None, load_fixtures=False):
     def reset_data():
         # Called during tests to reset the database
         session = Session()
-        tables = session.execute(
-            "SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
-        ).fetchall()
-        for (t,) in tables:
-            session.execute(f"DELETE from {t}")
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
         app.oso.roles.synchronize_data()
         load_fixture_data(session, app.oso.roles)
         return {}

@@ -19,21 +19,15 @@ def index(org_id, repo_id):
 
 
 @bp.route("", methods=["POST"])
-@session({Repo: "create_issues"})
+@session({Repo: "create_issues", Issue: "read"})
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
     issue = Issue(title=payload["title"], repo=repo)
     # check_permission("create", issue)  # TODO(gj): validation check; maybe unnecessary.
     g.session.add(issue)
-    g.session.flush()
-    # For some reason, this method raises a sqlalchemy ObjectDeletedError
-    # if you try to call `issue.repr()` after the commit.
-    # TODO(gkaemmer): figure out why this only happens during tests, and why it
-    # only happens on this endpoint.
-    repr = issue.repr()
     g.session.commit()
-    return repr, 201
+    return issue.repr(), 201
 
 
 @bp.route("/<int:issue_id>", methods=["GET"])
