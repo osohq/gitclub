@@ -4,7 +4,7 @@ colon := :#
 POLICIES := $(subst ${space},${colon},$(wildcard app/*.polar))
 
 dev:
-	FLASK_DEBUG=1 FLASK_RUN_EXTRA_FILES="${POLICIES}" flask run
+	FLASK_DEBUG=1 FLASK_RUN_EXTRA_FILES="${POLICIES}" flask run --port=5000
 
 run:
 	flask run
