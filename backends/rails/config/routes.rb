@@ -20,4 +20,6 @@ Rails.application.routes.draw do
 
   get :org_role_choices, to: 'role_choices#org_role_choices'
   get :repo_role_choices, to: 'role_choices#repo_role_choices'
+
+  post '/_reset', to: 'test#reset'
 end

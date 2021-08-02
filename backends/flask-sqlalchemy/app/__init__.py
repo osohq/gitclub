@@ -49,6 +49,16 @@ def create_app(db_path=None, load_fixtures=False):
     def handle_not_found(*_):
         return {"message": "Not Found"}, 404
 
+    @app.route("/_reset", methods=["POST"])
+    def reset_data():
+        # Called during tests to reset the database
+        session = Session()
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        app.oso.roles.synchronize_data()
+        load_fixture_data(session, app.oso.roles)
+        return {}
+
     # Init session factory that SQLAlchemyOso will use to manage role data.
     Session = sessionmaker(bind=engine)
 

@@ -8,4 +8,11 @@
 
 require 'fixtures'
 
+models = [RepoRole, OrgRole, Issue, Repo, Org, User]
+tables = models.map(&:table_name)
+tables.each do |table|
+  ActiveRecord::Base.connection.execute "delete from #{table}"
+  ActiveRecord::Base.connection.execute "delete from sqlite_sequence where name='#{table}'"
+end
+
 Fixtures.load_fixture_data()
