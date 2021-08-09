@@ -10,22 +10,6 @@ from ..models import Base
 Permissions = Dict[Type[Base], str]
 
 
-# docs: begin-session-decorator
-def session(checked_permissions: Optional[Permissions]):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            g.session = current_app.authorized_sessionmaker(
-                get_checked_permissions=lambda: checked_permissions
-            )()
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-    # docs: end-session-decorator
-
-
 def check_permission(action: str, resource: Base, check_read=True, error=Forbidden):
     if not current_app.oso.is_allowed(g.current_user, action, resource):
         if action == "read" or check_read and not current_app.oso.is_allowed(g.current_user, "read", resource):

@@ -87,6 +87,10 @@ def create_app(db_path=None, load_fixtures=False):
     # docs: end-authorized-session
 
     @app.before_request
+    def set_current_session():
+        g.session = Session()
+
+    @app.before_request
     def set_current_user_and_session():
         flask_session.permanent = True
 
@@ -94,12 +98,10 @@ def create_app(db_path=None, load_fixtures=False):
         if "current_user" not in g:
             if "current_user_id" in flask_session:
                 user_id = flask_session.get("current_user_id")
-                session = Session()
-                user = session.query(User).filter_by(id=user_id).one_or_none()
+                user = g.session.query(User).filter_by(id=user_id).one_or_none()
                 if user is None:
                     flask_session.pop("current_user_id")
                 g.current_user = user
-                session.close()
             else:
                 g.current_user = None
         # docs: end-authn

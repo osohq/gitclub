@@ -2,13 +2,12 @@ from flask import Blueprint, g, request, current_app, jsonify
 from werkzeug.exceptions import Forbidden
 
 from ..models import Org
-from .helpers import authorize_query, check_permission, session
+from .helpers import authorize_query, check_permission
 
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 
 # docs: begin-org-index
 @bp.route("", methods=["GET"])
-@session(checked_permissions=None)
 def index():
     query = authorize_query("read", Org)
     return jsonify([o.repr() for o in query])
@@ -17,7 +16,6 @@ def index():
 
 # docs: begin-is-allowed
 @bp.route("", methods=["POST"])
-@session(checked_permissions=None)
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
@@ -32,7 +30,6 @@ def create():
 
 
 @bp.route("/<int:org_id>", methods=["GET"])
-@session(checked_permissions=None)
 def show(org_id):
     org = g.session.get_or_404(Org, id=org_id)
     check_permission("read", org)

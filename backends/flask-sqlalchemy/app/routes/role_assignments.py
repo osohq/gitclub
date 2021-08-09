@@ -3,13 +3,12 @@ from sqlalchemy import column
 from werkzeug.exceptions import NotFound
 
 from ..models import Org, Repo, User
-from .helpers import authorize_query, check_permission, session
+from .helpers import authorize_query, check_permission
 
 bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_id>")
 
 
 @bp.route("/unassigned_users", methods=["GET"])
-@session(checked_permissions=None)
 def org_unassigned_users_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
     check_permission("read", org)
@@ -21,7 +20,6 @@ def org_unassigned_users_index(org_id):
 
 # docs: begin-org-role-index
 @bp.route("/role_assignments", methods=["GET"])
-@session(checked_permissions=None)
 def org_index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
     check_permission("list_role_assignments", org)
@@ -40,7 +38,6 @@ def org_index(org_id):
 
 # docs: begin-role-assignment
 @bp.route("/role_assignments", methods=["POST"])
-@session(checked_permissions=None)
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
@@ -59,7 +56,6 @@ def org_create(org_id):
 
 
 @bp.route("/role_assignments", methods=["PATCH"])
-@session(checked_permissions=None)
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
@@ -74,7 +70,6 @@ def org_update(org_id):
 
 
 @bp.route("/role_assignments", methods=["DELETE"])
-@session(checked_permissions=None)
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
@@ -91,7 +86,6 @@ def org_delete(org_id):
 
 
 @bp.route("/repos/<int:repo_id>/unassigned_users", methods=["GET"])
-@session(checked_permissions=None)
 def repo_unassigned_users_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
     check_permission("create_role_assignments", repo)
@@ -102,7 +96,6 @@ def repo_unassigned_users_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["GET"])
-@session(checked_permissions=None)
 def repo_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
     check_permission("list_role_assignments", repo)
@@ -117,7 +110,6 @@ def repo_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["POST"])
-@session(checked_permissions=None)
 def repo_create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
@@ -134,7 +126,6 @@ def repo_create(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["PATCH"])
-@session(checked_permissions=None)
 def repo_update(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
@@ -149,7 +140,6 @@ def repo_update(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["DELETE"])
-@session(checked_permissions=None)
 def repo_delete(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
