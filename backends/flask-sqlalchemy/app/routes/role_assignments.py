@@ -27,7 +27,9 @@ def org_index(org_id):
     assignments = current_app.oso.roles.assignments_for_resource(org)
     # docs: end-org-role-index-highlight
     ids = [assignment["user_id"] for assignment in assignments]
-    users = {u.id: u for u in authorize_query("read", User).filter(column("id").in_(ids))}
+    users = {
+        u.id: u for u in authorize_query("read", User).filter(column("id").in_(ids))
+    }
     assignments = [
         {"user": users[assignment["user_id"]].repr(), "role": assignment["role"]}
         for assignment in assignments
@@ -101,7 +103,9 @@ def repo_index(org_id, repo_id):
     authorize("list_role_assignments", repo)
     assignments = current_app.oso.roles.assignments_for_resource(repo)
     ids = [assignment["user_id"] for assignment in assignments]
-    users = {u.id: u for u in authorize_query("read", User).filter(column("id").in_(ids))}
+    users = {
+        u.id: u for u in authorize_query("read", User).filter(column("id").in_(ids))
+    }
     assignments = [
         {"user": users[assignment["user_id"]].repr(), "role": assignment["role"]}
         for assignment in assignments

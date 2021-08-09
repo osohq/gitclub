@@ -12,13 +12,23 @@ Permissions = Dict[Type[Base], str]
 
 def authorize(action: str, resource: Base, check_read=True, error=Forbidden):
     if not current_app.oso.is_allowed(g.current_user, action, resource):
-        if action == "read" or check_read and not current_app.oso.is_allowed(g.current_user, "read", resource):
+        if (
+            action == "read"
+            or check_read
+            and not current_app.oso.is_allowed(g.current_user, "read", resource)
+        ):
             raise NotFound
         raise error
 
 
 def authorize_query(action: str, resource_type):
-    filter = authorize_model(oso=current_app.oso, actor=g.current_user, action=action, session=g.session, model=resource_type)
+    filter = authorize_model(
+        oso=current_app.oso,
+        actor=g.current_user,
+        action=action,
+        session=g.session,
+        model=resource_type,
+    )
     return g.session.query(resource_type).filter(filter)
 
 
