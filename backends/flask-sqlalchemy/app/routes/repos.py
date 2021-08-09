@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request, jsonify
 
 from ..models import Org, Repo
-from .helpers import authorize_query, check_permission
+from .helpers import authorize_query, authorize
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
@@ -10,7 +10,7 @@ bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 @bp.route("", methods=["GET"])
 def index(org_id):
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("list_repos", org)
+    authorize("list_repos", org)
     query = authorize_query("read", Repo)
     repos = query.filter_by(org_id=org_id)
     return jsonify([repo.repr() for repo in repos])
@@ -21,7 +21,7 @@ def index(org_id):
 def create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("create_repos", org)
+    authorize("create_repos", org)
     repo = Repo(name=payload.get("name"), org=org)
     g.session.add(repo)
     g.session.commit()
@@ -31,5 +31,5 @@ def create(org_id):
 @bp.route("/<int:repo_id>", methods=["GET"])
 def show(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("read", repo)
+    authorize("read", repo)
     return repo.repr()
