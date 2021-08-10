@@ -1,8 +1,6 @@
 from flask import Blueprint, g, current_app
-from werkzeug.exceptions import NotFound
 
 from ..models import User
-from .helpers import authorize
 
 bp = Blueprint("routes.users", __name__, url_prefix="/users")
 

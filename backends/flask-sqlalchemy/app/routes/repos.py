@@ -2,7 +2,6 @@ from flask import Blueprint, g, request, jsonify
 from flask.globals import current_app
 
 from ..models import Org, Repo
-from .helpers import authorize_query, authorize
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 

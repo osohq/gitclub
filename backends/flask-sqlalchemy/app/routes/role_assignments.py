@@ -3,7 +3,6 @@ from sqlalchemy import column
 from werkzeug.exceptions import NotFound
 
 from ..models import Org, Repo, User
-from .helpers import authorize_query, authorize
 
 bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_id>")
 

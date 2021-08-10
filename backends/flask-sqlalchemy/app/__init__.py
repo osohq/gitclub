@@ -10,6 +10,7 @@ from .models import Base, User
 from .fixtures import load_fixture_data
 
 from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyOso
+from . import oso_enforcement
 
 
 def create_app(db_path=None, load_fixtures=False):
@@ -127,6 +128,9 @@ def create_app(db_path=None, load_fixtures=False):
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
     oso = SQLAlchemyOso(Base)
+    oso.build_error = lambda is_not_found, user, action, resource: (
+        NotFound if is_not_found or action == "read_profile" else Forbidden
+    )
 
     # Enable roles features.
     oso.enable_roles(User, Session)

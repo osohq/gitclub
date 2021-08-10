@@ -1,7 +1,6 @@
 from flask import Blueprint, g, request, jsonify, current_app
 
 from ..models import Repo, Issue
-from .helpers import authorize_query, authorize
 
 bp = Blueprint(
     "routes.issues",
