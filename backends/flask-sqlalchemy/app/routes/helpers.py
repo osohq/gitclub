@@ -11,32 +11,16 @@ from ..models import Base, User
 Permissions = Dict[Type[Base], str]
 
 
-class OsoAuthorizationError(Exception):
-    def __init__(self, actor, action, resource):
-        self.actor = actor
-        self.action = action
-        self.resource = resource
-
-
-class OsoNotFoundError(OsoAuthorizationError):
-    pass
-
-
-class OsoForbiddenError(OsoAuthorizationError):
-    pass
-
-
 def authorize(self, actor, action: str, resource: Base, *, check_read=True):
     if not self.is_allowed(actor, action, resource):
+        is_not_found = False
         if (
             action == self.read_action
             or check_read
             and not self.is_allowed(actor, self.read_action, resource)
         ):
-            raise self.transform_not_found_error(
-                OsoNotFoundError(actor, action, resource)
-            )
-        raise self.transform_forbidden_error(OsoForbiddenError(actor, action, resource))
+            is_not_found = True
+        raise self.build_error(is_not_found, actor, action, resource)
 
 
 def authorize_query(self, actor, model: Type[Any]):
@@ -52,10 +36,9 @@ def authorize_query(self, actor, model: Type[Any]):
 
 
 Oso.read_action = "read"
-Oso.transform_forbidden_error = (
-    lambda self, err: NotFound if err.action == "read_profile" else Forbidden
+Oso.build_error = lambda self, is_not_found, user, action, resource: (
+    NotFound if is_not_found or action == "read_profile" else Forbidden
 )
-Oso.transform_not_found_error = lambda self, _err: NotFound
 Oso.authorize = authorize
 Oso.authorize_query = authorize_query
 
