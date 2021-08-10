@@ -9,6 +9,7 @@ Eventually, this code would exist in the oso python library (as well as other
 host language libraries).
 """
 
+
 class OsoAuthorizationError(Exception):
     def __init__(self, actor, action, resource):
         self.actor = actor
@@ -51,6 +52,7 @@ def authorize_query(self, actor, model: Type[Any]):
 def default_build_error(self, is_not_found, actor, action, resource):
     err_class = OsoNotFoundError if is_not_found else OsoForbiddenError
     return err_class(actor, action, resource)
+
 
 Oso.read_action = "read"
 Oso.build_error = default_build_error
