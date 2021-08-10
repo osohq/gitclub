@@ -9,7 +9,7 @@ bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 # docs: begin-org-index
 @bp.route("", methods=["GET"])
 def index():
-    query = authorize_query("read", Org)
+    query = current_app.oso.authorize_query(g.current_user, Org)
     return jsonify([o.repr() for o in query])
     # docs: end-org-index
 
@@ -19,7 +19,7 @@ def index():
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    authorize("create", org, check_read=False)
+    current_app.oso.authorize(g.current_user, "create", org, check_read=False)
     # docs: end-is-allowed
 
     g.session.add(org)
@@ -32,5 +32,5 @@ def create():
 @bp.route("/<int:org_id>", methods=["GET"])
 def show(org_id):
     org = g.session.get_or_404(Org, id=org_id)
-    authorize("read", org)
+    current_app.oso.authorize(g.current_user, "read", org)
     return org.repr()
