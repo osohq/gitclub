@@ -6,8 +6,6 @@ from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.routes.helpers import OsoForbiddenError, OsoNotFoundError
-
 from .models import Base, User
 from .fixtures import load_fixture_data
 
