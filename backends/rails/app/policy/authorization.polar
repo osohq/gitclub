@@ -49,9 +49,6 @@ resource(_type: Issue, "issue", actions, roles) if
 parent_child(parent_repo: Repo, issue: Issue) if
     issue.repo = parent_repo;
 
-parent_child(parent_repo: Repo, issue: Issue) if
-    issue.repo = parent_repo;
-
 parent_child(parent_org: Org, repo: Repo) if
     repo.org = parent_org;
 
