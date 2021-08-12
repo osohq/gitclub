@@ -46,20 +46,14 @@ resource(_type: Issue, "issue", actions, roles) if
     actions = ["read"] and
     roles = {};
 
-parent_child(parent_repo, issue: Issue) if
-    issue.repo = parent_repo and
-    # TODO: use specializer in rule head
-    parent_repo matches Repo;
+parent_child(parent_repo: Repo, issue: Issue) if
+    issue.repo = parent_repo;
 
-parent_child(parent_repo, issue: Issue) if
-    issue.repo = parent_repo and
-    # TODO: use specializer in rule head
-    parent_repo matches Repo;
+parent_child(parent_repo: Repo, issue: Issue) if
+    issue.repo = parent_repo;
 
-parent_child(parent_org, repo: Repo) if
-    repo.org = parent_org and
-    # TODO: use specializer in rule head
-    parent_org matches Org;
+parent_child(parent_org: Org, repo: Repo) if
+    repo.org = parent_org;
 
 allow(actor, action, resource) if
     role_allows(actor, action, resource);
