@@ -129,8 +129,6 @@ def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyPolicy instance.
     policy = SQLAlchemyPolicy(Base)
 
-    print(policy)
-
     # Enable roles features.
     policy.enable_roles(User, Session)
 
