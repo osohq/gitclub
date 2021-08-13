@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base, User
 from .fixtures import load_fixture_data
 
-from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyOso
+from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyPolicy, SQLAlchemyEnforcer
 from . import oso_enforcement
 
 
@@ -56,8 +56,8 @@ def create_app(db_path=None, load_fixtures=False):
         session = Session()
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
-        app.oso.roles.synchronize_data()
-        load_fixture_data(session, app.oso.roles)
+        app.oso.policy.roles.synchronize_data()
+        load_fixture_data(session, app.oso.policy.roles)
         return {}
 
     # Init session factory that SQLAlchemyOso will use to manage role data.
@@ -70,7 +70,7 @@ def create_app(db_path=None, load_fixtures=False):
     Base.metadata.create_all(engine)
 
     # docs: begin-configure
-    app.oso.roles.synchronize_data()
+    app.oso.policy.roles.synchronize_data()
     # docs: end-configure
 
     # optionally load fixture data
@@ -126,18 +126,19 @@ def create_app(db_path=None, load_fixtures=False):
 
 # docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
-    # Initialize SQLAlchemyOso instance.
-    oso = SQLAlchemyOso(Base)
-    oso.build_error = lambda is_not_found, user, action, resource: (
-        NotFound if is_not_found or action == "read_profile" else Forbidden
-    )
+    # Initialize SQLAlchemyPolicy instance.
+    policy = SQLAlchemyPolicy(Base)
+
+    print(policy)
 
     # Enable roles features.
-    oso.enable_roles(User, Session)
+    policy.enable_roles(User, Session)
 
     # Load authorization policy.
-    oso.load_file("app/authorization.polar")
+    policy.load_file("app/authorization.polar")
 
-    # Attach SQLAlchemyOso instance to Flask application.
-    app.oso = oso
+    # Attach SQLAlchemyPolicy instance to Flask application.
+    app.oso = SQLAlchemyEnforcer(policy, Session, get_error=lambda is_not_found: (
+        NotFound() if is_not_found else Forbidden()
+    ))
     # docs: end-init-oso
