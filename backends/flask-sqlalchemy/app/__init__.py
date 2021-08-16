@@ -10,7 +10,6 @@ from .models import Base, User
 from .fixtures import load_fixture_data
 
 from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyPolicy, SQLAlchemyEnforcer
-from . import oso_enforcement
 
 
 def create_app(db_path=None, load_fixtures=False):
@@ -135,8 +134,10 @@ def init_oso(app, Session: sessionmaker):
     # Load authorization policy.
     policy.load_file("app/authorization.polar")
 
-    # Attach SQLAlchemyPolicy instance to Flask application.
-    app.oso = SQLAlchemyEnforcer(policy, Session, get_error=lambda is_not_found: (
-        NotFound() if is_not_found else Forbidden()
-    ))
+    # Attach enforcer instance to Flask application.
+    app.oso = SQLAlchemyEnforcer(
+        policy,
+        Session,
+        get_error=lambda is_not_found: (NotFound() if is_not_found else Forbidden()),
+    )
     # docs: end-init-oso
