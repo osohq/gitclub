@@ -1,8 +1,7 @@
 {
-   "type": "sqlite",
-   "database": "database.sqlite",
-   "synchronize": true,
-   "logging": false,
+   "type": "sqljs",
+   "location": "database.sqlite",
+   "autoSave": true,
    "entities": [
       "src/entity/**/*.ts"
    ],
