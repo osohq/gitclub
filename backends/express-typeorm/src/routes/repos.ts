@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { RepoController } from "../controller/RepoController";
+import { RepoController } from "../controllers/RepoController";
+import { RepoRoleController } from "../controllers/RepoRoleController";
 import { addRoutes } from "./helpers";
 
 
@@ -23,6 +24,31 @@ const Routes = [{
     route: "/:id",
     controller: RepoController,
     action: "remove"
+}, {
+    method: "get",
+    route: "/:id/unassigned_users",
+    controller: RepoRoleController,
+    action: "unassignedUsers"
+}, {
+    method: "get",
+    route: "/:id/role_assignments",
+    controller: RepoRoleController,
+    action: "all"
+}, {
+    method: "post",
+    route: "/:id/role_assignments",
+    controller: RepoRoleController,
+    action: "save"
+}, {
+    method: "patch",
+    route: "/:id/role_assignments",
+    controller: RepoRoleController,
+    action: "update"
+}, {
+    method: "delete",
+    route: "/:id/role_assignments",
+    controller: RepoRoleController,
+    action: "delete"
 }];
 
 // Handles requests made to /org/:orgId//repos

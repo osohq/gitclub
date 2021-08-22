@@ -10,9 +10,9 @@ export class RepoRole {
     @Column()
     role: string;
 
-    @ManyToOne(() => Repo, repo => repo.repoRoles)
+    @ManyToOne(() => Repo, repo => repo.repoRoles, { eager: true })
     repo: Repo;
 
-    @ManyToOne(() => User, user => user.repoRoles)
+    @ManyToOne(() => User, user => user.repoRoles, { eager: true })
     user: User;
 }

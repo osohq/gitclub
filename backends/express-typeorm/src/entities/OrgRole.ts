@@ -10,9 +10,9 @@ export class OrgRole {
     @Column()
     role: string;
 
-    @ManyToOne(() => Org, org => org.orgRoles)
+    @ManyToOne(() => Org, org => org.orgRoles, { eager: true })
     org: Org;
 
-    @ManyToOne(() => User, user => user.orgRoles)
+    @ManyToOne(() => User, user => user.orgRoles, { eager: true })
     user: User;
 }

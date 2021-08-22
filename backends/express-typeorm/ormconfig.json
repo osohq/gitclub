@@ -3,7 +3,7 @@
    "location": "database.sqlite",
    "autoSave": true,
    "entities": [
-      "src/entity/**/*.ts"
+      "src/entities/**/*.ts"
    ],
    "migrations": [
       "src/migration/**/*.ts"
@@ -12,7 +12,7 @@
       "src/subscriber/**/*.ts"
    ],
    "cli": {
-      "entitiesDir": "src/entity",
+      "entitiesDir": "src/entities",
       "migrationsDir": "src/migration",
       "subscribersDir": "src/subscriber"
    }

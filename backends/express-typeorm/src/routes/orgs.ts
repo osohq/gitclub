@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { OrgController } from "../controller/OrgController";
+import { OrgController } from "../controllers/OrgController";
+import { OrgRoleController } from "../controllers/OrgRoleController";
 import { addRoutes } from "./helpers";
 
 
@@ -26,28 +27,28 @@ const Routes = [{
 }, {
     method: "get",
     route: "/:id/unassigned_users",
-    controller: OrgController,
-    action: "allUnassignedUsers"
+    controller: OrgRoleController,
+    action: "unassignedUsers"
 }, {
     method: "get",
     route: "/:id/role_assignments",
-    controller: OrgController,
-    action: "allOrgRoles"
+    controller: OrgRoleController,
+    action: "all"
 }, {
     method: "post",
     route: "/:id/role_assignments",
-    controller: OrgController,
-    action: "saveOrgRole"
+    controller: OrgRoleController,
+    action: "save"
 }, {
     method: "patch",
     route: "/:id/role_assignments",
-    controller: OrgController,
-    action: "updateOrgRole"
+    controller: OrgRoleController,
+    action: "update"
 }, {
     method: "delete",
     route: "/:id/role_assignments",
-    controller: OrgController,
-    action: "deleteOrgRole"
+    controller: OrgRoleController,
+    action: "delete"
 }];
 
 // Handles requests made to /orgs

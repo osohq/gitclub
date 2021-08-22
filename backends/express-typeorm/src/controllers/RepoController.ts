@@ -1,7 +1,7 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import { Repo } from "../entity/Repo";
-import { RepoRole } from "../entity/RepoRole";
+import { Repo } from "../entities/Repo";
+import { RepoRole } from "../entities/RepoRole";
 
 export class RepoController {
 
