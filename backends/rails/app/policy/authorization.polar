@@ -67,9 +67,8 @@ resource Repo {
   "reader" if "writer";
 }
 
-has_relation(org, "parent", repo: Repo) if
-  org = repo.org and
-  org matches Org;
+has_relation(org: Org, "parent", repo: Repo) if
+  org = repo.org;
 
 resource Issue {
   permissions = ["read"];
@@ -78,6 +77,5 @@ resource Issue {
   "read" if "reader" on "parent";
 }
 
-has_relation(repo, "parent", issue: Issue) if
-  repo = issue.repo and
-  repo matches Repo;
+has_relation(repo: Repo, "parent", issue: Issue) if
+  repo = issue.repo;
