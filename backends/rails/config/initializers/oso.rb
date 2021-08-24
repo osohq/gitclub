@@ -12,4 +12,3 @@ OSO = Oso.new
 end
 
 OSO.load_file("app/policy/authorization.polar")
-OSO.enable_roles()
