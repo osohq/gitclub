@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
-import { ApplicationController } from "./ApplicationController";
+import { getRepository } from "typeorm";
+import { User } from "../entities/User";
 
-export class SessionController extends ApplicationController {
+export class SessionController {
+    private userRepository = getRepository(User);
+
     async get(request: Request, res: Response) {
-        const user = await this.currentUser(request);
+        const user = request.user;
         if (user === undefined) {
             return res.status(401).send(request.session);
         }

@@ -1,7 +1,7 @@
 import "reflect-metadata";
-import { createConnection } from "typeorm";
+import { createConnection, getRepository } from "typeorm";
 import * as express from "express";
-import * as session from "express-session";
+import * as session from "cookie-session";
 import * as bodyParser from "body-parser";
 import { usersRouter } from "./routes/users";
 import { issuesRouter } from "./routes/issues";
@@ -9,6 +9,9 @@ import { reposRouter } from "./routes/repos";
 import { orgsRouter } from "./routes/orgs";
 import { sessionRouter } from "./routes/sessions";
 import * as cors from "cors";
+import { addEnforcer, errorHandler, initOso } from "./oso";
+import { User } from "./entities/User";
+import { OrgRole } from "./entities/OrgRole";
 
 createConnection().then(async connection => {
 
@@ -28,6 +31,19 @@ createConnection().then(async connection => {
         secret: 'keyboard cat',
         sameSite: true,
     }));
+
+    // set current user on the request
+    const userRepository = getRepository(User);
+    app.use(async function (req, res, next) {
+        const userId = req.session.userId;
+        if (userId) {
+            req.user = await userRepository.findOne(userId, {
+                relations: ["repoRoles", "orgRoles"]
+            });
+        }
+        next()
+    });
+    app.use(addEnforcer);
     reposRouter.use('/:repoId/issues', issuesRouter);
     orgsRouter.use('/:orgId/repos', reposRouter);
     app.use('/orgs', orgsRouter);

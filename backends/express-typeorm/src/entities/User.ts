@@ -12,8 +12,8 @@ export class User {
     email: string;
 
     @OneToMany(() => RepoRole, repo_role => repo_role.user)
-    repoRoles!: RepoRole[];
+    repoRoles: RepoRole[];
 
     @OneToMany(() => OrgRole, org_role => org_role.user)
-    orgRoles!: OrgRole[];
+    orgRoles: OrgRole[];
 }
