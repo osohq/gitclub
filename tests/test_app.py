@@ -93,6 +93,10 @@ def test_org_create(test_client):
     org = resp.json()
     assert org["name"] == org_name
 
+    show_org = "/orgs/%s" % org["id"]
+    resp = test_client.get(show_org)
+    assert resp.status_code == 200
+
 
 def test_org_show(test_client):
     the_beatles = "/orgs/1"
@@ -175,6 +179,10 @@ def test_repo_create(test_client):
     assert resp.status_code == 201
     repo = resp.json()
     assert repo["name"] == repo_params["name"]
+
+    repo = "%s/%s" % (beatles_repos, repo["id"])
+    resp = test_client.get(repo)
+    assert resp.status_code == 200
 
     monsters_repos = "/orgs/2/repos"
     resp = test_client.post(monsters_repos, json=repo_params)

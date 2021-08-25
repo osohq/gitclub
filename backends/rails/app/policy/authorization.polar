@@ -56,12 +56,12 @@ allow(actor, action, resource) if
     role_allows(actor, action, resource);
 
 
-actor_has_role_for_resource(actor: User, role_name, resource: Org) if
+actor_has_role_for_resource(actor: User, role_name: String, resource: Org) if
     role in actor.org_roles and
     role_name = role.name and
-    resource = role.org;
+    resource.id = role.org_id;
 
-actor_has_role_for_resource(actor: User, role_name, resource: Repo) if
+actor_has_role_for_resource(actor: User, role_name: String, resource: Repo) if
     role in actor.repo_roles and
     role_name = role.name and
-    resource = role.repo;
+    resource.id = role.repo_id;

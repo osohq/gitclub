@@ -1,14 +1,13 @@
 class OrgsController < ApplicationController
   def index
-    orgs = Org.all
-    orgs = orgs.filter { |org| OSO.allowed?(actor: current_user, action: "read", resource: org) }
-    render json: orgs
+    render json: OSO.get_allowed_resources(current_user, 'read', Org)
   end
 
   def create
     org = Org.new(create_params)
     authorize! "create", org, Exceptions::Forbidden
     org.save
+    org_role = OrgRole.create! user: current_user, org: org, name: 'owner'
     render json: org, status: 201
   end
 
