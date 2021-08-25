@@ -55,10 +55,9 @@ createConnection().then(async connection => {
     app.get("/repo_role_choices", (req, res) => {
         res.send(["repo_admin", "repo_writer", "repo_reader"])
     });
+    app.use(errorHandler);
 
-
-    // setup express app here
-    // ...
+    await initOso();
 
     // start express server
     app.listen(5000, '0.0.0.0');
