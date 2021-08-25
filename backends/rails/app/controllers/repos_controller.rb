@@ -1,4 +1,3 @@
-  require 'pry'
 class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])

@@ -1,7 +1,7 @@
 module Fetcher
   def self.included(base)
     base.class_eval do
-      qhash = lambda do |c|
+      param = lambda do |c|
         if c.field.nil?
           { primary_key => c.value.send(primary_key) }
         else
@@ -10,12 +10,12 @@ module Fetcher
       end
 
       kinds = Hash.new { |k| raise "Unsupported constraint kind: #{k}" }
-      kinds['Eq'] = kinds['In'] = ->(q, c) { q.where(qhash[c]) }
-      kinds['Neq'] = ->(q, c) { q.where.not(qhash[c]) }
+      kinds['Eq'] = kinds['In'] = ->(q, c) { q.where param[c] }
+      kinds['Neq'] = ->(q, c) { q.where.not param[c] }
 
-      const_set(:FETCHER, lambda do |cons|
+      base.define_singleton_method(:fetch) do |cons|
         cons.reduce(all) { |q, con| kinds[con.kind][q, con] }
-      end)
+      end
     end
   end
 end

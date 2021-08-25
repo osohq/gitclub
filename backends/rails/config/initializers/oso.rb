@@ -3,18 +3,16 @@ Relationship = Oso::Polar::DataFiltering::Relationship
 
 OSO.register_class(
   User,
-  fetcher: User::FETCHER,
+  fetcher: User.method(:fetch),
   fields: {
-    id: Integer,
     email: String,
   }
 )
 
 OSO.register_class(
   Org,
-  fetcher: Org::FETCHER,
+  fetcher: Org.method(:fetch),
   fields: {
-    id: Integer,
     name: String,
     base_repo_role: String,
     billing_address: String,
@@ -29,10 +27,8 @@ OSO.register_class(
 
 OSO.register_class(
   Repo,
-  fetcher: Repo::FETCHER,
+  fetcher: Repo.method(:fetch),
   fields: {
-    id: Integer,
-    org_id: Integer,
     name: String,
     org: Relationship.new(
       kind: 'parent',
@@ -51,10 +47,8 @@ OSO.register_class(
 
 OSO.register_class(
   Issue,
-  fetcher: Issue::FETCHER,
+  fetcher: Issue.method(:fetch),
   fields: {
-    id: Integer,
-    repo_id: Integer,
     title: String,
     repo: Relationship.new(
       kind: 'parent',
@@ -67,11 +61,8 @@ OSO.register_class(
 
 OSO.register_class(
   OrgRole,
-  fetcher: OrgRole::FETCHER,
+  fetcher: OrgRole.method(:fetch),
   fields: {
-    id: Integer,
-    org_id: Integer,
-    user_id: Integer,
     name: String,
     org: Relationship.new(
       kind: 'parent',
@@ -90,11 +81,8 @@ OSO.register_class(
 
 OSO.register_class(
   RepoRole,
-  fetcher: RepoRole::FETCHER,
+  fetcher: RepoRole.method(:fetch),
   fields: {
-    id: Integer,
-    repo_id: Integer,
-    user_id: Integer,
     name: String,
     repo: Relationship.new(
       kind: 'parent',
@@ -110,17 +98,6 @@ OSO.register_class(
     )
   }
 )
-
-# TODO: do this automatically with a module or something?
-# Unfortunately we're not guaranteed to have loaded those classes yet though
-[
-#  User,
-#  Org,
-#  Repo,
-#  Issue
-].each do |klass|
-  OSO.register_class(klass)
-end
 
 OSO.load_file("app/policy/authorization.polar")
 OSO.enable_roles()

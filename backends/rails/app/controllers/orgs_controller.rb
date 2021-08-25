@@ -7,7 +7,7 @@ class OrgsController < ApplicationController
     org = Org.new(create_params)
     authorize! "create", org, Exceptions::Forbidden
     org.save
-    org_role = OrgRole.create! user: current_user, org: org, name: 'owner'
+    OrgRole.create! user: current_user, org: org, name: 'owner'
     render json: org, status: 201
   end
 
