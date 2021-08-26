@@ -37,12 +37,13 @@ function App() {
           <View.Org.New path="/orgs/new" />
           <View.Org.Show path="/orgs/:orgId" />
 
-          <View.Repo.Index path="/orgs/:orgId/repos" />
-          <View.Repo.New path="/orgs/:orgId/repos/new" />
-          <View.Repo.Settings path="/orgs/:orgId/repos/:repoId/settings" />
-          <View.Repo.Show path="/orgs/:orgId/repos/:repoId" />
+          <View.Org.Repo.Index path="/orgs/:orgId/repos" />
+          <View.Org.Repo.New path="/orgs/:orgId/repos/new" />
+          <View.Org.Repo.Settings path="/orgs/:orgId/repos/:repoId/settings" />
+          <View.Org.Repo.Show path="/orgs/:orgId/repos/:repoId" />
 
           <View.User.Show path="/users/:userId" />
+          <View.User.Repo.Index path="/users/:userId/repos" />
 
           <View.NotFound default />
         </View.Notices>

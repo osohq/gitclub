@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { RouteComponentProps } from '@reach/router';
+import { Link, RouteComponentProps } from '@reach/router';
 
 import { User, UserContext } from '../../models';
 import { user as userApi } from '../../api';
@@ -19,5 +19,12 @@ export function Show({ userId }: Props) {
 
   if (!userId || !user) return null;
 
-  return <h1>{user.email}</h1>;
+  return (
+    <>
+      <h1>{user.email}</h1>
+      <h2>
+        <Link to={`/users/${userId}/repos`}>Repos</Link>
+      </h2>
+    </>
+  );
 }
