@@ -13,7 +13,7 @@ This app also uses Oso's built-in roles functionality, which you can read about
 [here][docs-ruby-roles].
 
 [docs]: https://docs.osohq.com/
-[docs-ruby]: https://docs.osohq.com/ruby/reference/lib.html
+[docs-ruby]: https://docs.osohq.com/ruby/reference/installation.html
 [docs-ruby-roles]: https://docs.osohq.com/ruby/guides/roles/getting-started.html
 
 ## Backend
