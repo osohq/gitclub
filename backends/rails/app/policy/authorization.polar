@@ -65,3 +65,6 @@ actor_has_role_for_resource(actor: User, role_name: String, resource: Repo) if
     role in actor.repo_roles and
     role_name = role.name and
     resource.id = role.repo_id;
+
+actor_has_role_for_resource(org: Org, _role: String, repo: Repo) if
+    repo.org = org;

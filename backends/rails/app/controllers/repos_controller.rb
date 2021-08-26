@@ -2,7 +2,9 @@ class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])
     authorize! "list_repos", org
-    repos = org.repos
+    # FIXME this isn't ideal but the current data filtering api is very rigid
+    # we'd like to be able to ask "what repos can this org show this user"
+    repos = OSO.get_allowed_resources(org, 'read', Repo)
 
     render json: repos
   end
