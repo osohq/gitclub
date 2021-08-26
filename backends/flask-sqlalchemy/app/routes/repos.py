@@ -1,6 +1,6 @@
 from flask import Blueprint, g, request, jsonify
 
-from ..models import Org, Repo, User
+from ..models import Org, Repo
 from .helpers import check_permission, session
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
