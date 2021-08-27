@@ -14,7 +14,7 @@ also where you can find [documentation for the new built-in roles features in
 the `sqlalchemy-oso` library][docs-roles] that this app uses heavily.
 
 [docs]: https://docs.osohq.com/
-[docs-python]: https://docs.osohq.com/python/reference/lib.html
+[docs-python]: https://docs.osohq.com/python/reference/installation.html
 [docs-sqlalchemy]: https://docs.osohq.com/python/reference/frameworks/sqlalchemy.html
 [docs-roles]: https://docs.osohq.com/python/new-roles.html
 
