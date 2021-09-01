@@ -1,6 +1,6 @@
 class OrgsController < ApplicationController
   def index
-    render json: OSO.get_allowed_resources(current_user, 'read', Org)
+    render json: OSO.authorized_resources(current_user, 'read', Org)
   end
 
   def create

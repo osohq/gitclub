@@ -2,7 +2,7 @@
 allow(_: User, "read", _: User);
 
 # Users can see their own profiles
-allow(_: User{id: id}, "read_profile", _: User{id: id});
+allow(user: User, "read_profile", user);
 
 
 # Any logged-in user can create a new org.
@@ -42,29 +42,17 @@ resource(_type: Repo, "repo", actions, roles) if
         }
     };
 
-resource(_type: Issue, "issue", actions, roles) if
-    actions = ["read"] and
-    roles = {};
+resource(_type: Issue, "issue", ["read"], {});
 
-parent_child(parent_repo: Repo, issue: Issue) if
-    issue.repo = parent_repo;
+parent_child(repo: Repo, _: Issue{repo: repo});
 
-parent_child(parent_org: Org, repo: Repo) if
-    repo.org = parent_org;
+parent_child(org: Org, _: Repo{org: org});
 
 allow(actor, action, resource) if
     role_allows(actor, action, resource);
 
+actor_has_role_for_resource(_: User{org_roles: roles}, name: String, org: Org) if
+    role in roles and role matches { name: name, org: org };
 
-actor_has_role_for_resource(actor: User, role_name: String, resource: Org) if
-    role in actor.org_roles and
-    role_name = role.name and
-    resource.id = role.org_id;
-
-actor_has_role_for_resource(actor: User, role_name: String, resource: Repo) if
-    role in actor.repo_roles and
-    role_name = role.name and
-    resource.id = role.repo_id;
-
-actor_has_role_for_resource(org: Org, _role: String, repo: Repo) if
-    repo.org = org;
+actor_has_role_for_resource(_: User{repo_roles: roles}, name: String, repo: Repo) if
+    role in roles and role matches { name: name, repo: repo };

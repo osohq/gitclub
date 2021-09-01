@@ -3,7 +3,6 @@ Relationship = Oso::Polar::DataFiltering::Relationship
 
 OSO.register_class(
   User,
-  fetcher: User.method(:fetch),
   fields: {
     email: String,
   }
@@ -11,7 +10,6 @@ OSO.register_class(
 
 OSO.register_class(
   Org,
-  fetcher: Org.method(:fetch),
   fields: {
     name: String,
     base_repo_role: String,
@@ -27,7 +25,6 @@ OSO.register_class(
 
 OSO.register_class(
   Repo,
-  fetcher: Repo.method(:fetch),
   fields: {
     name: String,
     org: Relationship.new(
@@ -47,7 +44,6 @@ OSO.register_class(
 
 OSO.register_class(
   Issue,
-  fetcher: Issue.method(:fetch),
   fields: {
     title: String,
     repo: Relationship.new(
@@ -61,7 +57,6 @@ OSO.register_class(
 
 OSO.register_class(
   OrgRole,
-  fetcher: OrgRole.method(:fetch),
   fields: {
     name: String,
     org: Relationship.new(
@@ -81,7 +76,6 @@ OSO.register_class(
 
 OSO.register_class(
   RepoRole,
-  fetcher: RepoRole.method(:fetch),
   fields: {
     name: String,
     repo: Relationship.new(
