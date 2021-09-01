@@ -13,6 +13,12 @@ export class OrgRole {
     @ManyToOne(() => Org, org => org.orgRoles, { eager: true })
     org: Org;
 
+    @Column({ nullable: true })
+    orgId: number;
+
     @ManyToOne(() => User, user => user.orgRoles, { eager: true })
     user: User;
+
+    @Column({ nullable: true })
+    userId: number;
 }

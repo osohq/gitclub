@@ -18,10 +18,10 @@ resource Repo {
 has_role(user: User, role_name, org: Org) if
     role in user.orgRoles and
     role_name = role.role and
-    org = role.org;
+    org.id = role.org.id;
 
 has_relation(org: Org, "parent", repo: Repo) if
-    repo.org = org;
+    repo.org.id = org.id;
 
 allow(user: User, action, resource) if
     has_permission(user, action, resource);

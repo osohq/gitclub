@@ -13,8 +13,11 @@ export class Repo {
     name: string;
 
     @ManyToOne(() => Org, org => org.repositories)
-    @JoinColumn({ name: "organization_id" })
     org: Org;
+
+
+    @Column({ nullable: true })
+    orgId: number;
 
     @OneToMany(() => Issue, issue => issue.repo)
     issues: Issue[]

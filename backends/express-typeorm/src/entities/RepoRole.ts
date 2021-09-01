@@ -13,6 +13,13 @@ export class RepoRole {
     @ManyToOne(() => Repo, repo => repo.repoRoles, { eager: true })
     repo: Repo;
 
+    @Column({ nullable: true })
+    repoId: number;
+
     @ManyToOne(() => User, user => user.repoRoles, { eager: true })
     user: User;
+
+    @Column({ nullable: true })
+    userId: number;
+
 }

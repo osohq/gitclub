@@ -1,6 +1,6 @@
 import { Enforcer, Policy, NotFoundError, ForbiddenError } from "oso";
 import { Field, Relationship } from "oso/dist/src/dataFiltering";
-import { getRepository } from "typeorm";
+import { getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
 import { Org } from "./entities/Org";
 import { OrgRole } from "./entities/OrgRole";
@@ -13,18 +13,18 @@ export const policy = new Policy();
 export async function initOso() {
     // set global exec/combine query functions
     policy.configureDataFiltering({
-        execQuery: execQuery,
         combineQuery: combineQuery,
+        buildQuery: buildQuery,
     });
     function makeMap(obj) {
         return new Map(Object.entries(obj));
     }
     const issueType = new Map();
     issueType.set('id', Number);
-    issueType.set('repo', new Relationship('parent', 'Repo', 'repository_id', 'id'));
+    issueType.set('repo', new Relationship('parent', 'Repo', 'repoId', 'id'));
     policy.registerClass(Issue, {
         types: issueType,
-        buildQuery: fromRepo(getRepository(Issue), 'issue'),
+        execQuery: execFromRepo(Issue),
     });
 
     const orgType = new Map();
@@ -33,7 +33,7 @@ export async function initOso() {
     orgType.set('orgRoles', new Relationship('parent', 'OrgRole', 'id', 'orgId'));
     policy.registerClass(Org, {
         types: orgType,
-        buildQuery: fromRepo(getRepository(Org), 'org'),
+        execQuery: execFromRepo(Org),
     });
 
     const orgRoleFields = {
@@ -44,19 +44,18 @@ export async function initOso() {
     }
     policy.registerClass(OrgRole, {
         types: makeMap(orgRoleFields),
-        buildQuery: fromRepo(getRepository(OrgRole), 'org_role'),
-        execQuery: (q) => q.leftJoinAndSelect("org_role.org", "org").leftJoinAndSelect("org_role.user", "user").getMany()
+        execQuery: execFromRepo(OrgRole),
     });
 
     const repoFiles = {
         id: Number,
         org: new Relationship('parent', 'Org', 'orgId', 'id'),
-        issues: new Relationship('children', 'Issue', 'id', 'repository_id'),
+        issues: new Relationship('children', 'Issue', 'id', 'repoId'),
         repoRoles: new Relationship('parent', 'RepoRole', 'id', 'repoId')
     };
     policy.registerClass(Repo, {
         types: makeMap(repoFiles),
-        buildQuery: fromRepo(getRepository(Repo), 'repo'),
+        execQuery: execFromRepo(Repo),
     });
 
     const repoRoleFields = {
@@ -67,9 +66,7 @@ export async function initOso() {
     };
     policy.registerClass(RepoRole, {
         types: makeMap(repoRoleFields),
-        buildQuery: fromRepo(getRepository(RepoRole), 'repo_role'),
-        execQuery: (q) => q.leftJoinAndSelect("repo_role.repo", "repo").leftJoinAndSelect("repo_role.user", "user").getMany()
-
+        execQuery: execFromRepo(RepoRole),
     });
 
     const userFields = {
@@ -79,7 +76,7 @@ export async function initOso() {
     };
     policy.registerClass(User, {
         types: makeMap(userFields),
-        buildQuery: fromRepo(getRepository(User), 'user'),
+        execQuery: execFromRepo(User),
     });
 
 
@@ -120,50 +117,29 @@ export function errorHandler(err: Error, req, res, next) {
     }
 }
 
-var i = 0;
-const gensym = (tag?: any) => `_${tag}_${i++}`;
-
-
-const fromRepo = (repo: any, name: string) => {
+const buildQuery = (constraints: any) => {
     const constrain = (query: any, c: any) => {
         if (c.field === undefined) {
             c.field = "id"
             c.value = c.kind == 'In' ? c.value.map(v => v.id) : c.value.id
         }
 
-        const sym = gensym(c.field);
-        const varName = `${name}.${c.field}`
-        var clause,
-            rhs,
-            param: any = {};
-
-        if (c.value instanceof Field) {
-            rhs = `${name}.${c.value.field}`;
-        } else {
-            rhs = c.kind == 'In' ? `(:...${sym})` : `:${sym}`;
-            param[sym] = c.value;
-        }
-
-        if (c.kind === 'Eq') clause = `${varName} = ${rhs}`;
-        else if (c.kind === 'Neq') clause = `${varName} <> ${rhs}`;
-        else if (c.kind === 'In') clause = `${varName} IN ${rhs}`;
+        if (c.kind === 'Eq') query[c.field] = c.value
+        else if (c.kind === 'Neq') query[c.field] = Not(c.value)
+        else if (c.kind === 'In') query[c.field] = In(c.value)
         else throw new Error(`Unknown constraint kind: ${c.kind}`);
 
-        return query.andWhere(clause, param);
+        return query;
     };
 
-    return (constraints: any) =>
-        constraints.reduce(constrain, repo.createQueryBuilder(name)).printSql();
+    return constraints.reduce(constrain, {})
 };
 
-const execQuery = (q: any) => {
-    return q.printSql().getMany();
-}
+
 const combineQuery = (a: any, b: any) => {
-    // this is kind of bad but typeorm doesn't give you a lot of tools
-    // for working with queries :(
-    const whereClause = (sql: string) => /WHERE (.*)$/.exec(sql)![1];
-    a = a.orWhere(whereClause(b.getQuery()), b.getParameters());
-    return a.where(`(${whereClause(a.getQuery())})`, a.getParameters());
+    return [a, b]
 };
 
+const execFromRepo = (repo) => {
+    return (q) => getRepository(repo).find(q)
+}

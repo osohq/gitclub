@@ -12,6 +12,8 @@ export class Issue {
     title: string;
 
     @ManyToOne(() => Repo, repo => repo.issues)
-    @JoinColumn({ name: "repository_id" })
     repo: Repo;
+    
+    @Column({ nullable: true })
+    repoId: number;
 }
