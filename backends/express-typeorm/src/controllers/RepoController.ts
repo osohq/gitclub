@@ -8,7 +8,7 @@ export class RepoController {
 
     async all(request: Request) {
         const repoFilter = await request.oso.authorizedResources(request.user, "read", Repo);
-        const repos = await repoFilter.andWhere('repo.org.id = :orgId', { orgId: request.params.id }).getMany();
+        const repos = await repoFilter.find({ repoId: request.params.id, ...repoFilter });
         return repos;
     }
 
