@@ -1,19 +1,15 @@
 import { getRepository } from "typeorm";
-import { NextFunction, Request, Response } from "express";
+import { Request } from "express";
 import { Repo } from "../entities/Repo";
-import { RepoRole } from "../entities/RepoRole";
 
 export class RepoController {
 
     private repoRepository = getRepository(Repo);
-    private repoRoleRepository = getRepository(RepoRole);
 
     async all(request: Request) {
-        return this.repoRepository.find({
-            org: {
-                id: request.params.orgId
-            }
-        });
+        const repoFilter = await request.oso.authorizedResources(request.user, "read", Repo);
+        const repos = await repoFilter.andWhere('repo.org.id = :orgId', { orgId: request.params.id }).getMany();
+        return repos;
     }
 
     async one(request: Request) {

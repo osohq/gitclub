@@ -1,16 +1,27 @@
-
 resource Org {
     permissions = ["read"];
-    roles = ["org_owner", "org_member"];
+    roles = ["owner", "member"];
 
-    "read" if "org_member";
-    "org_member" if "org_owner";
+    "read" if "member";
+    "member" if "owner";
+}
+
+resource Repo {
+    permissions = ["read"];
+    relations = {
+        parent: Org,
+    };
+
+    "read" if "member" on "parent";
 }
 
 has_role(user: User, role_name, org: Org) if
     role in user.orgRoles and
     role_name = role.role and
-    org.id = role.org.id;
+    org = role.org;
+
+has_relation(org: Org, "parent", repo: Repo) if
+    repo.org = org;
 
 allow(user: User, action, resource) if
     has_permission(user, action, resource);

@@ -1,21 +1,19 @@
 import { getRepository } from "typeorm";
 import { Request, Response } from "express";
 import { Org } from "../entities/Org";
+import { Oso } from "oso";
 
 export class OrgController {
     private orgRepository = getRepository(Org);
 
     async all(request: Request) {
-        const allOrgs = await this.orgRepository.find();
-        console.log('authorize read on orgs');
-        const orgs = request.authorizeList("read", allOrgs);
+        const orgs = await request.oso.authorizedResources(request.user, "read", Org).then(q => q.getMany());
         return orgs;
     }
 
     async one(request: Request, response: Response) {
         const org = await this.orgRepository.findOne(request.params.id);
         await request.oso.authorize(request.user, "read", org);
-        console.log("returning data?!?!");
         return org
     }
 
