@@ -20,7 +20,13 @@ module Fetcher
         'Eq'  => ->(query, constraint) { query.where     query_clause[constraint] },
         'In'  => ->(query, constraint) { query.where     query_clause[constraint] },
         'Neq' => ->(query, constraint) { query.where.not query_clause[constraint] }
-      }.freeze
+      }
+
+      @constraint_handlers.default_proc = proc do |k|
+        raise "Unsupported constraint kind: #{k}"
+      end
+
+      @constraint_handlers.freeze
 
       # Create a query from an array of constraints
       def self.build_query(constraints)
