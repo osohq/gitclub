@@ -1,4 +1,4 @@
-import { Enforcer, Policy, NotFoundError, ForbiddenError } from "oso";
+import { Oso } from "oso";
 import { Field, Relationship } from "oso/dist/src/dataFiltering";
 import { getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
@@ -8,7 +8,13 @@ import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
 
-export const policy = new Policy();
+class Forbidden implements Error {
+    name: string;
+    message: string;
+    stack?: string;
+}
+
+export const policy = new Oso();
 
 export async function initOso() {
     // set global exec/combine query functions
@@ -30,7 +36,7 @@ export async function initOso() {
     const orgType = new Map();
     orgType.set('id', Number);
     orgType.set('base_repo_role', String);
-    orgType.set('orgRoles', new Relationship('parent', 'OrgRole', 'id', 'orgId'));
+    orgType.set('orgRoles', new Relationship('chlidren', 'OrgRole', 'id', 'orgId'));
     policy.registerClass(Org, {
         types: orgType,
         execQuery: execFromRepo(Org),
@@ -86,8 +92,14 @@ export async function initOso() {
 
 
 export function addEnforcer(req, resp, next) {
-    const enforcer = new Enforcer(policy);
+    const enforcer = policy;
     req.oso = enforcer;
+    req.oso.authorize = async (actor, action, resource) => {
+        const allowed = await enforcer.isAllowed(actor, action, resource);
+        if (!allowed) {
+            throw new Forbidden();
+        }
+    }
     req.authorizeList = async (action, resourceList: Org[]) => {
         const result = []
         for (const resource of resourceList) {
@@ -107,10 +119,10 @@ export function errorHandler(err: Error, req, res, next) {
         console.log("too late");
         return next(err)
     }
-    if (err instanceof NotFoundError) {
+    if (err instanceof Forbidden) {
         res.status(404).send("Not found")
-    } else if (err instanceof ForbiddenError) {
-        res.status(403).send("Permission denied")
+        // } else if (err instanceof ForbiddenError) {
+        //     res.status(403).send("Permission denied")
     } else {
         console.error(err.stack)
         res.status(500).send('Something broke!')
