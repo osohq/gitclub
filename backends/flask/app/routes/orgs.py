@@ -7,14 +7,14 @@ from .helpers import authorized_resource, authorized_resources, session
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 
 @bp.route("", methods=["GET"])
-@session()
+@session
 def index():
     orgs = current_app.oso.authorized_resources(g.current_user, "read", Org)
     return jsonify([o.repr() for o in orgs])
 
 
 @bp.route("", methods=["POST"])
-@session()
+@session
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
@@ -32,6 +32,6 @@ def create():
 
 
 @bp.route("/<int:org_id>", methods=["GET"])
-@session()
+@session
 def show(org_id):
     return authorized_resource("read", Org, id=org_id).repr()

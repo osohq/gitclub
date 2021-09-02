@@ -7,7 +7,7 @@ bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
 # docs: begin-repo-index
 @bp.route("", methods=["GET"])
-@session()
+@session
 def index(org_id):
     org = authorized_resource("list_repos", Org, id=org_id)
     repos = authorized_resources("read", Repo)
@@ -16,7 +16,7 @@ def index(org_id):
 
 
 @bp.route("", methods=["POST"])
-@session()
+@session
 def create(org_id):
     payload = request.get_json(force=True)
     org = authorized_resource("create_repos", Org, id=org_id)
@@ -27,7 +27,7 @@ def create(org_id):
 
 
 @bp.route("/<int:repo_id>", methods=["GET"])
-@session()
+@session
 def show(org_id, repo_id):
     repo = authorized_resource("read", Repo, id=repo_id)
     return repo.repr()

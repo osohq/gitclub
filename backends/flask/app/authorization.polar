@@ -13,24 +13,28 @@ allow(_: User, "create", _: Org);
 resource(_type: Org, "org", actions, roles) if
     # TODO(gj): might be able to cut down on some repetition with namespacing, e.g., `role_assignments::{create, list, update, delete}`
     actions = ["read", "create_repos", "list_repos",
-               "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
+               "create_role_assignments", "list_role_assignments",
+               "update_role_assignments", "delete_role_assignments"] and
     roles = {
         member: {
             permissions: ["read", "list_repos", "list_role_assignments"],
             implies: ["repo:reader"]
         },
         owner: {
-            permissions: ["create_repos", "create_role_assignments", "update_role_assignments", "delete_role_assignments"],
+            permissions: ["create_repos", "create_role_assignments",
+                          "update_role_assignments", "delete_role_assignments"],
             implies: ["member", "repo:admin"]
         }
     };
 
 resource(_type: Repo, "repo", actions, roles) if
     actions = ["read", "create_issues", "list_issues",
-               "create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"] and
+               "create_role_assignments", "list_role_assignments",
+               "update_role_assignments", "delete_role_assignments"] and
     roles = {
         admin: {
-            permissions: ["create_role_assignments", "list_role_assignments", "update_role_assignments", "delete_role_assignments"],
+            permissions: ["create_role_assignments", "list_role_assignments",
+                          "update_role_assignments", "delete_role_assignments"],
             implies: ["writer"]
         },
         writer: {
@@ -44,15 +48,17 @@ resource(_type: Repo, "repo", actions, roles) if
 
 resource(_type: Issue, "issue", ["read"], {});
 
-parent_child(repo: Repo, _: Issue{repo: repo});
+parent_child(repo: Repo, issue: Issue) if repo = issue.repo;
 
-parent_child(org: Org, _: Repo{org: org});
+parent_child(_: Org{id: id}, _: Repo{org_id: id});
 
 allow(actor, action, resource) if
     role_allows(actor, action, resource);
 
 actor_has_role_for_resource(_: User{org_roles: roles}, name: String, org: Org) if
-    role in roles and role matches { name: name, org: org };
+  role in roles and
+  role matches { name: name, org: org };
 
 actor_has_role_for_resource(_: User{repo_roles: roles}, name: String, repo: Repo) if
-    role in roles and role matches { name: name, repo: repo };
+  role in roles and
+  role matches { name: name, repo: repo };

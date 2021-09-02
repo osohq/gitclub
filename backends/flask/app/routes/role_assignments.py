@@ -9,7 +9,7 @@ bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_i
 
 
 @bp.route("/unassigned_users", methods=["GET"])
-@session()
+@session
 def org_unassigned_users_index(org_id):
     org = authorized_resource("list_role_assignments", Org, id=org_id)
     existing = [assignment.user_id for assignment in org.roles]
@@ -18,7 +18,7 @@ def org_unassigned_users_index(org_id):
 
 
 @bp.route("/role_assignments", methods=["GET"])
-@session()
+@session
 def org_index(org_id):
     org = authorized_resource("list_role_assignments", Org, id=org_id)
     assignments = [
@@ -28,7 +28,7 @@ def org_index(org_id):
     return jsonify(assignments)
 
 @bp.route("/role_assignments", methods=["POST"])
-@session()
+@session
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = authorized_resource("create_role_assignments", Org, id=org_id)
@@ -41,7 +41,7 @@ def org_create(org_id):
 
 
 @bp.route("/role_assignments", methods=["PATCH"])
-@session()
+@session
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = authorized_resource("update_role_assignments", Org, id=org_id)
@@ -55,7 +55,7 @@ def org_update(org_id):
 
 
 @bp.route("/role_assignments", methods=["DELETE"])
-@session()
+@session
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = authorized_resource("delete_role_assignments", Org, id=org_id)
@@ -68,18 +68,20 @@ def org_delete(org_id):
 
 
 @bp.route("/repos/<int:repo_id>/unassigned_users", methods=["GET"])
-@session({Repo: "list_role_assignments", User: "read"})
+@session
 def repo_unassigned_users_index(org_id, repo_id):
     repo = authorized_resource("list_role_assignments", Repo, id=repo_id)
-#    repo = authorized_resource("create_role_assignments", Repo, id=repo.id)
-
     existing = [role.user_id for role in repo.roles]
+    check_permission("create_role_assignments", repo, NotFound)
+
+#    repo = authorized_resource("create_role_assignments", Repo, id=repo_id)
+
     unassigned = g.session.query(User).filter(column("id").notin_(existing))
     return jsonify([u.repr() for u in unassigned])
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["GET"])
-@session({Repo: "list_role_assignments", User: "read"})
+@session
 def repo_index(org_id, repo_id):
     repo = authorized_resource("list_role_assignments", Repo, id=repo_id)
     assignments = [
@@ -90,7 +92,7 @@ def repo_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["POST"])
-@session({Repo: "list_role_assignments", User: "read"})
+@session
 def repo_create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = authorized_resource("create_role_assignments", Repo, id=repo_id)
@@ -103,7 +105,7 @@ def repo_create(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["PATCH"])
-@session({Repo: "list_role_assignments", User: "read"})
+@session
 def repo_update(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = authorized_resource("update_role_assignments", Repo, id=repo_id)
@@ -117,7 +119,7 @@ def repo_update(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["DELETE"])
-@session({Repo: "list_role_assignments", User: "read"})
+@session
 def repo_delete(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = authorized_resource("delete_role_assignments", Repo, id=repo_id)

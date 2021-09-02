@@ -12,7 +12,7 @@ bp = Blueprint(
 
 
 @bp.route("", methods=["GET"])
-@session()
+@session
 def index(org_id, repo_id):
     repo = authorized_resource("list_issues", Repo, id=repo_id)
     issues = authorized_resources("read", Issue, repo=repo)
@@ -20,7 +20,7 @@ def index(org_id, repo_id):
 
 
 @bp.route("", methods=["POST"])
-@session()
+@session
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = authorized_resource("create_issues", Repo, id=repo_id)
@@ -31,7 +31,7 @@ def create(org_id, repo_id):
 
 
 @bp.route("/<int:issue_id>", methods=["GET"])
-@session()
+@session
 def show(org_id, repo_id, issue_id):
     ids = [ i.id for i in current_app.oso.authorized_resources(g.current_user, "read", Issue)]
     if issue_id not in ids:

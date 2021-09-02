@@ -10,21 +10,14 @@ Permissions = Dict[Type[Base], str]
 
 
 # docs: begin-session-decorator
-def session(checked_permissions: Optional[Permissions] = None):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            g.session = current_app.authorized_sessionmaker()
-            if "current_user" not in g:
-                g.current_user = None
-            if g.current_user is not None:
-                user = g.session.get_or_404(User, id=g.current_user.id)
-                g.current_user = user
-            return func(*args, **kwargs)
+def session(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        g.session = current_app.authorized_sessionmaker()
+        return func(*args, **kwargs)
 
-        return wrapper
+    return wrapper
 
-    return decorator
     # docs: end-session-decorator
 
 
