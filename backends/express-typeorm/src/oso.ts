@@ -94,12 +94,12 @@ export async function initOso() {
 export function addEnforcer(req, resp, next) {
     const enforcer = policy;
     req.oso = enforcer;
-    req.oso.authorize = async (actor, action, resource) => {
-        const allowed = await enforcer.isAllowed(actor, action, resource);
-        if (!allowed) {
-            throw new Forbidden();
-        }
-    }
+    // req.oso.authorize = async (actor, action, resource) => {
+    //     const allowed = await enforcer.isAllowed(actor, action, resource);
+    //     if (!allowed) {
+    //         throw new Forbidden();
+    //     }
+    // }
     req.authorizeList = async (action, resourceList: Org[]) => {
         const result = []
         for (const resource of resourceList) {

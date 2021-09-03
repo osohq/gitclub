@@ -6,9 +6,9 @@ export class OrgController {
     private orgRepository = getRepository(Org);
 
     async all(request: Request) {
-        const q = await request.oso.authorizedResources(request.user, "read", Org);
-        console.log(q);
-        const orgs = await this.orgRepository.find(q);
+        const orgs = await request.oso.authorizedResources(request.user, "read", Org);
+        // console.log(q);
+        // const orgs = await this.orgRepository.find(q);
         return orgs;
     }
 

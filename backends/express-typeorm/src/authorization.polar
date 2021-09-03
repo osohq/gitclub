@@ -6,14 +6,14 @@ resource Org {
     "member" if "owner";
 }
 
-resource Repo {
-    permissions = ["read"];
-    relations = {
-        parent: Org,
-    };
+# resource Repo {
+#     permissions = ["read"];
+#     relations = {
+#         parent: Org,
+#     };
 
-    # "read" if "member" on "parent";
-}
+#     # "read" if "member" on "parent";
+# }
 
 has_permission(user: User, "read", repo: Repo) if
     has_relation(org, "parent", repo) and
@@ -24,8 +24,8 @@ has_role(user: User, role_name, org: Org) if
     role_name = role.role and
     org = role.org;
 
-has_relation(org: Org, "parent", repo: Repo) if
-    repo.org = org;
+# has_relation(org: Org, "parent", repo: Repo) if
+#     repo.org = org;
 
 allow(user: User, action, resource) if
     has_permission(user, action, resource);
