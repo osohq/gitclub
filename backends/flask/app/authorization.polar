@@ -48,9 +48,9 @@ resource(_type: Repo, "repo", actions, roles) if
 
 resource(_type: Issue, "issue", ["read"], {});
 
-parent_child(repo: Repo, issue: Issue) if repo = issue.repo;
+parent_child(repo: Repo, _: Issue{repo_id: repo.id});
 
-parent_child(_: Org{id: id}, _: Repo{org_id: id});
+parent_child(org: Org, _: Repo{org_id: org.id});
 
 allow(actor, action, resource) if
     role_allows(actor, action, resource);

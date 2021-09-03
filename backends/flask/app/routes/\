@@ -74,6 +74,7 @@ def repo_unassigned_users_index(org_id, repo_id):
     repo = authorized_resource("create_role_assignments", Repo, id=repo_id)
     existing = [role.user_id for role in repo.roles]
 
+
     unassigned = g.session.query(User).filter(column("id").notin_(existing))
     return jsonify([u.repr() for u in unassigned])
 
