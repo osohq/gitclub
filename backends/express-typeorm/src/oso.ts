@@ -1,5 +1,4 @@
-import { Oso } from "oso";
-import { Field, Relationship } from "oso/dist/src/dataFiltering";
+import { Relationship, Oso, ForbiddenError, NotFoundError } from "oso";
 import { getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
 import { Org } from "./entities/Org";
@@ -8,17 +7,11 @@ import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
 
-class Forbidden implements Error {
-    name: string;
-    message: string;
-    stack?: string;
-}
-
-export const policy = new Oso();
+export const oso = new Oso();
 
 export async function initOso() {
     // set global exec/combine query functions
-    policy.configureDataFiltering({
+    oso.configureDataFiltering({
         combineQuery: combineQuery,
         buildQuery: buildQuery,
     });
@@ -28,7 +21,7 @@ export async function initOso() {
     const issueType = new Map();
     issueType.set('id', Number);
     issueType.set('repo', new Relationship('parent', 'Repo', 'repoId', 'id'));
-    policy.registerClass(Issue, {
+    oso.registerClass(Issue, {
         types: issueType,
         execQuery: execFromRepo(Issue),
     });
@@ -37,7 +30,7 @@ export async function initOso() {
     orgType.set('id', Number);
     orgType.set('base_repo_role', String);
     orgType.set('orgRoles', new Relationship('chlidren', 'OrgRole', 'id', 'orgId'));
-    policy.registerClass(Org, {
+    oso.registerClass(Org, {
         types: orgType,
         execQuery: execFromRepo(Org),
     });
@@ -48,7 +41,7 @@ export async function initOso() {
         org: Org,
         user: User
     }
-    policy.registerClass(OrgRole, {
+    oso.registerClass(OrgRole, {
         types: makeMap(orgRoleFields),
         execQuery: execFromRepo(OrgRole),
     });
@@ -59,7 +52,7 @@ export async function initOso() {
         issues: new Relationship('children', 'Issue', 'id', 'repoId'),
         repoRoles: new Relationship('parent', 'RepoRole', 'id', 'repoId')
     };
-    policy.registerClass(Repo, {
+    oso.registerClass(Repo, {
         types: makeMap(repoFiles),
         execQuery: execFromRepo(Repo),
     });
@@ -70,7 +63,7 @@ export async function initOso() {
         repo: Repo,
         user: User,
     };
-    policy.registerClass(RepoRole, {
+    oso.registerClass(RepoRole, {
         types: makeMap(repoRoleFields),
         execQuery: execFromRepo(RepoRole),
     });
@@ -80,36 +73,17 @@ export async function initOso() {
         repoRoles: new Relationship('children', 'RepoRole', 'id', 'userId'),
         orgRoles: new Relationship('children', 'OrgRole', 'id', 'userId')
     };
-    policy.registerClass(User, {
+    oso.registerClass(User, {
         types: makeMap(userFields),
         execQuery: execFromRepo(User),
     });
 
-
-
-    await policy.loadFile("src/authorization.polar");
+    await oso.loadFile("src/authorization.polar");
 }
 
 
-export function addEnforcer(req, resp, next) {
-    const enforcer = policy;
-    req.oso = enforcer;
-    // req.oso.authorize = async (actor, action, resource) => {
-    //     const allowed = await enforcer.isAllowed(actor, action, resource);
-    //     if (!allowed) {
-    //         throw new Forbidden();
-    //     }
-    // }
-    req.authorizeList = async (action, resourceList: Org[]) => {
-        const result = []
-        for (const resource of resourceList) {
-            const allowed = await policy.isAllowed(req.user, action, resource);
-            if (allowed) {
-                result.push(resource);
-            }
-        }
-        return result
-    }
+export function addEnforcer(req, _resp, next) {
+    req.oso = oso;
     next()
 }
 
@@ -119,10 +93,10 @@ export function errorHandler(err: Error, req, res, next) {
         console.log("too late");
         return next(err)
     }
-    if (err instanceof Forbidden) {
+    if (err instanceof NotFoundError) {
         res.status(404).send("Not found")
-        // } else if (err instanceof ForbiddenError) {
-        //     res.status(403).send("Permission denied")
+    } else if (err instanceof ForbiddenError) {
+        res.status(403).send("Permission denied")
     } else {
         console.error(err.stack)
         res.status(500).send('Something broke!')
