@@ -151,7 +151,7 @@ def init_oso(app, Session: sessionmaker):
         typ.build_query = fetcher(model)
         typ.fields = fields
 
-    Relationship = import_module('polar.data_filtering', 'oso').Relationship
+    Relation = import_module('polar.data_filtering', 'oso').Relation
 
     def combine_query(q, r):
         return q.union(r)
@@ -165,14 +165,14 @@ def init_oso(app, Session: sessionmaker):
         combine_query=combine_query,
         types={
             'name': str,
-            'org': Relationship(
-                kind='parent',
+            'org': Relation(
+                kind='one',
                 other_type='Org',
                 my_field='org_id',
                 other_field='id'
             ),
-            'issues': Relationship(
-                kind='children',
+            'issues': Relation(
+                kind='many',
                 other_type='Issue',
                 my_field='id',
                 other_field='repo_id'
@@ -187,14 +187,14 @@ def init_oso(app, Session: sessionmaker):
         combine_query=combine_query,
         types={
             'name': str,
-            'user': Relationship(
-                kind='parent',
+            'user': Relation(
+                kind='one',
                 other_type='User',
                 my_field='user_id',
                 other_field='id'
             ),
-            'org': Relationship(
-                kind='parent',
+            'org': Relation(
+                kind='one',
                 other_type='Org',
                 my_field='org_id',
                 other_field='id'
@@ -209,14 +209,14 @@ def init_oso(app, Session: sessionmaker):
         combine_query=combine_query,
         types={
             'name': str,
-            'user': Relationship(
-                kind='parent',
+            'user': Relation(
+                kind='one',
                 other_type='User',
                 my_field='user_id',
                 other_field='id'
             ),
-            'repo': Relationship(
-                kind='parent',
+            'repo': Relation(
+                kind='one',
                 other_type='Repo',
                 my_field='repo_id',
                 other_field='id'
@@ -232,8 +232,8 @@ def init_oso(app, Session: sessionmaker):
         combine_query=combine_query,
         types={
             'title': str,
-            'repo': Relationship(
-                kind='parent',
+            'repo': Relation(
+                kind='one',
                 other_type='Repo',
                 my_field='repo_id',
                 other_field='id'
@@ -250,8 +250,8 @@ def init_oso(app, Session: sessionmaker):
             'name': str,
             'base_repo_role': str,
             'billing_address': str,
-            'repos': Relationship(
-                kind='children',
+            'repos': Relation(
+                kind='many',
                 other_type='Repo',
                 my_field='id',
                 other_field='org_id'
@@ -266,14 +266,14 @@ def init_oso(app, Session: sessionmaker):
         combine_query=combine_query,
         types={
             'email': str,
-            'org_roles': Relationship(
-                kind='children',
+            'org_roles': Relation(
+                kind='many',
                 other_type='OrgRole',
                 my_field='id',
                 other_field='user_id'
             ),
-            'repo_roles': Relationship(
-                kind='children',
+            'repo_roles': Relation(
+                kind='many',
                 other_type='RepoRole',
                 my_field='id',
                 other_field='user_id'

@@ -50,7 +50,7 @@ resource(_type: Issue, "issue", ["read"], {});
 
 parent_child(repo: Repo, _: Issue{repo_id: repo.id});
 
-parent_child(org: Org, _: Repo{org_id: org.id});
+parent_child(org: Org, _: Repo{org: org});
 
 allow(actor, action, resource) if
     role_allows(actor, action, resource);
