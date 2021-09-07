@@ -14,7 +14,7 @@ export class RoleController {
     protected resourceName: string;
 
     async unassignedUsers(request: Request) {
-        const resource = await this.resourceRepository.find({
+        const resource = await this.resourceRepository.findOneOrFail({
             id: request.params.id
         });
         await request.oso.authorize(request.user, "list_role_assignments", resource);
@@ -23,23 +23,20 @@ export class RoleController {
                 id: request.params.id
             }
         });
-        const assignedUsers: Set<number> = new Set((await assigned).map(role => role.user.id));
+        const assignedUsers: Set<number> = new Set((await assigned).map(role => role.userId));
         const authorizeFilter = await request.oso.authorizedQuery(request.user, "read", User);
-        return await this.userRepository.find({ id: Not(In(Array.from(assignedUsers.values()))), ...authorizeFilter });
+        return await (await this.userRepository.find(authorizeFilter)).filter(u => !assignedUsers.has(u.id));
     }
 
     async all(request: Request): Promise<Role[]> {
-        const resource = await this.resourceRepository.find({
+        const resource = await this.resourceRepository.findOneOrFail({
             id: request.params.id
         });
         await request.oso.authorize(request.user, "list_role_assignments", resource);
-
-        const userFilter = await request.oso.authorizedQuery(request.user, "read", User);
-        const resourceRoles = await this.resourceRepository.find({
+        const resourceRoles = await this.roleRepository.find({
             [this.resourceName]: {
                 id: request.params.id
             },
-            user: userFilter
         });
         const roles = resourceRoles.map(resRole => {
             return {
@@ -50,32 +47,35 @@ export class RoleController {
         return roles;
     }
 
-    async save(request: Request) {
-        const resource = await this.resourceRepository.find({
+    async save(request: Request, response) {
+        const resource = await this.resourceRepository.findOneOrFail({
             id: request.params.id
         });
         await request.oso.authorize(request.user, "create_role_assignments", resource);
-        const userFilter = await request.oso.authorizedQuery(request.user, "read", User);
-
-        const payload = request.params;
-        await this.roleRepository.create({
+        const payload = request.body;
+        const user = await this.userRepository.findOneOrFail({ id: payload.user_id });
+        await request.oso.authorize(request.user, "read", user);
+        console.log(payload);
+        let role = await this.roleRepository.save({
             [this.resourceName]: {
                 id: request.params.id,
             },
             role: payload.role,
             user: {
-                id: payload.userId,
-                ...userFilter
+                id: payload.user_id
             }
-        })
+        });
+        console.log(role)
+        role = await this.roleRepository.preload(role);
+        console.log(role)
+        return response.status(201).send(role);
     }
 
     async update(request: Request) {
-        const resource = await this.resourceRepository.find({
+        const resource = await this.resourceRepository.findOneOrFail({
             id: request.params.id
         });
         await request.oso.authorize(request.user, "update_role_assignments", resource);
-        const userFilter = await request.oso.authorizedQuery(request.user, "read", User);
 
         const payload = request.body;
         const existingRole = await this.roleRepository.findOneOrFail({
@@ -83,8 +83,7 @@ export class RoleController {
                 id: request.params.id
             },
             user: {
-                id: payload.userId,
-                ...userFilter
+                id: payload.user_id
             }
         });
         existingRole.role = payload.role;
@@ -92,12 +91,11 @@ export class RoleController {
         return existingRole;
     }
 
-    async delete(request: Request) {
-        const resource = await this.resourceRepository.find({
+    async delete(request: Request, response) {
+        const resource = await this.resourceRepository.findOneOrFail({
             id: request.params.id
         });
         await request.oso.authorize(request.user, "delete_role_assignments", resource);
-        const userFilter = await request.oso.authorizedQuery(request.user, "read", User);
 
         const payload = request.body;
         const existingRole = await this.roleRepository.findOneOrFail({
@@ -105,10 +103,10 @@ export class RoleController {
                 id: request.params.id
             },
             user: {
-                id: payload.userId,
-                ...userFilter
+                id: payload.user_id
             }
         });
         await this.roleRepository.delete(existingRole.id);
+        return response.status(204).send(existingRole);
     }
 }

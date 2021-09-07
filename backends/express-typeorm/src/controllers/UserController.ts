@@ -7,7 +7,8 @@ export class UserController {
 
     async one(request: Request) {
         const user = await this.userRepository.findOne(request.params.id);
-        await request.oso.authorize(request.user, "show_profile", user);
+        // TODO: update this to actual read action logic?
+        await request.oso.authorize(request.user, "read_profile", user, { readAction: "read_profile" });
         return user;
     }
 }

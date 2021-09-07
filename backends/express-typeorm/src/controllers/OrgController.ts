@@ -17,9 +17,9 @@ export class OrgController {
     }
 
     async save(request: Request, response: Response) {
-        const org = await this.orgRepository.findOne(request.params.id);
-        await request.oso.authorize(request.user, "update", org);
-        return this.orgRepository.save(request.body);
+        await request.oso.authorize(request.user, "create", new Org(), { checkRead: false });
+        const res = await this.orgRepository.save(request.body);
+        return response.status(201).send(res);
     }
 
     async remove(request: Request) {

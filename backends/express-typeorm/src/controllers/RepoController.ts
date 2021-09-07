@@ -1,33 +1,44 @@
-import { getRepository } from "typeorm";
+import { Brackets, getRepository } from "typeorm";
 import { Request } from "express";
 import { Repo } from "../entities/Repo";
+import { Org } from "../entities/Org";
 
 export class RepoController {
-
+    private orgRepository = getRepository(Org);
     private repoRepository = getRepository(Repo);
 
     async all(request: Request) {
+        const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
+        await request.oso.authorize(request.user, "list_repos", org);
         const repoFilter = await request.oso.authorizedQuery(request.user, "read", Repo);
-        const repos = await this.repoRepository.find({ orgId: request.params.id, ...repoFilter });
+        const repos = await this.repoRepository.createQueryBuilder()
+            .where({ orgId: request.params.orgId })
+            .andWhere(repoFilter)
+            .getMany();
         return repos;
     }
 
     async one(request: Request) {
-        const repo = await this.repoRepository.findOne(request.params.id);
+        const repo = await this.repoRepository.findOneOrFail({
+            id: request.params.id, orgId: request.params.orgId
+        });
         await request.oso.authorize(request.user, "read", repo);
         return repo
     }
 
-    async save(request: Request) {
-        const repo = await this.repoRepository.findOne(request.params.id);
-        await request.oso.authorize(request.user, "update", repo);
-        return this.repoRepository.save(repo, { reload: true, ...request.body });
+    async save(request: Request, response) {
+        const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
+        await request.oso.authorize(request.user, "create_repos", org);
+        const res = await this.repoRepository.save(request.body);
+        return response.status(201).send(res);
     }
 
     async remove(request: Request) {
-        const repoToRemove = await this.repoRepository.findOne(request.params.id);
-        await request.oso.authorize(request.user, "delete", repoToRemove);
-        await this.repoRepository.remove(repoToRemove);
+        const repo = await this.repoRepository.findOneOrFail({
+            id: request.params.id, orgId: request.params.orgId
+        });
+        await request.oso.authorize(request.user, "delete", repo);
+        await this.repoRepository.remove(repo);
     }
 
 }

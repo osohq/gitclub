@@ -8,7 +8,8 @@ export class SessionController {
     async get(request: Request, res: Response) {
         const user = request.user;
         if (user === undefined) {
-            return res.status(401).send(request.session);
+            // TODO: Shouldn't this return 401?
+            return res.status(200).send({});
         }
         return res.status(200).json(user);
     }
@@ -24,12 +25,13 @@ export class SessionController {
             return res.status(404).send('Not found');
         } else {
             request.session.userId = user.id;
+            request.user = user;
         }
         return res.status(201).json(user)
     }
 
     async delete(request: Request, response: Response) {
-        response.locals.userId = undefined;
+        request.session = {};
         return response.status(204).json({})
     }
 }

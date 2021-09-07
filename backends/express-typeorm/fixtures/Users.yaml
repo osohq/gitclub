@@ -6,11 +6,11 @@ items:
     email: "paul@beatles.com"
   ringo:
     email: "ringo@beatles.com"
-  admin:
-    email: "admin@admin.com"
   mike:
     email: "mike@monsters.com"
   sully:
     email: "sully@monsters.com"
   randall:
     email: "randall@monsters.com"
+  admin:
+    email: "admin@admin.com"

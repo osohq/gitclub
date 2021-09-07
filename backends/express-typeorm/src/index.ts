@@ -50,12 +50,12 @@ createConnection().then(async connection => {
     app.use('/users', usersRouter);
     app.use('/session', sessionRouter);
     app.get("/org_role_choices", (req, res) => {
-        res.send(["org_owner", "org_member"])
+        res.send(["member", "owner"])
     });
     app.get("/repo_role_choices", (req, res) => {
-        res.send(["repo_admin", "repo_writer", "repo_reader"])
+        res.send(["admin", "writer", "reader"])
     });
-    app.get("/_reset", async (req, res) =>
+    app.post("/_reset", async (req, res) =>
         await resetData(connection).then(() => {
             console.log('Fixtures are successfully loaded.');
             return res.status(200).send("Data loaded")

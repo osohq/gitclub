@@ -1,5 +1,5 @@
 import { Oso } from "oso";
-import { getRepository, In, Not } from "typeorm";
+import { Brackets, getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
 import { Org } from "./entities/Org";
 import { OrgRole } from "./entities/OrgRole";
@@ -30,16 +30,20 @@ export async function initOso() {
     await oso.loadFile("src/authorization.polar");
 }
 
-
-
 export function addEnforcer(req, resp, next) {
     req.oso = oso;
 
     // stand-ins for actual enforcement + data filtering APIs
-    req.oso.authorize = async (actor, action, resource) => {
-        const allowedRead = await oso.isAllowed(actor, "read", resource);
-        if (!allowedRead) {
-            throw new NotFoundError();
+    req.oso.authorize = async (actor, action, resource, opts) => {
+        if (opts === undefined) {
+            opts = {}
+        }
+        let readAction = opts.readAction || "read";
+        if (opts.checkRead !== false) {
+            const allowedRead = await oso.isAllowed(actor, readAction, resource);
+            if (!allowedRead) {
+                throw new NotFoundError();
+            }
         }
         const allowed = await oso.isAllowed(actor, action, resource);
         if (!allowed) {
@@ -56,9 +60,7 @@ export function addEnforcer(req, resp, next) {
                 result.push(resource);
             }
         }
-        return {
-            id: In(result.map(res => res.id))
-        };
+        return new Brackets(qb => qb.where("id in (:...ids)", { ids: result.map(res => res.id) }));
     }
     req.oso.authorizedResources = async (actor, action, cls) => {
         const r = getRepository(cls);
@@ -76,45 +78,19 @@ export function addEnforcer(req, resp, next) {
 }
 
 export function errorHandler(err: Error, req, res, next) {
-    console.log("in error handler");
     if (res.headersSent) {
         console.log("too late");
         return next(err)
     }
-    if (err instanceof ForbiddenError) {
+    if (err instanceof NotFoundError) {
+        console.error("Not found: ", req.path);
         res.status(404).send("Not found")
     } else if (err instanceof ForbiddenError) {
+        console.error("Forbidden: ", req.path);
         res.status(403).send("Permission denied")
     } else {
         console.error(err)
         console.error(err.stack)
         res.status(500).send('Something broke!')
     }
-}
-
-const buildQuery = (constraints: any) => {
-    const constrain = (query: any, c: any) => {
-        if (c.field === undefined) {
-            c.field = "id"
-            c.value = c.kind == 'In' ? c.value.map(v => v.id) : c.value.id
-        }
-
-        if (c.kind === 'Eq') query[c.field] = c.value
-        else if (c.kind === 'Neq') query[c.field] = Not(c.value)
-        else if (c.kind === 'In') query[c.field] = In(c.value)
-        else throw new Error(`Unknown constraint kind: ${c.kind}`);
-
-        return query;
-    };
-
-    return constraints.reduce(constrain, {})
-};
-
-
-const combineQuery = (a: any, b: any) => {
-    return [a, b]
-};
-
-const execFromRepo = (repo) => {
-    return (q) => getRepository(repo).find(q)
 }

@@ -5,7 +5,8 @@ allow(actor, action, resource) if
 has_permission(_: User, "read", _: User);
 
 # A User can read their own profile.
-has_permission(user: User, "read_profile", user);
+has_permission(user: User, "read_profile", profile: User) if
+    user.id = profile.id;
 
 # Any logged-in user can create a new org.
 has_permission(_: User, "create", _: Org);
