@@ -11,7 +11,7 @@ import { sessionRouter } from "./routes/sessions";
 import * as cors from "cors";
 import { addEnforcer, errorHandler, initOso } from "./oso";
 import { User } from "./entities/User";
-import { OrgRole } from "./entities/OrgRole";
+import { resetData } from "./test";
 
 createConnection().then(async connection => {
 
@@ -55,6 +55,16 @@ createConnection().then(async connection => {
     app.get("/repo_role_choices", (req, res) => {
         res.send(["repo_admin", "repo_writer", "repo_reader"])
     });
+    app.get("/_reset", async (req, res) =>
+        await resetData(connection).then(() => {
+            console.log('Fixtures are successfully loaded.');
+            return res.status(200).send("Data loaded")
+        })
+            .catch(err => {
+                console.log(err);
+                return res.status(500).send(err.toString())
+            })
+    );
     app.use(errorHandler);
 
     await initOso();

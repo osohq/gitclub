@@ -1,4 +1,7 @@
-test: test-flask-sqlalchemy test-rails
+test: test-flask-sqlalchemy test-rails test-express-typeorm
+
+test-express-typeorm: .make.requirements-install
+	BACKEND=express-typeorm pytest
 
 test-flask-sqlalchemy: .make.requirements-install
 	BACKEND=flask-sqlalchemy pytest

@@ -12,7 +12,7 @@ resource Repo {
         parent: Org,
     };
 
-    # "read" if "member" on "parent";
+    "read" if "member" on "parent";
 }
 
 has_permission(user: User, "read", repo: Repo) if
@@ -22,10 +22,10 @@ has_permission(user: User, "read", repo: Repo) if
 has_role(user: User, role_name, org: Org) if
     role in user.orgRoles and
     role_name = role.role and
-    org = role.org;
+    org.id = role.orgId;
 
 has_relation(org: Org, "parent", repo: Repo) if
-    repo.org = org;
+    repo.orgId = org.id;
 
 allow(user: User, action, resource) if
     has_permission(user, action, resource);
