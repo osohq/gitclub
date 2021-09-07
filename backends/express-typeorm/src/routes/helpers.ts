@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
-import { NotFoundError } from "oso";
+
+// TODO: Change this to be from `oso` package instead
+import { NotFoundError } from "../oso";
 
 export function addRoutes(router, routes) {
     // register express routes from defined application routes

@@ -7,20 +7,26 @@ export class IssueController {
     private issueRepository = getRepository(Issue);
 
     async all(request: Request) {
-        return this.issueRepository.find();
+        const issueFilter = await request.oso.authorizedQuery(request.user, "read", Issue);
+        return await this.issueRepository.find({ orgId: request.params.id, repoId: request.params.repoId, ...issueFilter });
     }
 
     async one(request: Request) {
+        const issue = await this.issueRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "read", issue);
         return this.issueRepository.findOne(request.params.id);
     }
 
     async save(request: Request) {
-        return this.issueRepository.save(request.body);
+        const issue = await this.issueRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "update", issue);
+        return this.issueRepository.save(issue, request.body);
     }
 
     async remove(request: Request) {
-        let userToRemove = await this.issueRepository.findOne(request.params.id);
-        await this.issueRepository.remove(userToRemove);
+        const issue = await this.issueRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "delete", issue);
+        await this.issueRepository.remove(issue);
     }
 
 }

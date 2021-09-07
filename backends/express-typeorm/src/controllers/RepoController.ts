@@ -1,7 +1,6 @@
 import { getRepository } from "typeorm";
 import { Request } from "express";
 import { Repo } from "../entities/Repo";
-import { Oso } from "oso";
 
 export class RepoController {
 
@@ -14,16 +13,21 @@ export class RepoController {
     }
 
     async one(request: Request) {
-        return this.repoRepository.findOne(request.params.id);
+        const repo = await this.repoRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "read", repo);
+        return repo
     }
 
     async save(request: Request) {
-        return this.repoRepository.save(request.body);
+        const repo = await this.repoRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "update", repo);
+        return this.repoRepository.save(repo, { reload: true, ...request.body });
     }
 
     async remove(request: Request) {
-        let userToRemove = await this.repoRepository.findOne(request.params.id);
-        await this.repoRepository.remove(userToRemove);
+        const repoToRemove = await this.repoRepository.findOne(request.params.id);
+        await request.oso.authorize(request.user, "delete", repoToRemove);
+        await this.repoRepository.remove(repoToRemove);
     }
 
 }
