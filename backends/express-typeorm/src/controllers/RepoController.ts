@@ -11,11 +11,10 @@ export class RepoController {
         const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
         await request.oso.authorize(request.user, "list_repos", org);
         const repoFilter = await request.oso.authorizedQuery(request.user, "read", Repo);
-        const repos = await this.repoRepository.createQueryBuilder()
-            .where({ orgId: request.params.orgId })
-            .andWhere(repoFilter)
-            .getMany();
-        return repos;
+        const query = this.repoRepository.createQueryBuilder()
+                          .where({ orgId: request.params.orgId })
+                          .andWhere(repoFilter);
+        return await query.getMany();
     }
 
     async one(request: Request) {
