@@ -5,6 +5,18 @@ OSO.register_class(
   User,
   fields: {
     email: String,
+    org_roles: Relation.new(
+      kind: 'many',
+      other_type: OrgRole,
+      my_field: 'id',
+      other_field: 'user_id'
+    ),
+    repo_roles: Relation.new(
+      kind: 'many',
+      other_type: RepoRole,
+      my_field: 'id',
+      other_field: 'user_id'
+    )
   }
 )
 
@@ -93,5 +105,4 @@ OSO.register_class(
   }
 )
 
-OSO.load_file("app/policy/authorization.polar")
-OSO.enable_roles()
+OSO.load_files ["app/policy/authorization.polar"]
