@@ -32,4 +32,6 @@ resource Issue {
   "read" if "admin" on "parent";
 }
 
+# The bug is solved if you change this to:
+# has_relation(repo: Repo, "parent", _: Issue{repo: repo});
 has_relation(repo: Repo, "parent", _: Issue{repoId: repo.id});
