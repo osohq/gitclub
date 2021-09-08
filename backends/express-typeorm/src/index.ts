@@ -9,7 +9,7 @@ import { reposRouter } from "./routes/repos";
 import { orgsRouter } from "./routes/orgs";
 import { sessionRouter } from "./routes/sessions";
 import * as cors from "cors";
-import { addEnforcer, errorHandler, initOso } from "./oso";
+import { addEnforcer, errorHandler, initOso } from "./osoLatest";
 import { User } from "./entities/User";
 import { resetData } from "./test";
 
