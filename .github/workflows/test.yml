@@ -31,6 +31,12 @@ jobs:
           bundler-cache: true
           ruby-version: 2.7
 
+      ## Node
+      - name: Use Node.js 12.20.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.20.0
+
       # Run backend tests
       - name: Flask SQLAlchemy Tests
         working-directory: "tests"
@@ -38,3 +44,6 @@ jobs:
       - name: Rails Tests
         working-directory: "tests"
         run: make test-rails
+      - name: express-typeorm Tests
+        working-directory: "tests"
+        run: make test-express-typeorm
