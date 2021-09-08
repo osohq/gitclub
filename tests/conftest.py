@@ -54,10 +54,12 @@ def xfail_backend(*envs, reason=None):
     env = os.environ.get("BACKEND", "flask-sqlalchemy")
     envs = envs if isinstance(envs, list) else [*envs]
 
-    reason=f"test is expected to fail for backend=`{env}`" + f"\n{reason}" if reason else ""
-    return pytest.mark.xfail(
-        env in envs, reason=reason, strict=True
+    reason = (
+        f"test is expected to fail for backend=`{env}`" + f"\n{reason}"
+        if reason
+        else ""
     )
+    return pytest.mark.xfail(env in envs, reason=reason, strict=True)
 
 
 DIRECTORIES = {
