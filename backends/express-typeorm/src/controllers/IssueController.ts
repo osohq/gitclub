@@ -23,6 +23,7 @@ export class IssueController {
             id: request.params.id,
             repoId: request.params.repoId,
         });
+
         await request.oso.authorize(request.user, "read", issue);
         return issue;
     }
