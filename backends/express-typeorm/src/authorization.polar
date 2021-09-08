@@ -34,4 +34,5 @@ resource Issue {
 
 # The bug is solved if you change this to:
 # has_relation(repo: Repo, "parent", _: Issue{repo: repo});
-has_relation(repo: Repo, "parent", _: Issue{repoId: repo.id});
+has_relation(repo: Repo, "parent", issue: Issue) if
+  repo.id = issue.repoId;
