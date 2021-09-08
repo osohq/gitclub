@@ -89,9 +89,8 @@ export function addEnforcer(req, _resp, next) {
 }
 
 export function errorHandler(err: Error, req, res, next) {
-    console.log("in error handler");
     if (res.headersSent) {
-        console.log("too late");
+        console.error("attempting to handle an error after the headers were sent. This is usually a bug.");
         return next(err)
     }
     if (err instanceof NotFoundError) {

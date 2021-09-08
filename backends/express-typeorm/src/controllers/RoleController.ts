@@ -55,7 +55,6 @@ export class RoleController {
         const payload = request.body;
         const user = await this.userRepository.findOneOrFail({ id: payload.user_id });
         await request.oso.authorize(request.user, "read", user);
-        console.log(payload);
         let role = await this.roleRepository.save({
             [this.resourceName]: {
                 id: request.params.id,
@@ -65,9 +64,7 @@ export class RoleController {
                 id: payload.user_id
             }
         });
-        console.log(role)
         role = await this.roleRepository.preload(role);
-        console.log(role)
         return response.status(201).send(role);
     }
 

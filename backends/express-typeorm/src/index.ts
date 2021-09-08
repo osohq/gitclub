@@ -57,11 +57,10 @@ createConnection().then(async connection => {
     });
     app.post("/_reset", async (req, res) =>
         await resetData(connection).then(() => {
-            console.log('Fixtures are successfully loaded.');
             return res.status(200).send("Data loaded")
         })
             .catch(err => {
-                console.log(err);
+                console.error(err);
                 return res.status(500).send(err.toString())
             })
     );
@@ -74,5 +73,5 @@ createConnection().then(async connection => {
 
     console.log("Express server has started on port 5000.");
 
-}).catch(error => console.log(error));
+}).catch(error => console.error(error));
 
