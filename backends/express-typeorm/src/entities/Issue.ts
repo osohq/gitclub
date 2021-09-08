@@ -11,9 +11,9 @@ export class Issue {
     @Column()
     title: string;
 
-    @ManyToOne(() => Repo, repo => repo.issues)
+    @ManyToOne(() => Repo, repo => repo.issues, { eager: true })
     repo: Repo;
-    
+
     @Column({ nullable: true })
     repoId: number;
 }

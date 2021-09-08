@@ -12,7 +12,7 @@ export class Repo {
     @Column()
     name: string;
 
-    @ManyToOne(() => Org, org => org.repositories)
+    @ManyToOne(() => Org, org => org.repositories, { eager: true })
     org: Org;
 
 

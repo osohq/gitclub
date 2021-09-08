@@ -10,6 +10,8 @@ has_permission(_: User{id: id}, "read_profile", _:User{id: id});
 # Any logged-in user can create a new org.
 has_permission(_: User, "create", _: Org);
 
+actor User {}
+
 resource Org {
   roles = ["owner", "member"];
   permissions = [
@@ -75,10 +77,11 @@ has_role(user: User, name: String, repo: Repo) if
 has_relation(org: Org, "parent", _: Repo{org: org});
 
 resource Issue {
-  permissions = ["read"];
-  relations = { parent: Repo };
+  permissions = ["issue_read"];
+  relations = { issue_parent: Repo };
 
-  "read" if "reader" on "parent";
+  "issue_read" if "reader" on "issue_parent";
 }
 
-has_relation(repo: Repo, "parent", _: Issue{repoId: repo.id});
+has_relation(repo: Repo, "issue_parent", issue: Issue) if
+  issue.repoId = repo.id;

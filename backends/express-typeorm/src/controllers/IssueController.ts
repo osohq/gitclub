@@ -24,7 +24,7 @@ export class IssueController {
             repoId: request.params.repoId,
         });
 
-        await request.oso.authorize(request.user, "read", issue);
+        await request.oso.authorize(request.user, "issue_read", issue, { checkRead: false });
         return issue;
     }
 
