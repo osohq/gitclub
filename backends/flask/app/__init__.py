@@ -3,7 +3,7 @@ import functools
 from flask import g, Flask, session as flask_session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
-from sqlalchemy import create_engine, event, inspect
+from sqlalchemy import create_engine, event, inspect, and_, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.util import AliasedClass
@@ -12,11 +12,9 @@ from sqlalchemy.sql import expression as sql
 from .models import Base, User, Org, Repo, Issue, OrgRole, RepoRole
 from .fixtures import load_fixture_data
 
-from oso import Oso, Variable
+from oso import Oso, OsoError
 
 from importlib import import_module
-
-TypeConstraint = import_module('polar.partial', 'oso').TypeConstraint
 
 from typing import Any, Callable, Dict, Optional, Type
 
@@ -71,23 +69,17 @@ def create_app(db_path=None, load_fixtures=False):
         load_fixture_data(Session())
         return {}
 
-
     # Init Oso.
     init_oso(app, Session)
 
     # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
-    # docs: begin-configure
-#    app.oso.roles.synchronize_data()
-    # docs: end-configure
-
     # optionally load fixture data
     if load_fixtures:
         load_fixture_data(Session())
 
     app.authorized_sessionmaker = Session
-
 
     @app.before_request
     def set_current_user_and_session():
@@ -130,33 +122,39 @@ def init_oso(app, Session: sessionmaker):
     oso = Oso()
 
     def fetcher(model):
-        def constrain(query, con):
+        def filter(con):
             if con.field is not None:
                 field = getattr(model, con.field)
                 value = con.value
             else:
                 field = model.id
                 value = con.value.id
-                
-            if con.kind == 'Eq':
-                filter = field == value
-            elif con.kind == 'In':
-                filter = field.in_(value)
-            return query.filter(filter)
 
-        return lambda cs: reduce(constrain, cs, Session().query(model)).distinct()
+            if con.kind == "Eq":
+                return field == value
+            elif con.kind == "In":
+                return field.in_(value)
+            else:
+                raise OsoError(f"Unsupported constraint kind: {con.kind}")
+
+        def go(cs):
+            pred = and_(*[filter(c) for c in cs])
+            return Session().query(model).filter(pred)
+
+        return go
 
     def update(model, fields):
         typ = oso.host.types[model]
         typ.build_query = fetcher(model)
         typ.fields = fields
 
-    Relation = import_module('polar.data_filtering', 'oso').Relation
+    Relation = import_module("polar.data_filtering", "oso").Relation
 
     def combine_query(q, r):
         return q.union(r)
+
     def exec_query(q):
-        return q.all()
+        return q.distinct().all()
 
     oso.register_class(
         Repo,
@@ -164,20 +162,14 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'name': str,
-            'org': Relation(
-                kind='one',
-                other_type='Org',
-                my_field='org_id',
-                other_field='id'
+            "name": str,
+            "org": Relation(
+                kind="one", other_type="Org", my_field="org_id", other_field="id"
             ),
-            'issues': Relation(
-                kind='many',
-                other_type='Issue',
-                my_field='id',
-                other_field='repo_id'
-            )
-        }
+            "issues": Relation(
+                kind="many", other_type="Issue", my_field="id", other_field="repo_id"
+            ),
+        },
     )
 
     oso.register_class(
@@ -186,20 +178,14 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'name': str,
-            'user': Relation(
-                kind='one',
-                other_type='User',
-                my_field='user_id',
-                other_field='id'
+            "name": str,
+            "user": Relation(
+                kind="one", other_type="User", my_field="user_id", other_field="id"
             ),
-            'org': Relation(
-                kind='one',
-                other_type='Org',
-                my_field='org_id',
-                other_field='id'
-            )
-        }
+            "org": Relation(
+                kind="one", other_type="Org", my_field="org_id", other_field="id"
+            ),
+        },
     )
 
     oso.register_class(
@@ -208,22 +194,15 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'name': str,
-            'user': Relation(
-                kind='one',
-                other_type='User',
-                my_field='user_id',
-                other_field='id'
+            "name": str,
+            "user": Relation(
+                kind="one", other_type="User", my_field="user_id", other_field="id"
             ),
-            'repo': Relation(
-                kind='one',
-                other_type='Repo',
-                my_field='repo_id',
-                other_field='id'
-            )
-        }
+            "repo": Relation(
+                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
+            ),
+        },
     )
-
 
     oso.register_class(
         Issue,
@@ -231,14 +210,11 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'title': str,
-            'repo': Relation(
-                kind='one',
-                other_type='Repo',
-                my_field='repo_id',
-                other_field='id'
-            )
-        }
+            "title": str,
+            "repo": Relation(
+                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
+            ),
+        },
     )
 
     oso.register_class(
@@ -247,16 +223,13 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'name': str,
-            'base_repo_role': str,
-            'billing_address': str,
-            'repos': Relation(
-                kind='many',
-                other_type='Repo',
-                my_field='id',
-                other_field='org_id'
-            )
-        }
+            "name": str,
+            "base_repo_role": str,
+            "billing_address": str,
+            "repos": Relation(
+                kind="many", other_type="Repo", my_field="id", other_field="org_id"
+            ),
+        },
     )
 
     oso.register_class(
@@ -265,27 +238,18 @@ def init_oso(app, Session: sessionmaker):
         exec_query=exec_query,
         combine_query=combine_query,
         types={
-            'email': str,
-            'org_roles': Relation(
-                kind='many',
-                other_type='OrgRole',
-                my_field='id',
-                other_field='user_id'
+            "email": str,
+            "org_roles": Relation(
+                kind="many", other_type="OrgRole", my_field="id", other_field="user_id"
             ),
-            'repo_roles': Relation(
-                kind='many',
-                other_type='RepoRole',
-                my_field='id',
-                other_field='user_id'
+            "repo_roles": Relation(
+                kind="many", other_type="RepoRole", my_field="id", other_field="user_id"
             ),
-        }
+        },
     )
 
     # Load authorization policy.
     oso.load_file("app/authorization.polar")
-
-    # Enable roles features.
-    oso.enable_roles()
 
     # Attach Oso instance to Flask application.
     app.oso = oso

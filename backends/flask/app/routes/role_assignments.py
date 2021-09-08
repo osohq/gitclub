@@ -21,11 +21,9 @@ def org_unassigned_users_index(org_id):
 @session
 def org_index(org_id):
     org = authorized_resource("list_role_assignments", Org, id=org_id)
-    assignments = [
-        {"user": role.user.repr(), "role": role.name}
-        for role in org.roles
-    ]
+    assignments = [{"user": role.user.repr(), "role": role.name} for role in org.roles]
     return jsonify(assignments)
+
 
 @bp.route("/role_assignments", methods=["POST"])
 @session
@@ -82,10 +80,7 @@ def repo_unassigned_users_index(org_id, repo_id):
 @session
 def repo_index(org_id, repo_id):
     repo = authorized_resource("list_role_assignments", Repo, id=repo_id)
-    assignments = [
-        {"user": role.user.repr(), "role": role.name}
-        for role in repo.roles
-    ]
+    assignments = [{"user": role.user.repr(), "role": role.name} for role in repo.roles]
     return jsonify(assignments)
 
 

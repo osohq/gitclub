@@ -33,7 +33,10 @@ def create(org_id, repo_id):
 @bp.route("/<int:issue_id>", methods=["GET"])
 @session
 def show(org_id, repo_id, issue_id):
-    ids = [ i.id for i in current_app.oso.authorized_resources(g.current_user, "read", Issue)]
+    ids = [
+        i.id
+        for i in current_app.oso.authorized_resources(g.current_user, "read", Issue)
+    ]
     if issue_id not in ids:
         raise NotFound
     return authorized_resource("read", Issue, id=issue_id).repr()

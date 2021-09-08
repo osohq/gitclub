@@ -5,14 +5,13 @@ from .helpers import authorized_resource, authorized_resources, session, distinc
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
-# docs: begin-repo-index
+
 @bp.route("", methods=["GET"])
 @session
 def index(org_id):
     org = authorized_resource("list_repos", Org, id=org_id)
     repos = authorized_resources("read", Repo)
     return jsonify(distinct([repo.repr() for repo in repos]))
-    # docs: end-repo-index
 
 
 @bp.route("", methods=["POST"])

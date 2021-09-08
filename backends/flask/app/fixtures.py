@@ -6,14 +6,15 @@ mike_email = "mike@monsters.com"
 ringo_email = "ringo@beatles.com"
 
 
-
 def load_fixture_data(session):
     def org_role(user, org, name):
         role = OrgRole(user=user, org=org, name=name)
         session.add(role)
+
     def repo_role(user, repo, name):
         role = RepoRole(user=user, repo=repo, name=name)
         session.add(role)
+
     #########
     # Users #
     #########

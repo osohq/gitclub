@@ -66,16 +66,19 @@ class Issue(Base):
     def repr(self):
         return {"id": self.id, "title": self.title}
 
+
 class OrgRole(Base):
     __tablename__ = "org_roles"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", backref="org_roles", lazy=True)
-    org = relationship("Org", backref="roles", lazy = True)
+    org = relationship("Org", backref="roles", lazy=True)
     org_id = Column(Integer, ForeignKey("orgs.id"), nullable=False)
     name = Column(String, index=True)
+
     def repr(self):
         return {"user_id": self.user_id, "org_id": self.org_id, "name": self.name}
+
 
 class RepoRole(Base):
     __tablename__ = "repo_roles"
@@ -85,5 +88,6 @@ class RepoRole(Base):
     repo = relationship("Repo", backref="roles", lazy=True)
     user = relationship("User", backref="repo_roles", lazy=True)
     name = Column(String, index=True)
+
     def repr(self):
         return {"user_id": self.user_id, "repo_id": self.repo_id, "name": self.name}

@@ -6,6 +6,7 @@ from .helpers import authorized_resource, authorized_resources, session
 
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 
+
 @bp.route("", methods=["GET"])
 @session
 def index():
@@ -24,7 +25,7 @@ def create():
     g.session.add(org)
 
     org = g.session.get_or_404(Org, **payload)
-    role = OrgRole(org_id=org.id, user_id=g.current_user.id, name='owner')
+    role = OrgRole(org_id=org.id, user_id=g.current_user.id, name="owner")
     g.session.add(role)
     g.session.flush()
     g.session.commit()

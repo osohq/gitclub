@@ -1,64 +1,85 @@
+allow(actor, action, resource) if
+  has_permission(actor, action, resource);
+
 # Users can see each other.
-allow(_: User, "read", _: User);
+has_permission(_: User, "read", _: User);
 
-# Users can see their own profiles
-allow(user: User, "read_profile", user);
-
+# A User can read their own profile.
+has_permission(_: User{id: id}, "read_profile", _:User{id: id});
 
 # Any logged-in user can create a new org.
-allow(_: User, "create", _: Org);
+has_permission(_: User, "create", _: Org);
 
-# ROLES
+actor User {}
 
-resource(_type: Org, "org", actions, roles) if
-    # TODO(gj): might be able to cut down on some repetition with namespacing, e.g., `role_assignments::{create, list, update, delete}`
-    actions = ["read", "create_repos", "list_repos",
-               "create_role_assignments", "list_role_assignments",
-               "update_role_assignments", "delete_role_assignments"] and
-    roles = {
-        member: {
-            permissions: ["read", "list_repos", "list_role_assignments"],
-            implies: ["repo:reader"]
-        },
-        owner: {
-            permissions: ["create_repos", "create_role_assignments",
-                          "update_role_assignments", "delete_role_assignments"],
-            implies: ["member", "repo:admin"]
-        }
-    };
+resource Org {
+  roles = ["owner", "member"];
+  permissions = [
+    "read",
+    "create_repos",
+    "list_repos",
+    "create_role_assignments",
+    "list_role_assignments",
+    "update_role_assignments",
+    "delete_role_assignments",
+  ];
 
-resource(_type: Repo, "repo", actions, roles) if
-    actions = ["read", "create_issues", "list_issues",
-               "create_role_assignments", "list_role_assignments",
-               "update_role_assignments", "delete_role_assignments"] and
-    roles = {
-        admin: {
-            permissions: ["create_role_assignments", "list_role_assignments",
-                          "update_role_assignments", "delete_role_assignments"],
-            implies: ["writer"]
-        },
-        writer: {
-            permissions: ["create_issues"],
-            implies: ["reader"]
-        },
-        reader: {
-            permissions: ["read", "list_issues", "issue:read"]
-        }
-    };
+  "read" if "member";
+  "list_repos" if "member";
+  "list_role_assignments" if "member";
 
-resource(_type: Issue, "issue", ["read"], {});
+  "create_repos" if "owner";
+  "create_role_assignments" if "owner";
+  "update_role_assignments" if "owner";
+  "delete_role_assignments" if "owner";
 
-parent_child(repo: Repo, _: Issue{repo_id: repo.id});
+  "member" if "owner";
+}
 
-parent_child(org: Org, _: Repo{org: org});
+has_role(user: User, name: String, org: Org) if
+    role in user.org_roles and
+    role matches { name: name, org: org };
 
-allow(actor, action, resource) if
-    role_allows(actor, action, resource);
+resource Repo {
+  roles = ["admin", "writer", "reader"];
+  permissions = [
+    "read",
+    "create_issues",
+    "list_issues",
+    "create_role_assignments",
+    "list_role_assignments",
+    "update_role_assignments",
+    "delete_role_assignments",
+  ];
+  relations = { parent: Org };
 
-actor_has_role_for_resource(_: User{org_roles: roles}, name: String, org: Org) if
-  role in roles and
-  role matches { name: name, org: org };
+  "create_role_assignments" if "admin";
+  "list_role_assignments" if "admin";
+  "update_role_assignments" if "admin";
+  "delete_role_assignments" if "admin";
 
-actor_has_role_for_resource(_: User{repo_roles: roles}, name: String, repo: Repo) if
-  role in roles and
-  role matches { name: name, repo: repo };
+  "create_issues" if "writer";
+
+  "read" if "reader";
+  "list_issues" if "reader";
+
+  "admin" if "owner" on "parent";
+  "reader" if "member" on "parent";
+
+  "writer" if "admin";
+  "reader" if "writer";
+}
+
+has_role(user: User, name: String, repo: Repo) if
+    role in user.repo_roles and
+    role matches { name: name, repo: repo };
+
+has_relation(org: Org, "parent", repo: Repo) if repo.org = org;
+
+resource Issue {
+  permissions = ["read"];
+  relations = { parent: Repo };
+  "read" if "reader" on "parent";
+}
+
+has_relation(repo: Repo, "parent", issue: Issue) if issue.repo = repo;

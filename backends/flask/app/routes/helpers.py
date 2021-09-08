@@ -39,6 +39,7 @@ def authorized_resources(actn: str, cls: Type[Any], **kwargs):
         raise NotFound
     return [rsrc for rsrc in query.filter_by(**kwargs)]
 
+
 # docs: begin-get-resource-by
 def get_or_404(self, cls: Type[Any], **kwargs):
     resource = self.query(cls).filter_by(**kwargs).one_or_none()
@@ -46,8 +47,10 @@ def get_or_404(self, cls: Type[Any], **kwargs):
         raise NotFound
     return resource
 
+
 def distinct(elems):
     return [elem for i, elem in enumerate(elems) if elem not in elems[:i]]
+
 
 Session.get_or_404 = get_or_404  # type: ignore
 # docs: end-get-resource-by
