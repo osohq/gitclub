@@ -9,9 +9,11 @@ import { reposRouter } from "./routes/repos";
 import { orgsRouter } from "./routes/orgs";
 import { sessionRouter } from "./routes/sessions";
 import * as cors from "cors";
-import { addEnforcer, errorHandler, initOso } from "./oso";
+import { addEnforcer, errorHandler, initOso, oso } from "./oso";
 import { User } from "./entities/User";
 import { resetData } from "./test";
+import { Repo } from "./entities/Repo";
+import { Issue } from "./entities/Issue";
 
 createConnection().then(async connection => {
 
@@ -68,7 +70,7 @@ createConnection().then(async connection => {
     app.use(errorHandler);
 
     await initOso();
-
+    await reproIssue();
     // start express server
     app.listen(5000, '0.0.0.0');
 
@@ -76,3 +78,12 @@ createConnection().then(async connection => {
 
 }).catch(error => console.log(error));
 
+
+async function reproIssue() {
+    const user = await getRepository(User).findOneOrFail({ where: { email: "john@beatles.com" }, relations: ["orgRoles", "repoRoles"] });
+    const issue = await getRepository(Issue).findOneOrFail({ id: 1 });
+    const allowed = await oso.isAllowed(user, "read", issue);
+    if (!allowed) {
+        throw new Error("bug reproduced");
+    }
+}
