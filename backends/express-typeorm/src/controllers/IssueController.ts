@@ -19,11 +19,15 @@ export class IssueController {
     }
 
     async one(request: Request) {
+      console.log('one');
         const issue = await this.issueRepository.findOneOrFail({
             id: request.params.id,
             repoId: request.params.repoId,
         });
+
         await request.oso.authorize(request.user, "read", issue);
+//        await request.oso.authorize(request.user, "read", issue.repo);
+ //     console.log('authd', request.user, "read", issue);
         return issue;
     }
 

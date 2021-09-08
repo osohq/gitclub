@@ -1,0 +1,22 @@
+entity: RepoRole
+items:
+  role1:
+    user: "@john"
+    repo: "@abbey_road"
+    role: "admin"
+  role2:
+    user: "@paul"
+    repo: "@abbey_road"
+    role: "reader"
+  role3:
+    user: "@ringo"
+    repo: "@abbey_road"
+    role: "writer"
+  role4:
+    user: "@mike"
+    repo: "@paperwork"
+    role: "admin"
+  role5:
+    user: "@sully"
+    repo: "@paperwork"
+    role: "reader"

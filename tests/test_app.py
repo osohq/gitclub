@@ -181,7 +181,7 @@ def test_repo_create(test_client):
     assert resp.status_code == 404
 
 
-@xfail_backend("express-typeorm", reason="potential grounding bug")
+#@xfail_backend("express-typeorm", reason="potential grounding bug")
 def test_repo_show(test_client):
     abbey_road = "/orgs/1/repos/1"
     resp = test_client.get(abbey_road)
@@ -200,7 +200,7 @@ def test_repo_show(test_client):
     assert resp.status_code == 404
 
 
-@xfail_backend("express-typeorm", reason="potential grounding bug")
+#@xfail_backend("express-typeorm", reason="potential grounding bug")
 def test_issue_index(test_client):
     abbey_road_issues = "/orgs/1/repos/1/issues"
     resp = test_client.get(abbey_road_issues)
@@ -220,7 +220,7 @@ def test_issue_index(test_client):
     assert resp.status_code == 404
 
 
-@xfail_backend("express-typeorm", reason="potential grounding bug")
+#@xfail_backend("express-typeorm", reason="potential grounding bug")
 def test_issue_create(test_client):
     issue_params = {"title": "new issue"}
     abbey_road_issues = "/orgs/1/repos/1/issues"
@@ -239,7 +239,7 @@ def test_issue_create(test_client):
     assert resp.status_code == 404
 
 
-@xfail_backend("express-typeorm", reason="potential grounding bug")
+#@xfail_backend("express-typeorm", reason="potential grounding bug")
 def test_issue_show(test_client):
     too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
     resp = test_client.get(too_much_critical_acclaim)
