@@ -1,4 +1,8 @@
-test: test-flask-sqlalchemy test-rails
+test: test-flask test-flask-sqlalchemy test-rails
+
+# TODO better name
+test-flask: .make.requirements-install
+	BACKEND=flask pytest
 
 test-flask-sqlalchemy: .make.requirements-install
 	BACKEND=flask-sqlalchemy pytest
