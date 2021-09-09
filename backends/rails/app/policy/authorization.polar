@@ -40,12 +40,6 @@ has_role(user: User, name: String, org: Org) if
     role in user.org_roles and
     role matches { name: name, org: org };
 
-resource String {
-  roles = ["foo"];
-  permissions = ["bar"];
-  "bar" if "foo";
-}
-has_role(_, "foo", _: String);
 resource Repo {
   roles = ["admin", "writer", "reader"];
   permissions = [
