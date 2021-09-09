@@ -119,48 +119,44 @@ def create_app(db_path=None, load_fixtures=False):
 # docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
-    oso = Oso()
+    oso = Oso(forbidden_error=Forbidden, not_found_error=NotFound)
 
-    def fetcher(model):
-        def filter(con):
-            if con.field is not None:
-                field = getattr(model, con.field)
-                value = con.value
+    def query_builder(model):
+        # A "filter" is an object returned from Oso that describes
+        # a condition that must hold on an object. This turns an
+        # Oso filter into one that can be applied to an SQLAlchemy
+        # query.
+        def to_sqlalchemy_filter(filter):
+            if filter.field is not None:
+                field = getattr(model, filter.field)
+                value = filter.value
             else:
                 field = model.id
-                value = con.value.id
+                value = filter.value.id
 
-            if con.kind == "Eq":
+            if filter.kind == "Eq":
                 return field == value
-            elif con.kind == "In":
+            elif filter.kind == "In":
                 return field.in_(value)
             else:
-                raise OsoError(f"Unsupported constraint kind: {con.kind}")
+                raise OsoError(f"Unsupported filter kind: {filter.kind}")
 
-        def go(cs):
-            pred = and_(*[filter(c) for c in cs])
-            return Session().query(model).filter(pred)
+        # Turn a collection of Oso filters into one SQLAlchemy filter.
+        def combine_filters(filters):
+            filter = and_(*[to_sqlalchemy_filter(f) for f in filters])
+            return Session().query(model).filter(filter)
 
-        return go
-
-    def update(model, fields):
-        typ = oso.host.types[model]
-        typ.build_query = fetcher(model)
-        typ.fields = fields
+        return combine_filters
 
     Relation = import_module("polar.data_filtering", "oso").Relation
 
-    def combine_query(q, r):
-        return q.union(r)
-
-    def exec_query(q):
-        return q.distinct().all()
+    oso.set_data_filtering_query_defaults(
+        combine_query=lambda q, r: q.union(r), exec_query=lambda q: q.distinct().all()
+    )
 
     oso.register_class(
         Repo,
-        build_query=fetcher(Repo),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(Repo),
         types={
             "name": str,
             "org": Relation(
@@ -174,9 +170,7 @@ def init_oso(app, Session: sessionmaker):
 
     oso.register_class(
         OrgRole,
-        build_query=fetcher(OrgRole),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(OrgRole),
         types={
             "name": str,
             "user": Relation(
@@ -190,9 +184,7 @@ def init_oso(app, Session: sessionmaker):
 
     oso.register_class(
         RepoRole,
-        build_query=fetcher(RepoRole),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(RepoRole),
         types={
             "name": str,
             "user": Relation(
@@ -206,9 +198,7 @@ def init_oso(app, Session: sessionmaker):
 
     oso.register_class(
         Issue,
-        build_query=fetcher(Issue),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(Issue),
         types={
             "title": str,
             "repo": Relation(
@@ -219,9 +209,7 @@ def init_oso(app, Session: sessionmaker):
 
     oso.register_class(
         Org,
-        build_query=fetcher(Org),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(Org),
         types={
             "name": str,
             "base_repo_role": str,
@@ -234,9 +222,7 @@ def init_oso(app, Session: sessionmaker):
 
     oso.register_class(
         User,
-        build_query=fetcher(User),
-        exec_query=exec_query,
-        combine_query=combine_query,
+        build_query=query_builder(User),
         types={
             "email": str,
             "org_roles": Relation(
@@ -249,7 +235,7 @@ def init_oso(app, Session: sessionmaker):
     )
 
     # Load authorization policy.
-    oso.load_file("app/authorization.polar")
+    oso.load_files(["app/authorization.polar"])
 
     # Attach Oso instance to Flask application.
     app.oso = oso

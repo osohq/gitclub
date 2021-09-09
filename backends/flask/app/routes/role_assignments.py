@@ -3,7 +3,7 @@ from sqlalchemy import column
 from werkzeug.exceptions import NotFound
 
 from ..models import Org, Repo, User, OrgRole, RepoRole
-from .helpers import check_permission, session, authorized_resource
+from .helpers import session, authorized_resource
 
 bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_id>")
 
@@ -45,7 +45,7 @@ def org_update(org_id):
     org = authorized_resource("update_role_assignments", Org, id=org_id)
     user = authorized_resource("read", User, id=payload["user_id"])
 
-    role = g.session.get_or_404(OrgRole, user_id=payload["user_id"], org_id=org_id)
+    role = g.session.get_or_404(OrgRole, user=user, org=org)
     role.name = payload["role"]
     g.session.add(role)
     g.session.commit()
@@ -59,7 +59,7 @@ def org_delete(org_id):
     org = authorized_resource("delete_role_assignments", Org, id=org_id)
     user = authorized_resource("read", User, id=payload["user_id"])
 
-    role = g.session.get_or_404(OrgRole, user_id=payload["user_id"], org_id=org_id)
+    role = g.session.get_or_404(OrgRole, user=user, org=org)
     g.session.delete(role)
     g.session.commit()
     return current_app.response_class(status=204, mimetype="application/json")

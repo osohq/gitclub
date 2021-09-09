@@ -19,8 +19,7 @@ def index():
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    if not current_app.oso.is_allowed(g.current_user, "create", org):
-        raise Forbidden
+    current_app.oso.authorize(g.current_user, "create", org, check_read=False)
 
     g.session.add(org)
 

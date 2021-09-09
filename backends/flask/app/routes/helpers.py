@@ -21,11 +21,6 @@ def session(func):
     # docs: end-session-decorator
 
 
-def check_permission(action: str, resource: Base, err=Forbidden):
-    if not current_app.oso.is_allowed(g.current_user, action, resource):
-        raise err
-
-
 def authorized_resource(actn: str, cls: Type[Any], **kwargs):
     rsrcs = authorized_resources(actn, cls, **kwargs)
     if len(rsrcs) == 0:
