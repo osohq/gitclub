@@ -13,8 +13,7 @@ from .models import Base, User, Org, Repo, Issue, OrgRole, RepoRole
 from .fixtures import load_fixture_data
 
 from oso import Oso, OsoError
-
-from importlib import import_module
+from polar.data_filtering import Relation
 
 from typing import Any, Callable, Dict, Optional, Type
 
@@ -147,8 +146,6 @@ def init_oso(app, Session: sessionmaker):
             return Session().query(model).filter(filter)
 
         return combine_filters
-
-    Relation = import_module("polar.data_filtering", "oso").Relation
 
     oso.set_data_filtering_query_defaults(
         combine_query=lambda q, r: q.union(r), exec_query=lambda q: q.distinct().all()
