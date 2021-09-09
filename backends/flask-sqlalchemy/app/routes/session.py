@@ -13,7 +13,7 @@ def show():
 
 
 @bp.route("", methods=["POST"])
-@session(checked_permissions=None)
+@session
 def create():
     payload = request.get_json(force=True)
     if "email" not in payload:

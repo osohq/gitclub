@@ -3,15 +3,23 @@ import functools
 from flask import g, Flask, session as flask_session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, event, inspect, and_, text
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm.query import Query
+from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql import expression as sql
 
-from .models import Base, User
+from .models import Base, User, Org, Repo, Issue, OrgRole, RepoRole
 from .fixtures import load_fixture_data
 
-from sqlalchemy_oso import authorized_sessionmaker, SQLAlchemyOso
+from oso import Oso, OsoError
+from polar.data_filtering import Relation
 
+from typing import Any, Callable, Dict, Optional, Type
 
+from functools import reduce
+
+# from sqlalchemy-oso
 def create_app(db_path=None, load_fixtures=False):
     from . import routes
 
@@ -49,18 +57,16 @@ def create_app(db_path=None, load_fixtures=False):
     def handle_not_found(*_):
         return {"message": "Not Found"}, 404
 
+    # Init session factory that SQLAlchemyOso will use to manage role data.
+    Session = sessionmaker(bind=engine)
+
     @app.route("/_reset", methods=["POST"])
     def reset_data():
         # Called during tests to reset the database
-        session = Session()
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
-        app.oso.roles.synchronize_data()
-        load_fixture_data(session, app.oso.roles)
+        load_fixture_data(Session())
         return {}
-
-    # Init session factory that SQLAlchemyOso will use to manage role data.
-    Session = sessionmaker(bind=engine)
 
     # Init Oso.
     init_oso(app, Session)
@@ -68,23 +74,11 @@ def create_app(db_path=None, load_fixtures=False):
     # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
-    # docs: begin-configure
-    app.oso.roles.synchronize_data()
-    # docs: end-configure
-
     # optionally load fixture data
     if load_fixtures:
-        load_fixture_data(Session(), app.oso.roles)
+        load_fixture_data(Session())
 
-    # docs: begin-authorized-session
-    # Init authorized session factory.
-    app.authorized_sessionmaker = functools.partial(
-        authorized_sessionmaker,
-        bind=engine,
-        get_oso=lambda: app.oso,
-        get_user=lambda: g.current_user,
-    )
-    # docs: end-authorized-session
+    app.authorized_sessionmaker = Session
 
     @app.before_request
     def set_current_user_and_session():
@@ -124,14 +118,123 @@ def create_app(db_path=None, load_fixtures=False):
 # docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
-    oso = SQLAlchemyOso(Base)
+    oso = Oso(forbidden_error=Forbidden, not_found_error=NotFound)
 
-    # Enable roles features.
-    oso.enable_roles(User, Session)
+    def query_builder(model):
+        # A "filter" is an object returned from Oso that describes
+        # a condition that must hold on an object. This turns an
+        # Oso filter into one that can be applied to an SQLAlchemy
+        # query.
+        def to_sqlalchemy_filter(filter):
+            if filter.field is not None:
+                field = getattr(model, filter.field)
+                value = filter.value
+            else:
+                field = model.id
+                value = filter.value.id
+
+            if filter.kind == "Eq":
+                return field == value
+            elif filter.kind == "In":
+                return field.in_(value)
+            else:
+                raise OsoError(f"Unsupported filter kind: {filter.kind}")
+
+        # Turn a collection of Oso filters into one SQLAlchemy filter.
+        def combine_filters(filters):
+            filter = and_(*[to_sqlalchemy_filter(f) for f in filters])
+            return Session().query(model).filter(filter)
+
+        return combine_filters
+
+    oso.set_data_filtering_query_defaults(
+        combine_query=lambda q, r: q.union(r), exec_query=lambda q: q.distinct().all()
+    )
+
+    oso.register_class(
+        Repo,
+        build_query=query_builder(Repo),
+        types={
+            "name": str,
+            "org": Relation(
+                kind="one", other_type="Org", my_field="org_id", other_field="id"
+            ),
+            "issues": Relation(
+                kind="many", other_type="Issue", my_field="id", other_field="repo_id"
+            ),
+        },
+    )
+
+    oso.register_class(
+        OrgRole,
+        build_query=query_builder(OrgRole),
+        types={
+            "name": str,
+            "user": Relation(
+                kind="one", other_type="User", my_field="user_id", other_field="id"
+            ),
+            "org": Relation(
+                kind="one", other_type="Org", my_field="org_id", other_field="id"
+            ),
+        },
+    )
+
+    oso.register_class(
+        RepoRole,
+        build_query=query_builder(RepoRole),
+        types={
+            "name": str,
+            "user": Relation(
+                kind="one", other_type="User", my_field="user_id", other_field="id"
+            ),
+            "repo": Relation(
+                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
+            ),
+        },
+    )
+
+    oso.register_class(
+        Issue,
+        build_query=query_builder(Issue),
+        types={
+            "title": str,
+            "repo": Relation(
+                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
+            ),
+        },
+    )
+
+    oso.register_class(
+        Org,
+        build_query=query_builder(Org),
+        types={
+            "name": str,
+            "base_repo_role": str,
+            "billing_address": str,
+            "repos": Relation(
+                kind="many", other_type="Repo", my_field="id", other_field="org_id"
+            ),
+        },
+    )
+
+    oso.register_class(
+        User,
+        build_query=query_builder(User),
+        types={
+            "email": str,
+            "org_roles": Relation(
+                kind="many", other_type="OrgRole", my_field="id", other_field="user_id"
+            ),
+            "repo_roles": Relation(
+                kind="many", other_type="RepoRole", my_field="id", other_field="user_id"
+            ),
+        },
+    )
 
     # Load authorization policy.
-    oso.load_file("app/authorization.polar")
+    oso.load_files(["app/authorization.polar"])
 
-    # Attach SQLAlchemyOso instance to Flask application.
+    # Attach Oso instance to Flask application.
     app.oso = oso
+
     # docs: end-init-oso

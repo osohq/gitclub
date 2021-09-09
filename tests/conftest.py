@@ -53,13 +53,13 @@ def ensure_port_5000_is_open(process):
 DIRECTORIES = {
     "rails": "../backends/rails",
     "flask-sqlalchemy": "../backends/flask-sqlalchemy",
-    "flask": "../backends/flask",
+    "flask-sqlalchemy-oso": "../backends/flask-sqlalchemy-oso",
 }
 
 
 @pytest.fixture(scope="session")
 def test_app():
-    directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy")]
+    directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy-oso")]
     process = subprocess.Popen(
         ["make", "test-server", "-C", directory], start_new_session=True
     )

@@ -1,26 +1,20 @@
 from flask import Blueprint, g, jsonify, current_app
 
 from ..models import User, Repo
-from .helpers import check_permission, session
+from .helpers import session, authorized_resource, authorized_resources, distinct
 
 bp = Blueprint("routes.users", __name__, url_prefix="/users")
 
 
 @bp.route("/<int:user_id>", methods=["GET"])
-@session({User: "read_profile"})
+@session
 def show(user_id):
-    user = g.session.get_or_404(User, id=user_id)
-    return user.repr()
+    return authorized_resource("read_profile", User, id=user_id).repr()
 
 
 @bp.route("/<int:user_id>/repos", methods=["GET"])
-@session({User: "read_profile", Repo: "read"})
+@session
 def index(user_id):
-    user = g.session.get_or_404(User, id=user_id)
-    # TODO use data filtering!
-    repos = [
-        repo.repr()
-        for repo in g.session.query(Repo)
-        if current_app.oso.is_allowed(user, "read", repo)
-    ]
-    return jsonify(repos)
+    user = authorized_resource("read_profile", User, id=user_id)
+    repos = authorized_resources("read", Repo)
+    return jsonify(distinct([repo.repr() for repo in repos]))
