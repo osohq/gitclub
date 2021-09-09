@@ -2,7 +2,7 @@ from flask import Blueprint, g, request, current_app, jsonify
 from werkzeug.exceptions import Forbidden
 
 from ..models import Org, OrgRole, User
-from .helpers import authorized_resource, authorized_resources, session
+from .helpers import session
 
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 
@@ -34,4 +34,6 @@ def create():
 @bp.route("/<int:org_id>", methods=["GET"])
 @session
 def show(org_id):
-    return authorized_resource("read", Org, id=org_id).repr()
+    org = g.session.query(Org).filter_by(id=org_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "read", org)
+    return org.repr()

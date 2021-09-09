@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request, jsonify, current_app
 
 from ..models import Org, Repo
-from .helpers import authorized_resource, authorized_resources, session, distinct
+from .helpers import session, distinct
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
@@ -9,16 +9,19 @@ bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 @bp.route("", methods=["GET"])
 @session
 def index(org_id):
-    org = authorized_resource("list_repos", Org, id=org_id)
-    repos = authorized_resources("read", Repo)
-    return jsonify(distinct([repo.repr() for repo in repos]))
+    org = g.session.query(Org).filter_by(id=org_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "list_repos", org)
+    query = current_app.oso.authorized_query(g.current_user, "read", Repo)
+    query = query.filter_by(org_id=org_id)
+    return jsonify(distinct([repo.repr() for repo in query]))
 
 
 @bp.route("", methods=["POST"])
 @session
 def create(org_id):
     payload = request.get_json(force=True)
-    org = authorized_resource("create_repos", Org, id=org_id)
+    org = g.session.query(Org).filter_by(id=org_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "create_repos", org)
     repo = Repo(name=payload.get("name"), org_id=org.id)
     g.session.add(repo)
     g.session.commit()
@@ -28,5 +31,6 @@ def create(org_id):
 @bp.route("/<int:repo_id>", methods=["GET"])
 @session
 def show(org_id, repo_id):
-    repo = authorized_resource("read", Repo, id=repo_id)
+    repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "read", repo)
     return repo.repr()

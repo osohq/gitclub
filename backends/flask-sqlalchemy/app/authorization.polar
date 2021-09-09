@@ -38,7 +38,7 @@ resource Org {
 
 has_role(user: User, name: String, org: Org) if
     role in user.org_roles and
-    role matches { name: name, org: org };
+    role matches { name: name, org_id: org.id };
 
 resource Repo {
   roles = ["admin", "writer", "reader"];
@@ -72,7 +72,7 @@ resource Repo {
 
 has_role(user: User, name: String, repo: Repo) if
     role in user.repo_roles and
-    role matches { name: name, repo: repo };
+    role matches { name: name, repo_id: repo.id };
 
 has_relation(org: Org, "parent", repo: Repo) if repo.org = org;
 

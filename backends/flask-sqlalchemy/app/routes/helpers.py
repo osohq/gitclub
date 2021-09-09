@@ -21,20 +21,6 @@ def session(func):
     # docs: end-session-decorator
 
 
-def authorized_resource(actn: str, cls: Type[Any], **kwargs):
-    rsrcs = authorized_resources(actn, cls, **kwargs)
-    if len(rsrcs) == 0:
-        raise NotFound
-    return rsrcs[0]
-
-
-def authorized_resources(actn: str, cls: Type[Any], **kwargs):
-    query = current_app.oso.authorized_query(g.current_user, actn, cls)
-    if query is None:
-        raise NotFound
-    return [rsrc for rsrc in query.filter_by(**kwargs)]
-
-
 # docs: begin-get-resource-by
 def get_or_404(self, cls: Type[Any], **kwargs):
     resource = self.query(cls).filter_by(**kwargs).one_or_none()

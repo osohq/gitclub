@@ -1,7 +1,7 @@
 from flask import Blueprint, g, jsonify, current_app
 
 from ..models import User, Repo
-from .helpers import session, authorized_resource, authorized_resources, distinct
+from .helpers import session, distinct
 
 bp = Blueprint("routes.users", __name__, url_prefix="/users")
 
@@ -9,12 +9,15 @@ bp = Blueprint("routes.users", __name__, url_prefix="/users")
 @bp.route("/<int:user_id>", methods=["GET"])
 @session
 def show(user_id):
-    return authorized_resource("read_profile", User, id=user_id).repr()
+    user = g.session.query(User).filter_by(id=user_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "read_profile", user)
+    return user.repr()
 
 
 @bp.route("/<int:user_id>/repos", methods=["GET"])
 @session
 def index(user_id):
-    user = authorized_resource("read_profile", User, id=user_id)
-    repos = authorized_resources("read", Repo)
+    user = g.session.query(User).filter_by(id=user_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "read_profile", user)
+    repos = current_app.oso.authorized_resources(g.current_user, "read", Repo)
     return jsonify(distinct([repo.repr() for repo in repos]))
