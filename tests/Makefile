@@ -1,7 +1,7 @@
-test: test-flask-sqlalchemy test-rails
+test: test-flask-sqlalchemy-oso test-rails
 
-test-flask-sqlalchemy: .make.requirements-install
-	BACKEND=flask-sqlalchemy pytest
+test-flask-sqlalchemy-oso: .make.requirements-install
+	BACKEND=flask-sqlalchemy-oso pytest
 
 test-rails: .make.requirements-install
 	BACKEND=rails pytest
