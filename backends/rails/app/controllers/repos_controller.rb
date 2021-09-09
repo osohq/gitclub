@@ -2,8 +2,9 @@ class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])
     authorize! "list_repos", org
+    repos = OSO.authorized_query(current_user, 'read', Repo).where(org: org)
 
-    render json: org.repos
+    render json: repos
   end
 
   def create
@@ -12,6 +13,7 @@ class ReposController < ApplicationController
     authorize! "create_repos", org
 
     repo.save
+    RepoRole.create! user: current_user, repo: repo, name: org.base_repo_role
     render json: repo, status: 201
   end
 

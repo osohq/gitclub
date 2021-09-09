@@ -93,6 +93,10 @@ def test_org_create(test_client):
     org = resp.json()
     assert org["name"] == org_name
 
+    show_org = "/orgs/%s" % org["id"]
+    resp = test_client.get(show_org)
+    assert resp.status_code == 200
+
 
 def test_org_show(test_client):
     the_beatles = "/orgs/1"
@@ -143,7 +147,25 @@ def test_org_unassigned_users_index(test_client):
     assert mike in unassigned_emails
 
 
-def test_repo_index(test_client):
+def test_org_repo_unassigned_users_index(test_client):
+    path = "/orgs/1/repos/1/unassigned_users"
+    resp = test_client.get(path)
+    assert resp.status_code == 404
+
+    test_client.log_in_as(john)
+
+    resp = test_client.get(path)
+    assert resp.status_code == 200
+    unassigned_users = resp.json()
+    assert len(unassigned_users) == 4
+    unassigned_emails = [u["email"] for u in unassigned_users]
+    assert john not in unassigned_emails
+    assert paul not in unassigned_emails
+    assert ringo not in unassigned_emails
+    assert mike in unassigned_emails
+
+
+def test_org_repo_index(test_client):
     beatles_repos = "/orgs/1/repos"
     resp = test_client.get(beatles_repos)
     # cannot see org => cannot index repo
@@ -163,6 +185,42 @@ def test_repo_index(test_client):
     assert resp.status_code == 404
 
 
+def test_user_repo_index(test_client):
+    john_repos = "/users/1/repos"
+    resp = test_client.get(john_repos)
+    # cannot see org => cannot index repo
+    assert resp.status_code == 404
+
+    test_client.log_in_as(john)
+
+    resp = test_client.get(john_repos)
+    assert resp.status_code == 200
+    repos = resp.json()
+    assert len(repos) == 1
+    assert repos[0]["name"] == "Abbey Road"
+
+    # if john adds mike to the repo ...
+    mike_id = 4
+    role_params = {"user_id": mike_id, "role": "reader"}
+    abbey_roles = "/orgs/1/repos/1/role_assignments"
+    test_client.post(abbey_roles, json=role_params)
+
+    test_client.log_in_as(mike)
+
+    # mike can't see john's repos.
+    resp = test_client.get(john_repos)
+    assert resp.status_code == 404
+
+    # but, mike can see abbey road
+    mike_repos = "/users/%d/repos" % mike_id
+    resp = test_client.get(mike_repos)
+    assert resp.status_code == 200
+    repos = [repo["name"] for repo in resp.json()]
+    assert len(repos) == 2
+    assert "Paperwork" in repos
+    assert "Abbey Road" in repos
+
+
 def test_repo_create(test_client):
     repo_params = {"name": "new repo"}
     beatles_repos = "/orgs/1/repos"
@@ -175,6 +233,10 @@ def test_repo_create(test_client):
     assert resp.status_code == 201
     repo = resp.json()
     assert repo["name"] == repo_params["name"]
+
+    repo = "%s/%s" % (beatles_repos, repo["id"])
+    resp = test_client.get(repo)
+    assert resp.status_code == 200
 
     monsters_repos = "/orgs/2/repos"
     resp = test_client.post(monsters_repos, json=repo_params)
@@ -275,6 +337,30 @@ def test_org_role_assignment_index(test_client):
     test_client.log_in_as(mike)
 
     resp = test_client.get(beatles_roles)
+    assert resp.status_code == 404
+
+
+def test_org_repo_role_assignment_create(test_client):
+    mike_id = 4
+    role_params = {"user_id": mike_id, "role": "reader"}
+    abbey_roles = "/orgs/1/repos/1/role_assignments"
+
+    # A guest cannot assign a role in any repo.
+    resp = test_client.post(abbey_roles, json=role_params)
+    assert resp.status_code == 404
+
+    test_client.log_in_as(john)
+
+    # John can assign a new role in the Abbey Road repo.
+    resp = test_client.post(abbey_roles, json=role_params)
+    assert resp.status_code == 201
+    user_role = resp.json()
+    assert user_role["user"]["email"] == mike
+    assert user_role["role"] == role_params["role"]
+
+    # But John can't assign a new role in the Monsters org.
+    paperwork_roles = "/orgs/2/repos/2/role_assignments"
+    resp = test_client.post(paperwork_roles, json=role_params)
     assert resp.status_code == 404
 
 

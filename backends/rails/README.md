@@ -37,9 +37,7 @@ $ bundle exec rails s
 ### Key files
 
 - [`initializers/oso.rb`][file-initializer]: Defines the `OSO` constant,
-  registers the necessary models, and loads the policy. Because the app uses
-  Oso's [built-in roles][docs-ruby-roles] feature, this file also calls
-  `OSO.enable_roles`.
+  registers the necessary models, and loads the policy.
 - [`application_controller.rb`][file-app-controller]: Defines a small controller
   helper `authorize! :action, resource` that uses `OSO.allowed?` under the hood
   to enforce the authorization policy. Check out

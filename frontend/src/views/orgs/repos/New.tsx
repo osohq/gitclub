@@ -1,9 +1,9 @@
 import { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { Redirect, RouteComponentProps, useNavigate } from '@reach/router';
 
-import { UserContext } from '../../models';
-import { NoticeContext } from '../../components';
-import { repo as repoApi } from '../../api';
+import { UserContext } from '../../../models';
+import { NoticeContext } from '../../../components';
+import { repo as repoApi } from '../../../api';
 
 type Props = RouteComponentProps & { orgId?: string };
 

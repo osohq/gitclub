@@ -14,3 +14,10 @@ export function repo(orgId: string) {
     show: (id: string) => show(`${path}/${id}`, Repo),
   };
 }
+
+export function userRepo(userId: string) {
+  const path = `/users/${userId}/repos`;
+  return {
+    index: () => index(path, Repo),
+  };
+}
