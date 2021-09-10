@@ -19,9 +19,7 @@ export class RoleController {
         });
         await request.oso.authorize(request.user, "list_role_assignments", resource);
         const assigned = await this.roleRepository.find({
-            [this.resourceName]: {
-                id: request.params.id
-            }
+            [this.resourceName]: { id: request.params.id }
         });
         const assignedUsers: Set<number> = new Set((await assigned).map(role => role.userId));
         const authorizeFilter = await request.oso.authorizedQuery(request.user, "read", User);

@@ -82,7 +82,7 @@ def repo_unassigned_users_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
     check_permission("create_role_assignments", repo)
     existing = [role.user.id for role in repo.roles]
-    unassigned = g.session.query(User).filter(column("id").notin_(existing))
+    unassigned = g.session.query(User).filter(User.id.notin_(existing))
     return jsonify([u.repr() for u in unassigned])
 
 
@@ -107,7 +107,7 @@ def repo_create(org_id, repo_id):
 
     # TODO(gj): validate that current user is allowed to assign this particular
     # role to this particular user?
-    role = RepoRole(org=org, user=user, name=payload["role"])
+    role = RepoRole(repo=repo, user=user, name=payload["role"])
     g.session.add(role)
     g.session.commit()
 
