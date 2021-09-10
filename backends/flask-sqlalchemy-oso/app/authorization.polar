@@ -92,9 +92,6 @@ has_relation(repo: Repo, "parent", role: RepoRole) if repo = role.repo;
 allow(actor, action, resource) if
   has_permission(actor, action, resource);
 
-# TODO remove
-type has_permission(_: Actor, _: String, _: Actor);
-
 # Users can see each other.
 has_permission(_: User, "read", _: User);
 
