@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request, current_app, jsonify
 from werkzeug.exceptions import Forbidden
 
-from ..models import Org
+from ..models import Org, OrgRole
 from .helpers import check_permission, session
 
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
@@ -25,8 +25,10 @@ def create():
     # docs: end-is-allowed
 
     g.session.add(org)
+    org = g.session.get_or_404(Org, **payload)
+    role = OrgRole(org=org, user=g.current_user, name="owner")
+    g.session.add(role)
     g.session.flush()  # NOTE(gj): load-bearing flush.
-    current_app.oso.roles.assign_role(g.current_user, org, "owner", session=g.session)
     g.session.commit()
     return org.repr(), 201
 
