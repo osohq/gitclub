@@ -23,3 +23,22 @@ $ yarn start
 ### Architecture
 
 - TypeScript / React / Reach Router
+
+## Development
+
+The backends all run on port 5000, and use cookies to manage sessions.
+
+If you want to be able to debug/test the backend without running the frontend
+and logging in, you can use the following to save a session locally:
+
+### Save the cookies
+
+```bash
+curl -c gitclub.cookies -H "Content-Type: application/json" -X POST -d '{"email": "john@beatles.com"}' localhost:5000/session
+```
+
+### Use the cookies
+
+```bash
+curl -b gitclub.cookies localhost:5000/orgs/1
+```

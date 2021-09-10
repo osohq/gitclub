@@ -4,7 +4,6 @@ from ..models import Org, Repo
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
-
 @bp.route("", methods=["GET"])
 def index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()

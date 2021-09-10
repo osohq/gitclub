@@ -1,10 +1,22 @@
 OSO = Oso.new
-Relationship = Oso::Polar::DataFiltering::Relationship
+Relation = Oso::Polar::DataFiltering::Relation
 
 OSO.register_class(
   User,
   fields: {
     email: String,
+    org_roles: Relation.new(
+      kind: 'many',
+      other_type: OrgRole,
+      my_field: 'id',
+      other_field: 'user_id'
+    ),
+    repo_roles: Relation.new(
+      kind: 'many',
+      other_type: RepoRole,
+      my_field: 'id',
+      other_field: 'user_id'
+    )
   }
 )
 
@@ -14,8 +26,8 @@ OSO.register_class(
     name: String,
     base_repo_role: String,
     billing_address: String,
-    repos: Relationship.new(
-      kind: 'children',
+    repos: Relation.new(
+      kind: 'many',
       other_type: 'Repo',
       my_field: 'id',
       other_field: 'org_id',
@@ -27,14 +39,14 @@ OSO.register_class(
   Repo,
   fields: {
     name: String,
-    org: Relationship.new(
-      kind: 'parent',
+    org: Relation.new(
+      kind: 'one',
       other_type: 'Org',
       my_field: 'org_id',
       other_field: 'id'
     ),
-    issues: Relationship.new(
-      kind: 'children',
+    issues: Relation.new(
+      kind: 'many',
       other_type: 'Issue',
       my_field: 'id',
       other_field: 'repo_id'
@@ -46,8 +58,8 @@ OSO.register_class(
   Issue,
   fields: {
     title: String,
-    repo: Relationship.new(
-      kind: 'parent',
+    repo: Relation.new(
+      kind: 'one',
       other_type: 'Repo',
       my_field: 'repo_id',
       other_field: 'id'
@@ -59,14 +71,14 @@ OSO.register_class(
   OrgRole,
   fields: {
     name: String,
-    org: Relationship.new(
-      kind: 'parent',
+    org: Relation.new(
+      kind: 'one',
       other_type: 'Org',
       my_field: 'org_id',
       other_field: 'id'
     ),
-    user: Relationship.new(
-      kind: 'parent',
+    user: Relation.new(
+      kind: 'one',
       other_type: 'User',
       my_field: 'user_id',
       other_field: 'id'
@@ -78,14 +90,14 @@ OSO.register_class(
   RepoRole,
   fields: {
     name: String,
-    repo: Relationship.new(
-      kind: 'parent',
+    repo: Relation.new(
+      kind: 'one',
       other_type: 'Repo',
       my_field: 'repo_id',
       other_field: 'id'
     ),
-    user: Relationship.new(
-      kind: 'parent',
+    user: Relation.new(
+      kind: 'one',
       other_type: 'User',
       my_field: 'user_id',
       other_field: 'id'
@@ -93,5 +105,4 @@ OSO.register_class(
   }
 )
 
-OSO.load_file("app/policy/authorization.polar")
-OSO.enable_roles()
+OSO.load_files ["app/policy/authorization.polar"]
