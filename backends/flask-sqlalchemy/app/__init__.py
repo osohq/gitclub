@@ -55,7 +55,8 @@ def create_app(db_path=None, load_fixtures=False):
         session = Session()
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
-        load_fixture_data(session)
+        app.oso.roles.synchronize_data()
+        load_fixture_data(session, app.oso.roles)
         return {}
 
     # Init session factory that SQLAlchemyOso will use to manage role data.
@@ -67,9 +68,13 @@ def create_app(db_path=None, load_fixtures=False):
     # Create all tables via SQLAlchemy.
     Base.metadata.create_all(engine)
 
+    # docs: begin-configure
+    app.oso.roles.synchronize_data()
+    # docs: end-configure
+
     # optionally load fixture data
     if load_fixtures:
-        load_fixture_data(Session())
+        load_fixture_data(Session(), app.oso.roles)
 
     # docs: begin-authorized-session
     # Init authorized session factory.
@@ -121,8 +126,11 @@ def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
     oso = SQLAlchemyOso(Base)
 
+    # Enable roles features.
+    oso.enable_roles(User, Session)
+
     # Load authorization policy.
-    oso.load_files(["app/authorization.polar"])
+    oso.load_file("app/authorization.polar")
 
     # Attach SQLAlchemyOso instance to Flask application.
     app.oso = oso

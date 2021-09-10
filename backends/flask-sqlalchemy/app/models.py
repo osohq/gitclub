@@ -1,6 +1,6 @@
 from sqlalchemy.types import Integer, String
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -44,7 +44,7 @@ class Repo(Base):
     # many-to-one relationship with orgs
     org_id = Column(Integer, ForeignKey("orgs.id"))
     # docs: begin-repo-model-highlight
-    org = relationship("Org", backref=backref("repos", lazy=False), lazy=False)
+    org = relationship("Org", backref="repos", lazy=True)
     # docs: end-repo-model-highlight
 
     unique_name_in_org = UniqueConstraint(name, org_id)
@@ -61,33 +61,7 @@ class Issue(Base):
     title = Column(String(256))
 
     repo_id = Column(Integer, ForeignKey("repos.id"))
-    repo = relationship("Repo", backref=backref("issues", lazy=False), lazy=False)
+    repo = relationship("Repo", backref="issues", lazy=True)
 
     def repr(self):
         return {"id": self.id, "title": self.title}
-
-
-class OrgRole(Base):
-    __tablename__ = "org_roles"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    org_id = Column(Integer, ForeignKey("orgs.id"), nullable=False)
-    user = relationship("User", backref=backref("org_roles", lazy=False), lazy=False)
-    org = relationship("Org", backref=backref("roles", lazy=False), lazy=False)
-    name = Column(String, index=True)
-
-    def repr(self):
-        return {"user_id": self.user_id, "org_id": self.org_id, "name": self.name}
-
-
-class RepoRole(Base):
-    __tablename__ = "repo_roles"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    repo_id = Column(Integer, ForeignKey("repos.id"), nullable=False)
-    user = relationship("User", backref=backref("repo_roles", lazy=False), lazy=False)
-    repo = relationship("Repo", backref=backref("roles", lazy=False), lazy=False)
-    name = Column(String, index=True)
-
-    def repr(self):
-        return {"user_id": self.user_id, "repo_id": self.repo_id, "name": self.name}
