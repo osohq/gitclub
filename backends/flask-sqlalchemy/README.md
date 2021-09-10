@@ -17,11 +17,10 @@ The [Oso documentation][docs] is a good reference for more information on Oso's
 ### Running tests
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt -r requirements-dev.txt
-$ cd ../../tests
-$ make test-flask
+$ make -C ../../tests test-flask-sqlalchemy-oso
 ```
 
 ### Running the backend
@@ -29,7 +28,7 @@ $ make test-flask
 First set up a virtualenv and install dependencies:
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt
 ```
