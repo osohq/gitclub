@@ -7,9 +7,9 @@ bp = Blueprint("routes.role_choices", __name__)
 
 @bp.route("/org_role_choices", methods=["GET"])
 def org_roles():
-    return jsonify(["member", "owner"])
+    return jsonify(current_app.oso.roles.for_resource(Org))
 
 
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_roles():
-    return jsonify(["admin", "reader", "writer"])
+    return jsonify(current_app.oso.roles.for_resource(Repo))
