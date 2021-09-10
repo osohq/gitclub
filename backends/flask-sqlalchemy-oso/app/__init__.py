@@ -121,9 +121,6 @@ def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
     oso = SQLAlchemyOso(Base)
 
-    # Enable roles features.
-    #    oso.enable_roles(User, Session)
-
     # Load authorization policy.
     oso.load_files(["app/authorization.polar"])
 
