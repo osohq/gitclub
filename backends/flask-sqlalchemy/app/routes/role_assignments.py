@@ -51,7 +51,7 @@ def org_update(org_id):
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
     current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.get_or_404(OrgRole, user=user, org=org)
+    role = g.session.query(OrgRole).filter_by(user=user, org=org).one_or_none()
     role.name = payload["role"]
     g.session.add(role)
     g.session.commit()
@@ -67,7 +67,7 @@ def org_delete(org_id):
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
     current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.get_or_404(OrgRole, user=user, org=org)
+    role = g.session.query(OrgRole).filter_by(user=user, org=org).one_or_none()
     g.session.delete(role)
     g.session.commit()
     return current_app.response_class(status=204, mimetype="application/json")
@@ -118,7 +118,7 @@ def repo_update(org_id, repo_id):
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
     current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.get_or_404(RepoRole, user=user, repo=repo)
+    role = g.session.query(RepoRole).filter_by(user=user, repo=repo).one_or_none()
     role.name = payload["role"]
     g.session.add(role)
     g.session.commit()
@@ -134,7 +134,7 @@ def repo_delete(org_id, repo_id):
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
     current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.get_or_404(RepoRole, user=user, repo=repo)
+    role = g.session.query(RepoRole).filter_by(user=user, repo=repo).one_or_none()
     g.session.delete(role)
     g.session.commit()
     return current_app.response_class(status=204, mimetype="application/json")

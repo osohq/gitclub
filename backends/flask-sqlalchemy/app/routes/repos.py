@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request, jsonify, current_app
 
 from ..models import Org, Repo
-from .helpers import session, distinct
+from .helpers import session
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
@@ -13,7 +13,7 @@ def index(org_id):
     current_app.oso.authorize(g.current_user, "list_repos", org)
     query = current_app.oso.authorized_query(g.current_user, "read", Repo)
     query = query.filter_by(org_id=org_id)
-    return jsonify(distinct([repo.repr() for repo in query]))
+    return jsonify([repo.repr() for repo in query])
 
 
 @bp.route("", methods=["POST"])

@@ -23,7 +23,7 @@ def create():
 
     g.session.add(org)
 
-    org = g.session.get_or_404(Org, **payload)
+    org = g.session.query(Org).filter_by(**payload).one_or_none()
     role = OrgRole(org_id=org.id, user_id=g.current_user.id, name="owner")
     g.session.add(role)
     g.session.flush()
