@@ -17,7 +17,7 @@ test-server: .make.requirements-test
 	touch $@
 
 venv:
-	python -m venv venv
+	python3 -m venv venv
 
 venv-source: venv
 	. venv/bin/activate
