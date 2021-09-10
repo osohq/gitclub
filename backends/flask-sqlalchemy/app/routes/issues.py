@@ -1,7 +1,7 @@
-from flask import Blueprint, g, request, jsonify
+from flask import Blueprint, g, request, jsonify, current_app
+from werkzeug.exceptions import NotFound
 
-from ..models import Repo, Issue
-from .helpers import session
+from ..models import Repo, Issue, User
 
 bp = Blueprint(
     "routes.issues",
@@ -9,29 +9,29 @@ bp = Blueprint(
     url_prefix="/orgs/<int:org_id>/repos/<int:repo_id>/issues",
 )
 
+import code
+
 
 @bp.route("", methods=["GET"])
-@session({Repo: "list_issues", Issue: "read"})
 def index(org_id, repo_id):
-    repo = g.session.get_or_404(Repo, id=repo_id)
-    issues = g.session.query(Issue).filter_by(repo_id=repo_id)
-    return jsonify([issue.repr() for issue in issues])
+    repo = g.session.query(Repo).filter_by(id=repo_id).one()
+    current_app.oso.authorize(g.current_user, "list_issues", repo)
+    return jsonify([issue.repr() for issue in repo.issues])
 
 
 @bp.route("", methods=["POST"])
-@session({Repo: "create_issues", Issue: "read"})
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
-    repo = g.session.get_or_404(Repo, id=repo_id)
-    issue = Issue(title=payload["title"], repo=repo)
-    # check_permission("create", issue)  # TODO(gj): validation check; maybe unnecessary.
+    repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "create_issues", repo)
+    issue = Issue(title=payload["title"], repo_id=repo.id)
     g.session.add(issue)
     g.session.commit()
     return issue.repr(), 201
 
 
 @bp.route("/<int:issue_id>", methods=["GET"])
-@session({Issue: "read"})
 def show(org_id, repo_id, issue_id):
-    issue = g.session.get_or_404(Issue, id=issue_id)
+    issue = g.session.query(Issue).filter_by(id=issue_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "read", issue)
     return issue.repr()

@@ -65,13 +65,14 @@ def xfail_backend(*envs, reason=None):
 DIRECTORIES = {
     "rails": "../backends/rails",
     "flask-sqlalchemy": "../backends/flask-sqlalchemy",
+    "flask-sqlalchemy-oso": "../backends/flask-sqlalchemy-oso",
     "express-typeorm": "../backends/express-typeorm",
 }
 
 
 @pytest.fixture(scope="session")
 def test_app():
-    directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy")]
+    directory = DIRECTORIES[os.getenv("BACKEND", "flask-sqlalchemy-oso")]
     process = subprocess.Popen(
         ["make", "test-server", "-C", directory], start_new_session=True
     )

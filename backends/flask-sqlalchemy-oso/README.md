@@ -1,26 +1,29 @@
 # GitClub (Python - SQLAlchemy - Flask - React)
 
 This is an example application based on GitHub that's meant to model GitHub's
-permissions system. The app uses the [`oso`][pypi-oso] library to model, manage,
-and enforce authorization.
+permissions system. The app uses the [`oso`][pypi-oso] and
+[`sqlalchemy-oso`][pypi-sqlalchemy-oso] libraries to model, manage, and enforce
+authorization.
 
 [pypi-oso]: https://pypi.org/project/oso/
+[pypi-sqlalchemy-oso]: https://pypi.org/project/sqlalchemy-oso/
 
 The [Oso documentation][docs] is a good reference for more information on Oso's
-[Python][docs-python] integration.
+[Python][docs-python] and [SQLAlchemy][docs-sqlalchemy] integrations.
 
 [docs]: https://docs.osohq.com/
 [docs-python]: https://docs.osohq.com/python/reference/lib.html
+[docs-sqlalchemy]: https://docs.osohq.com/python/reference/frameworks/sqlalchemy.html
 
 ## Backend
 
 ### Running tests
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt -r requirements-dev.txt
-$ make -C ../../tests test-flask-sqlalchemy
+$ make -C ../../tests test-flask-sqlalchemy-oso
 ```
 
 ### Running the backend
@@ -28,7 +31,7 @@ $ make -C ../../tests test-flask-sqlalchemy
 First set up a virtualenv and install dependencies:
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt
 ```
@@ -65,8 +68,6 @@ The app has the following models:
 - `Repo` - mimicking repos on GitHub — but without the backing Git data — each
   belongs to a single org.
 - `Issue` - mimicking GitHub issues, each is associated with a single repo.
-- `OrgRole` - a user role on an organization.
-- `RepoRole` - a user role on a repository.
 
 ### Authorization model
 

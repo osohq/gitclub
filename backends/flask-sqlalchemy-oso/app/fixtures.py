@@ -1,4 +1,6 @@
-from .models import Base, Issue, Org, Repo, User, OrgRole, RepoRole
+from sqlalchemy_oso.roles import OsoRoles
+
+from .models import Base, Issue, Org, Repo, User
 
 john_email = "john@beatles.com"
 paul_email = "paul@beatles.com"
@@ -6,15 +8,7 @@ mike_email = "mike@monsters.com"
 ringo_email = "ringo@beatles.com"
 
 
-def load_fixture_data(session):
-    def org_role(user, org, name):
-        role = OrgRole(user=user, org=org, name=name)
-        session.add(role)
-
-    def repo_role(user, repo, name):
-        role = RepoRole(user=user, repo=repo, name=name)
-        session.add(role)
-
+def load_fixture_data(session, roles: OsoRoles):
     #########
     # Users #
     #########
@@ -82,23 +76,22 @@ def load_fixture_data(session):
     # Repo roles #
     ##############
 
-    repo_role(john, abby_road, "reader")
-    repo_role(paul, abby_road, "reader")
-    repo_role(ringo, abby_road, "writer")
-    repo_role(mike, paperwork, "reader")
-    repo_role(sully, paperwork, "reader")
+    roles.assign_role(john, abby_road, "reader", session=session)
+    roles.assign_role(paul, abby_road, "reader", session=session)
+    roles.assign_role(ringo, abby_road, "writer", session=session)
+    roles.assign_role(mike, paperwork, "reader", session=session)
+    roles.assign_role(sully, paperwork, "reader", session=session)
 
     #############
     # Org roles #
     #############
 
-    org_role(john, beatles, "owner")
-    org_role(paul, beatles, "member")
-    org_role(ringo, beatles, "member")
-    org_role(mike, monsters, "owner")
-    org_role(sully, monsters, "member")
-    org_role(randall, monsters, "member")
+    roles.assign_role(john, beatles, "owner", session=session)
+    roles.assign_role(paul, beatles, "member", session=session)
+    roles.assign_role(ringo, beatles, "member", session=session)
+    roles.assign_role(mike, monsters, "owner", session=session)
+    roles.assign_role(sully, monsters, "member", session=session)
+    roles.assign_role(randall, monsters, "member", session=session)
 
-    session.flush()
     session.commit()
     session.close()

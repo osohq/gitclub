@@ -1,6 +1,10 @@
 TEST_FLAGS :=
 
-test: test-flask-sqlalchemy test-rails test-express-typeorm
+test: test-flask-sqlalchemy test-flask-sqlalchemy-oso test-rails test-express-typeorm
+
+# TODO better name
+test-flask-sqlalchemy-oso: .make.requirements-install
+	BACKEND=flask-sqlalchemy-oso pytest
 
 test-express-typeorm: .make.requirements-install
 	BACKEND=express-typeorm pytest ${TEST_FLAGS}

@@ -51,7 +51,7 @@ def test_user_show(test_client):
     test_client.log_in_as(paul)
 
     resp = test_client.get(john_profile)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 def test_org_index(test_client):
@@ -209,7 +209,7 @@ def test_user_repo_index(test_client):
 
     # mike can't see john's repos.
     resp = test_client.get(john_repos)
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
     # but, mike can see abbey road
     mike_repos = "/users/%d/repos" % mike_id
