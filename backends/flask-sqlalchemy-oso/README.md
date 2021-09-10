@@ -20,11 +20,7 @@ The [Oso documentation][docs] is a good reference for more information on Oso's
 ### Running tests
 
 ```console
-$ cd backends/flask-sqlalchemy-oso
-$ python3 -m venv venv && source venv/bin/activate
-$ pip3 install -r requirements.txt -r requirements-dev.txt
-$ cd ../../tests
-$ make test-flask-sqlalchemy-oso
+$ make -C tests test-flask-sqlalchemy-oso
 ```
 
 ### Running the backend
@@ -32,9 +28,8 @@ $ make test-flask-sqlalchemy-oso
 First set up a virtualenv and install dependencies:
 
 ```console
-$ cd backends/flask-sqlalchemy
-$ python3 -m venv venv && source venv/bin/activate
-$ pip3 install -r requirements.txt
+$ cd backends/flask-sqlalchemy-oso
+$ make run
 ```
 
 If this is the first time you've run the app, pass `True` as the second
@@ -42,14 +37,14 @@ argument to `create_app()`, which seeds the database from the `app/fixtures.py`
 file:
 
 ```console
-$ FLASK_APP="app:create_app(None, True)" flask run
+$ FLASK_APP="app:create_app(None, True)" make run
 ```
 
 If you've already seeded the database, change `True` to `False` to avoid
 resetting the database:
 
 ```console
-$ FLASK_APP="app:create_app(None, False)" flask run
+$ FLASK_APP="app:create_app(None, False)" make run
 ```
 
 ### Architecture

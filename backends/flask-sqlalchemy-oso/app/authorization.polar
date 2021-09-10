@@ -1,7 +1,9 @@
+allow(actor, action, resource) if
+  has_permission(actor, action, resource);
+
 actor User {
   permissions = ["read"];
 }
-
 
 resource Org {
   roles = ["owner", "member"];
@@ -89,9 +91,6 @@ has_relation(repo: Repo, "parent", issue: Issue) if issue.repo = repo;
 has_relation(org: Org, "parent", role: OrgRole) if org = role.org;
 has_relation(repo: Repo, "parent", role: RepoRole) if repo = role.repo;
 
-allow(actor, action, resource) if
-  has_permission(actor, action, resource);
-
 # Users can see each other.
 has_permission(_: User, "read", _: User);
 
@@ -100,4 +99,3 @@ has_permission(_: User{id: id}, "read_profile", _:User{id: id});
 
 # Any logged-in user can create a new org.
 has_permission(_: User, "create", _: Org);
-
