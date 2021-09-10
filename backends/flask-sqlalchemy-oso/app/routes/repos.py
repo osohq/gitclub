@@ -5,6 +5,7 @@ from .helpers import check_permission, session
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
+
 # docs: begin-repo-index
 @bp.route("", methods=["GET"])
 @session({Org: "list_repos", Repo: "read"})
