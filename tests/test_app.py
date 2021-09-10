@@ -1,4 +1,4 @@
-from .conftest import test_client, xfail_backend
+from .conftest import test_client
 
 import pytest
 import json
@@ -76,7 +76,6 @@ def test_org_index(test_client):
     assert orgs[0]["name"] == "Monsters Inc."
 
 
-@xfail_backend("rails", reason="404 not 403")
 def test_org_create(test_client):
     org_name = "new org"
     org_params = {
@@ -186,7 +185,6 @@ def test_org_repo_index(test_client):
     assert resp.status_code == 404
 
 
-@xfail_backend("express-typeorm", reason="not implemented")
 def test_user_repo_index(test_client):
     john_repos = "/users/1/repos"
     resp = test_client.get(john_repos)

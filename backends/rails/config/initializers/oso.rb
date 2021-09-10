@@ -1,7 +1,5 @@
 require 'exceptions'
-OSO = Oso.new
-OSO.instance_variable_set(:@not_found_error, Exceptions::NotFound)
-OSO.instance_variable_set(:@forbidden_error, Exceptions::Forbidden)
+OSO = Oso::Oso.new not_found_error: Exceptions::NotFound, forbidden_error: Exceptions::Forbidden
 Relation = Oso::Polar::DataFiltering::Relation
 
 OSO.register_class(

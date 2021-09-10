@@ -42,5 +42,4 @@ export class RepoController {
         await request.oso.authorize(request.user, "delete", repo);
         await this.repoRepository.remove(repo);
     }
-
 }

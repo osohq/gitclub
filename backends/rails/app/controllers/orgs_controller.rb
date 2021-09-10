@@ -4,6 +4,8 @@ class OrgsController < ApplicationController
   end
 
   def create
+    raise Exceptions::Forbidden if current_user.nil?
+
     org = Org.new(create_params)
     authorize! "create", org
     org.save
