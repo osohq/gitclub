@@ -9,24 +9,21 @@ authorization.
 [pypi-sqlalchemy-oso]: https://pypi.org/project/sqlalchemy-oso/
 
 The [Oso documentation][docs] is a good reference for more information on Oso's
-[Python][docs-python] and [SQLAlchemy][docs-sqlalchemy] integrations, and it's
-also where you can find [documentation for the new built-in roles features in
-the `sqlalchemy-oso` library][docs-roles] that this app uses heavily.
+[Python][docs-python] and [SQLAlchemy][docs-sqlalchemy] integrations.
 
 [docs]: https://docs.osohq.com/
 [docs-python]: https://docs.osohq.com/python/reference/lib.html
 [docs-sqlalchemy]: https://docs.osohq.com/python/reference/frameworks/sqlalchemy.html
-[docs-roles]: https://docs.osohq.com/python/new-roles.html
 
 ## Backend
 
 ### Running tests
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt -r requirements-dev.txt
-$ pytest
+$ make -C ../../tests test-flask-sqlalchemy-oso
 ```
 
 ### Running the backend
@@ -34,7 +31,7 @@ $ pytest
 First set up a virtualenv and install dependencies:
 
 ```console
-$ cd backends/flask-sqlalchemy
+$ cd backends/flask-sqlalchemy-oso
 $ python3 -m venv venv && source venv/bin/activate
 $ pip3 install -r requirements.txt
 ```
