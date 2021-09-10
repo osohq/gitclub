@@ -8,9 +8,7 @@ export class UserController {
 
     async one(request: Request) {
         const user = await this.userRepository.findOne(request.params.id);
-        if (!(await request.oso.isAllowed(request.user, "read_profile", user))) {
-          throw new NotFoundError();
-        }
+        await request.oso.authorize(request.user, "read_profile", user);
         return user;
     }
 }

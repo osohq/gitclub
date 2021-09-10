@@ -30,13 +30,21 @@ def check_permission(action: str, resource: Base):
         raise Forbidden
 
 
-# docs: begin-get-resource-by
-def get_or_404(self, cls: Type[Any], **kwargs):
+def get_or_raise(self, cls: Type[Any], error, **kwargs):
     resource = self.query(cls).filter_by(**kwargs).one_or_none()
     if resource is None:
-        raise NotFound
+        raise error
     return resource
 
+# docs: begin-get-resource-by
+def get_or_403(self, cls: Type[Any], **kwargs):
+    return self.get_or_raise(cls, Forbidden, **kwargs)
+
+# docs: begin-get-resource-by
+def get_or_404(self, cls: Type[Any], **kwargs):
+    return self.get_or_raise(cls, NotFound, **kwargs)
 
 Session.get_or_404 = get_or_404  # type: ignore
+Session.get_or_403 = get_or_403  # type: ignore
+Session.get_or_raise = get_or_raise  # type: ignore
 # docs: end-get-resource-by

@@ -4,7 +4,7 @@ test: test-flask-sqlalchemy test-flask-sqlalchemy-oso test-rails test-express-ty
 
 # TODO better name
 test-flask-sqlalchemy-oso: .make.requirements-install
-	BACKEND=flask-sqlalchemy-oso pytest
+	BACKEND=flask-sqlalchemy-oso pytest ${TEST_FLAGS}
 
 test-express-typeorm: .make.requirements-install
 	BACKEND=express-typeorm pytest ${TEST_FLAGS}

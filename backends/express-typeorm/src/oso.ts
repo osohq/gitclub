@@ -12,71 +12,67 @@ export const oso = new Oso();
 
 export async function initOso() {
     // set global exec/combine query functions
-    oso.configureDataFiltering({
+    oso.setDataFilteringQueryDefaults({
         combineQuery: combineQuery,
         buildQuery: buildQuery,
     });
     function makeMap(obj) {
         return new Map(Object.entries(obj));
     }
-    const issueType = new Map();
-    issueType.set('id', Number);
-    issueType.set('repo', new Relation('one', 'Repo', 'repoId', 'id'));
     oso.registerClass(Issue, {
-        types: issueType,
         execQuery: execFromRepo(Issue),
+        types: {
+          id: Number,
+          repo: new Relation('one', 'Repo', 'repoId', 'id')
+        }
     });
 
-    const orgType = new Map();
-    orgType.set('id', Number);
-    orgType.set('base_repo_role', String);
-    orgType.set('orgRoles', new Relation('many', 'OrgRole', 'id', 'orgId'));
     oso.registerClass(Org, {
-        types: orgType,
         execQuery: execFromRepo(Org),
+        types: {
+          id: Number,
+          base_repo_role: String,
+          orgRoles: new Relation('many', 'OrgRole', 'id', 'orgId')
+        }
     });
 
-    const orgRoleFields = {
-        id: Number,
-        role: String,
-        org: Org,
-        user: User
-    }
     oso.registerClass(OrgRole, {
-        types: makeMap(orgRoleFields),
         execQuery: execFromRepo(OrgRole),
+        types: {
+          id: Number,
+          role: String,
+          org: new Relation('one', 'Org', 'orgId', 'id'),
+          user: new Relation('one', 'User', 'userId', 'id')
+      }
     });
 
-    const repoFiles = {
-        id: Number,
-        org: new Relation('one', 'Org', 'orgId', 'id'),
-        issues: new Relation('many', 'Issue', 'id', 'repoId'),
-        repoRoles: new Relation('one', 'RepoRole', 'id', 'repoId')
-    };
     oso.registerClass(Repo, {
-        types: makeMap(repoFiles),
         execQuery: execFromRepo(Repo),
+        types: {
+          id: Number,
+          org: new Relation('one', 'Org', 'orgId', 'id'),
+          issues: new Relation('many', 'Issue', 'id', 'repoId'),
+          repoRoles: new Relation('many', 'RepoRole', 'id', 'repoId')
+      }
     });
 
-    const repoRoleFields = {
-        id: Number,
-        role: String,
-        repo: Repo,
-        user: User,
-    };
     oso.registerClass(RepoRole, {
-        types: makeMap(repoRoleFields),
         execQuery: execFromRepo(RepoRole),
+        types: {
+          id: Number,
+          role: String,
+          repo: new Relation('one', 'Repo', 'repoId', 'id'),
+          user: User,
+        }
     });
 
-    const userFields = {
-        id: Number,
-        repoRoles: new Relation('many', 'RepoRole', 'id', 'userId'),
-        orgRoles: new Relation('many', 'OrgRole', 'id', 'userId')
-    };
     oso.registerClass(User, {
-        types: makeMap(userFields),
         execQuery: execFromRepo(User),
+        types: {
+          id: Number,
+          repoRoles: new Relation('many', 'RepoRole', 'id', 'userId'),
+          orgRoles: new Relation('many', 'OrgRole', 'id', 'userId')
+        }
     });
 
     await oso.loadFile("src/authorization.polar");

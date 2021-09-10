@@ -1,11 +1,13 @@
 import { Brackets, getRepository } from "typeorm";
 import { Request } from "express";
 import { Repo } from "../entities/Repo";
+import { RepoRole } from "../entities/RepoRole";
 import { Org } from "../entities/Org";
 
 export class RepoController {
     private orgRepository = getRepository(Org);
     private repoRepository = getRepository(Repo);
+    private roleRepository = getRepository(RepoRole);
 
     async all(request: Request) {
         const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
@@ -28,7 +30,8 @@ export class RepoController {
     async save(request: Request, response) {
         const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
         await request.oso.authorize(request.user, "create_repos", org);
-        const res = await this.repoRepository.save(request.body);
+        const res = await this.repoRepository.save({ id: org.id, ...request.body });
+        await this.roleRepository.save({ repo: res, user: request.user, role: org.base_repo_role });
         return response.status(201).send(res);
     }
 
