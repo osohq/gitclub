@@ -2,7 +2,6 @@ from flask import Blueprint, g, request, jsonify, current_app
 from werkzeug.exceptions import NotFound
 
 from ..models import Repo, Issue, User
-from .helpers import session
 
 bp = Blueprint(
     "routes.issues",
@@ -14,7 +13,6 @@ import code
 
 
 @bp.route("", methods=["GET"])
-@session
 def index(org_id, repo_id):
     repo = g.session.query(Repo).filter_by(id=repo_id).one()
     current_app.oso.authorize(g.current_user, "list_issues", repo)
@@ -22,7 +20,6 @@ def index(org_id, repo_id):
 
 
 @bp.route("", methods=["POST"])
-@session
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
@@ -34,7 +31,6 @@ def create(org_id, repo_id):
 
 
 @bp.route("/<int:issue_id>", methods=["GET"])
-@session
 def show(org_id, repo_id, issue_id):
     issue = g.session.query(Issue).filter_by(id=issue_id).one_or_none()
     current_app.oso.authorize(g.current_user, "read", issue)

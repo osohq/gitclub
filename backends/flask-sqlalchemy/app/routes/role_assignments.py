@@ -3,13 +3,11 @@ from sqlalchemy import column
 from werkzeug.exceptions import NotFound
 
 from ..models import Org, Repo, User, OrgRole, RepoRole
-from .helpers import session
 
 bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_id>")
 
 
 @bp.route("/unassigned_users", methods=["GET"])
-@session
 def org_unassigned_users_index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", org)
@@ -19,7 +17,6 @@ def org_unassigned_users_index(org_id):
 
 
 @bp.route("/role_assignments", methods=["GET"])
-@session
 def org_index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", org)
@@ -28,7 +25,6 @@ def org_index(org_id):
 
 
 @bp.route("/role_assignments", methods=["POST"])
-@session
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
@@ -43,7 +39,6 @@ def org_create(org_id):
 
 
 @bp.route("/role_assignments", methods=["PATCH"])
-@session
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
@@ -59,7 +54,6 @@ def org_update(org_id):
 
 
 @bp.route("/role_assignments", methods=["DELETE"])
-@session
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
@@ -74,7 +68,6 @@ def org_delete(org_id):
 
 
 @bp.route("/repos/<int:repo_id>/unassigned_users", methods=["GET"])
-@session
 def repo_unassigned_users_index(org_id, repo_id):
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", repo)
@@ -86,7 +79,6 @@ def repo_unassigned_users_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["GET"])
-@session
 def repo_index(org_id, repo_id):
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", repo)
@@ -95,7 +87,6 @@ def repo_index(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["POST"])
-@session
 def repo_create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
@@ -110,7 +101,6 @@ def repo_create(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["PATCH"])
-@session
 def repo_update(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
@@ -126,7 +116,6 @@ def repo_update(org_id, repo_id):
 
 
 @bp.route("/repos/<int:repo_id>/role_assignments", methods=["DELETE"])
-@session
 def repo_delete(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
