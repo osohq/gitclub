@@ -1472,8 +1472,10 @@ osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
-oso@../../../oso/languages/js/:
-  version "0.20.0-beta"
+oso@0.20.1-beta:
+  version "0.20.1-beta"
+  resolved "https://registry.yarnpkg.com/oso/-/oso-0.20.1-beta.tgz#c04c9f7d2c68ca81e284b0f019115393d313cbe5"
+  integrity sha512-K7dEp8EyaebEyMLgVCxMwFG4JDqKaUoN4tea+gdkUe742SszRNB0ERRL7KOmMNKydBYiY3clPJHb4FrhX0K3+A==
 
 p-cancelable@^1.0.0:
   version "1.1.0"

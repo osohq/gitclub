@@ -1,7 +1,7 @@
 PATH
   remote: ../../../oso/languages/ruby
   specs:
-    oso-oso (0.20.0.pre.beta)
+    oso-oso (0.20.1.pre.beta)
       ffi (~> 1.0)
 
 GEM
@@ -157,7 +157,7 @@ PLATFORMS
 DEPENDENCIES
   byebug
   listen (~> 3.3)
-  oso-oso (~> 0.20.0.pre.beta)!
+  oso-oso (~> 0.20.1.pre.beta)!
   pry
   puma (~> 5.0)
   rack-cors
