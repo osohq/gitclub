@@ -1,0 +1,16 @@
+entity: User
+items:
+  john:
+    email: "john@beatles.com"
+  paul:
+    email: "paul@beatles.com"
+  ringo:
+    email: "ringo@beatles.com"
+  mike:
+    email: "mike@monsters.com"
+  sully:
+    email: "sully@monsters.com"
+  randall:
+    email: "randall@monsters.com"
+  admin:
+    email: "admin@admin.com"
