@@ -1,47 +1,59 @@
-import { getRepository } from "typeorm";
+import { Issue } from ".prisma/client";
 import { Request } from "express";
-import { Issue } from "../entities/Issue";
-import { Repo } from "../entities/Repo";
+import { prisma } from "..";
+
+
 
 export class IssueController {
-
-    private repoRepository = getRepository(Repo);
-    private issueRepository = getRepository(Issue);
-
     async all(request: Request) {
-        const repo = await this.repoRepository.findOneOrFail({ id: request.params.repoId });
+        const repo = await prisma.repo.findUnique({ where: { id: request.params.repoId } });
         await request.oso.authorize(request.user, "list_issues", repo);
-        const issueFilter = await request.oso.authorizedQuery(request.user, "read", Issue);
-        return await this.issueRepository.createQueryBuilder()
-            .where({ repoId: request.params.repoId })
-            .andWhere(issueFilter)
-            .getMany();
+        const issueFilter = await request.oso.authorizedQuery(request.user, "read", prisma.issue);
+        return await prisma.issue.findMany(
+            {
+                where: {
+                    AND: [
+                        issueFilter,
+                        {
+                            repoId: request.params.repoId
+                        }
+                    ]
+                }
+            }
+        )
     }
 
     async one(request: Request) {
-        const issue = await this.issueRepository.findOneOrFail({
-            id: request.params.id,
-            repoId: request.params.repoId,
+        const issueFilter = await request.oso.authorizedQuery(request.user, "read", prisma.issue);
+        const issue = await prisma.issue.findFirst({
+            where: {
+                AND: [{
+                    id: request.params.id,
+                    repoId: request.params.repoId,
+                },
+                    issueFilter
+                ]
+            }
         });
-
-        await request.oso.authorize(request.user, "read", issue);
         return issue;
     }
 
     async save(request: Request, response) {
-        const repo = await this.repoRepository.findOneOrFail({ id: request.params.repoId });
-        await request.oso.authorize(request.user, "create_issues", repo);
-        const res = await this.issueRepository.save(request.body);
+        const repo = await prisma.repo.findMany({ where: { id: request.params.repoId } });
+        // await request.oso.authorize(request.user, "create_issues", repo);
+        const res = await prisma.issue.create({ data: request.body });
         return response.status(201).send(res);
     }
 
     async remove(request: Request) {
-        const issue = await this.issueRepository.findOneOrFail({
-            id: request.params.id,
-            repoId: request.params.repoId,
+        const issue: Issue = await prisma.issue.findFirst({
+            where: {
+                id: request.params.id,
+                repoId: request.params.repoId,
+            }
         });
         await request.oso.authorize(request.user, "delete", issue);
-        await this.issueRepository.remove(issue);
+        await prisma.issue.delete({ where: { id: issue.id } });
     }
 
 }

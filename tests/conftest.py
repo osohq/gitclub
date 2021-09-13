@@ -67,6 +67,7 @@ DIRECTORIES = {
     "flask-sqlalchemy": "../backends/flask-sqlalchemy",
     "flask-sqlalchemy-oso": "../backends/flask-sqlalchemy-oso",
     "express-typeorm": "../backends/express-typeorm",
+    "express-prisma": "../backends/express-prisma",
 }
 
 

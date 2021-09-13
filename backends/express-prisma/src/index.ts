@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import { createConnection, getRepository } from "typeorm";
 import * as express from "express";
 import * as session from "cookie-session";
 import * as bodyParser from "body-parser";
@@ -10,10 +9,19 @@ import { orgsRouter } from "./routes/orgs";
 import { sessionRouter } from "./routes/sessions";
 import * as cors from "cors";
 import { addEnforcer, errorHandler, initOso } from "./oso";
-import { User } from "./entities/User";
 import { resetData } from "./test";
+import { Prisma, PrismaClient } from '@prisma/client'
+import { NotFoundError } from "oso";
 
-createConnection().then(async connection => {
+
+
+export const prisma = new PrismaClient({
+    rejectOnNotFound: (e) => new NotFoundError(),
+    log: ["query"]
+})
+
+
+async function main() {
 
     // create express app
     const app = express();
@@ -33,13 +41,22 @@ createConnection().then(async connection => {
     }));
 
     // set current user on the request
-    const userRepository = getRepository(User);
     app.use(async function (req, res, next) {
-        const userId = req.session.userId;
+        const userId: string = req.session.userId;
         if (userId) {
-            req.user = await userRepository.findOne(userId, {
-                relations: ["repoRoles", "orgRoles"]
-            });
+            try {
+                req.user = await prisma.user.findFirst({
+                    where: {
+                        id: Number.parseInt(userId)
+                    },
+                    include: {
+                        orgRole: { include: { org: true } },
+                        repoRole: { include: { repo: true } },
+                    }
+                })
+            } catch (err) {
+                console.error(err)
+            }
         }
         next()
     });
@@ -56,7 +73,7 @@ createConnection().then(async connection => {
         res.send(["admin", "writer", "reader"])
     });
     app.post("/_reset", async (req, res) =>
-        await resetData(connection).then(() => {
+        await resetData().then(() => {
             return res.status(200).send("Data loaded")
         })
             .catch(err => {
@@ -72,6 +89,7 @@ createConnection().then(async connection => {
     app.listen(5000, '0.0.0.0');
 
     console.log("Express server has started on port 5000.");
+}
 
-}).catch(error => console.error(error));
+main().catch(error => console.error(error));
 

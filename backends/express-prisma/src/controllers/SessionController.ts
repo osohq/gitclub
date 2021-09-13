@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
-import { getRepository } from "typeorm";
-import { User } from "../entities/User";
+import { prisma } from "..";
 
 export class SessionController {
-    private userRepository = getRepository(User);
-
     async get(request: Request, res: Response) {
         const user = request.user;
         if (user === undefined) {
@@ -20,7 +17,7 @@ export class SessionController {
             return res.status(500).send("missing email")
         }
 
-        const user = await this.userRepository.findOne({ email: payload.email });
+        const user = await prisma.user.findFirst({ where: { email: payload.email } });
         if (user === undefined) {
             return res.status(404).send('Not found');
         } else {

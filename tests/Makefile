@@ -9,6 +9,9 @@ test-flask-sqlalchemy-oso: .make.requirements-install
 test-express-typeorm: .make.requirements-install
 	BACKEND=express-typeorm pytest ${TEST_FLAGS}
 
+test-express-prisma: .make.requirements-install
+	BACKEND=express-prisma pytest ${TEST_FLAGS}
+
 test-flask-sqlalchemy: .make.requirements-install
 	BACKEND=flask-sqlalchemy pytest ${TEST_FLAGS}
 

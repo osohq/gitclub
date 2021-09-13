@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../database.sqlite"
+}
+
+model Issue {
+  id       Int    @id @default(autoincrement())
+  title    String
+  repoId   Int?
+  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  typename String @default("Issue")
+}
+
+model Org {
+  id              Int       @id @default(autoincrement())
+  name            String
+  base_repo_role  String
+  billing_address String
+  orgRole         OrgRole[]
+  repo            Repo[]
+  typename        String    @default("Org")
+}
+
+model OrgRole {
+  id       Int    @id @default(autoincrement())
+  role     String
+  orgId    Int?
+  userId   Int?
+  org      Org?   @relation(fields: [orgId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  typename String @default("OrgRole")
+}
+
+model Repo {
+  id       Int        @id @default(autoincrement())
+  name     String
+  orgId    Int?
+  org      Org?       @relation(fields: [orgId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  issue    Issue[]
+  repoRole RepoRole[]
+  typename String     @default("Repo")
+}
+
+model RepoRole {
+  id       Int    @id @default(autoincrement())
+  role     String
+  repoId   Int?
+  userId   Int?
+  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  typename String @default("RepoRole")
+}
+
+model User {
+  id       Int        @id @default(autoincrement())
+  email    String
+  orgRole  OrgRole[]
+  repoRole RepoRole[]
+  typename String     @default("User")
+}

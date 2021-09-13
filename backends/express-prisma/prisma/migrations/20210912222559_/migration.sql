@@ -1,0 +1,49 @@
+-- CreateTable
+CREATE TABLE "Issue" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "repoId" INTEGER,
+    CONSTRAINT "Issue_repoId_fkey" FOREIGN KEY ("repoId") REFERENCES "Repo" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- CreateTable
+CREATE TABLE "Org" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "baseRepoRole" TEXT NOT NULL,
+    "billingAddress" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "OrgRole" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "role" TEXT NOT NULL,
+    "orgId" INTEGER,
+    "userId" INTEGER,
+    CONSTRAINT "OrgRole_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Org" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT "OrgRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- CreateTable
+CREATE TABLE "Repo" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "orgId" INTEGER,
+    CONSTRAINT "Repo_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Org" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- CreateTable
+CREATE TABLE "RepoRole" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "role" TEXT NOT NULL,
+    "repoId" INTEGER,
+    "userId" INTEGER,
+    CONSTRAINT "RepoRole_repoId_fkey" FOREIGN KEY ("repoId") REFERENCES "Repo" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT "RepoRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "email" TEXT NOT NULL
+);

@@ -2,6 +2,9 @@
    "name": "backend-nodejs",
    "version": "0.0.1",
    "description": "Awesome project developed with TypeORM.",
+   "prisma": {
+      "seed": "ts-node prisma/seed.ts"
+   },
    "devDependencies": {
       "@types/node": "^8.0.29",
       "nodemon": "^2.0.7",
@@ -10,15 +13,16 @@
       "typescript": "3.3.3333"
    },
    "dependencies": {
+      "@prisma/client": "^3.0.2",
       "body-parser": "^1.18.1",
       "cookie-session": "1.4.0",
       "cors": "^2.8.5",
       "express": "^4.15.4",
-      "oso": "0.20.1-beta",
+      "oso": "../../../oso/languages/js/",
+      "prisma": "^3.0.2",
       "reflect-metadata": "^0.1.10",
       "sql.js": "^1.6.1",
-      "sqlite3": "^4.0.3",
-      "typeorm": "0.2.32"
+      "sqlite3": "^4.0.3"
    },
    "scripts": {
       "start": "nodemon src/index.ts",

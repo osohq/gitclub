@@ -60,9 +60,9 @@ def load_fixture_data(session):
     # Repos #
     #########
 
-    abby_road = Repo(name="Abbey Road", org=beatles)
+    abbey_road = Repo(name="Abbey Road", org=beatles)
     paperwork = Repo(name="Paperwork", org=monsters)
-    repos = [abby_road, paperwork]
+    repos = [abbey_road, paperwork]
     for repo in repos:
         session.add(repo)
 
@@ -70,7 +70,7 @@ def load_fixture_data(session):
     # Issues #
     ##########
 
-    too_much_critical_acclaim = Issue(title="Too much critical acclaim", repo=abby_road)
+    too_much_critical_acclaim = Issue(title="Too much critical acclaim", repo=abbey_road)
     issues = [too_much_critical_acclaim]
     for issue in issues:
         session.add(issue)
@@ -82,9 +82,9 @@ def load_fixture_data(session):
     # Repo roles #
     ##############
 
-    repo_role(john, abby_road, "reader")
-    repo_role(paul, abby_road, "reader")
-    repo_role(ringo, abby_road, "writer")
+    repo_role(john, abbey_road, "reader")
+    repo_role(paul, abbey_road, "reader")
+    repo_role(ringo, abbey_road, "writer")
     repo_role(mike, paperwork, "reader")
     repo_role(sully, paperwork, "reader")
 

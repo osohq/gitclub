@@ -1,45 +1,51 @@
-import { Brackets, getRepository } from "typeorm";
 import { Request } from "express";
-import { Repo } from "../entities/Repo";
-import { RepoRole } from "../entities/RepoRole";
-import { Org } from "../entities/Org";
+import { prisma } from "..";
 
 export class RepoController {
-    private orgRepository = getRepository(Org);
-    private repoRepository = getRepository(Repo);
-    private roleRepository = getRepository(RepoRole);
-
     async all(request: Request) {
-        const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
-        await request.oso.authorize(request.user, "list_repos", org);
-        const repoFilter = await request.oso.authorizedQuery(request.user, "read", Repo);
-        const query = this.repoRepository.createQueryBuilder()
-                          .where({ orgId: request.params.orgId })
-                          .andWhere(repoFilter);
-        return await query.getMany();
+        // const org = await prisma.org.findUnique({ where: { id: request.params.orgId } });
+        // await request.oso.authorize(request.user, "list_repos", org);
+        const repoFilter = await request.oso.authorizedQuery(request.user, "read", prisma.repo);
+        console.log(JSON.stringify(repoFilter, null, 2))
+        return prisma.repo.findMany({
+            where: {
+                AND: [repoFilter, {
+                    orgId: request.params.orgId
+                }]
+            }
+        });
     }
 
     async one(request: Request) {
-        const repo = await this.repoRepository.findOneOrFail({
-            id: request.params.id, orgId: request.params.orgId
+        const repo = await prisma.repo.findFirst({
+            where: {
+                id: request.params.id, orgId: request.params.orgId
+            },
+            include: {
+                org: true
+            }
         });
         await request.oso.authorize(request.user, "read", repo);
         return repo
     }
 
     async save(request: Request, response) {
-        const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
+        const org = await prisma.org.findUnique({ where: { id: request.params.orgId } });
         await request.oso.authorize(request.user, "create_repos", org);
-        const res = await this.repoRepository.save({ id: org.id, ...request.body });
-        await this.roleRepository.save({ repo: res, user: request.user, role: org.base_repo_role });
+        const res = await prisma.repo.create({ data: { orgId: org.id, ...request.body } });
         return response.status(201).send(res);
     }
 
     async remove(request: Request) {
-        const repo = await this.repoRepository.findOneOrFail({
-            id: request.params.id, orgId: request.params.orgId
+        const repo = await prisma.repo.findFirst({
+            where: {
+                id: request.params.id, orgId: request.params.orgId
+            },
+            include: {
+                org: true
+            }
         });
         await request.oso.authorize(request.user, "delete", repo);
-        await this.repoRepository.remove(repo);
+        await prisma.repo.delete({ where: { id: repo.id } });
     }
 }

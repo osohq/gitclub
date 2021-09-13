@@ -1,14 +1,35 @@
 
+import * as models from "@prisma/client";
 import { Relation, Oso, ForbiddenError, NotFoundError } from "oso";
-import { getRepository, In, Not } from "typeorm";
-import { Issue } from "./entities/Issue";
-import { Org } from "./entities/Org";
-import { OrgRole } from "./entities/OrgRole";
-import { Repo } from "./entities/Repo";
-import { RepoRole } from "./entities/RepoRole";
-import { User } from "./entities/User";
+import { prisma } from ".";
 
 export const oso = new Oso();
+
+class Issue { model = prisma.issue }
+class Org { model = prisma.org }
+class OrgRole { model = prisma.orgRole }
+class Repo { model = prisma.repo }
+class RepoRole { model = prisma.repoRole }
+class User { model = prisma.user }
+
+function modelToClass(model) {
+    switch (model) {
+        case prisma.issue:
+            return Issue
+        case prisma.org:
+            return Org
+        case prisma.orgRole:
+            return OrgRole
+        case prisma.repo:
+            return Repo
+        case prisma.repoRole:
+            return RepoRole
+        case prisma.user:
+            return User
+        default:
+            throw new Error(`unexpected model: ${model}`)
+    }
+}
 
 export async function initOso() {
     // set global exec/combine query functions
@@ -16,71 +37,80 @@ export async function initOso() {
         combineQuery: combineQuery,
         buildQuery: buildQuery,
     });
-    function makeMap(obj) {
-        return new Map(Object.entries(obj));
-    }
     oso.registerClass(Issue, {
-        execQuery: execFromRepo(Issue),
+        execQuery: (q) => prisma.issue.findMany({ where: q, include: { repo: true } }),
         types: {
-          id: Number,
-          repo: new Relation('one', 'Repo', 'repoId', 'id')
+            id: Number,
+            repo: new Relation('one', 'Repo', 'repoId', 'id')
         }
     });
 
     oso.registerClass(Org, {
-        execQuery: execFromRepo(Org),
+        execQuery: execFromModel(prisma.org),
         types: {
-          id: Number,
-          base_repo_role: String,
-          orgRoles: new Relation('many', 'OrgRole', 'id', 'orgId')
+            id: Number,
+            base_repo_role: String,
         }
     });
 
     oso.registerClass(OrgRole, {
-        execQuery: execFromRepo(OrgRole),
+        execQuery: (q) => prisma.orgRole.findMany({ where: q, include: { org: true, user: true } }),
         types: {
-          id: Number,
-          role: String,
-          org: new Relation('one', 'Org', 'orgId', 'id'),
-          user: new Relation('one', 'User', 'userId', 'id')
-      }
+            id: Number,
+            role: String,
+            org: new Relation('one', 'Org', 'orgId', 'id'),
+            user: new Relation('one', 'User', 'userId', 'id')
+        }
     });
 
     oso.registerClass(Repo, {
-        execQuery: execFromRepo(Repo),
+        execQuery: (q) => prisma.repo.findMany({ where: q, include: { org: true } }),
         types: {
-          id: Number,
-          org: new Relation('one', 'Org', 'orgId', 'id'),
-          issues: new Relation('many', 'Issue', 'id', 'repoId'),
-          repoRoles: new Relation('many', 'RepoRole', 'id', 'repoId')
-      }
+            id: Number,
+            org: new Relation('one', 'Org', 'orgId', 'id'),
+        }
     });
 
     oso.registerClass(RepoRole, {
-        execQuery: execFromRepo(RepoRole),
+        execQuery: (q) => prisma.repoRole.findMany({ where: q, include: { repo: true, user: true } }),
         types: {
-          id: Number,
-          role: String,
-          repo: new Relation('one', 'Repo', 'repoId', 'id'),
-          user: User,
+            id: Number,
+            role: String,
+            repo: new Relation('one', 'Repo', 'repoId', 'id'),
+            user: User,
         }
     });
 
     oso.registerClass(User, {
-        execQuery: execFromRepo(User),
+        execQuery: (q) => prisma.user.findMany({ where: q, include: { repoRole: { include: { repo: true } }, orgRole: { include: { org: true } } } }),
         types: {
-          id: Number,
-          repoRoles: new Relation('many', 'RepoRole', 'id', 'userId'),
-          orgRoles: new Relation('many', 'OrgRole', 'id', 'userId')
+            id: Number,
+            repoRole: new Relation('many', 'RepoRole', 'id', 'userId'),
+            orgRole: new Relation('many', 'OrgRole', 'id', 'userId')
         }
     });
 
-    await oso.loadFile("src/authorization.polar");
+    await oso.loadFiles(["src/authorization.polar"]);
 }
 
 
+type Model = models.Issue | models.Org | models.OrgRole | models.Repo | models.RepoRole | models.User;
+
 export function addEnforcer(req, _resp, next) {
     req.oso = oso;
+    function wrapFn(fn) {
+        return async function (actor, action, model) {
+            var cls = model;
+            if (!("prototype" in model)) {
+                cls = modelToClass(model)
+            }
+            const res = await fn.call(req.oso, actor, action, cls);
+            console.log(fn, cls, JSON.stringify(res, null, 2))
+            return res
+        }
+    }
+    req.oso.authorizedQuery = wrapFn(req.oso.authorizedQuery);
+    req.oso.authorizedResources = wrapFn(req.oso.authorizedResources);
     next()
 }
 
@@ -102,28 +132,32 @@ export function errorHandler(err: Error, req, res, next) {
 const buildQuery = (constraints: any) => {
     const constrain = (query: any, c: any) => {
         if (c.field === undefined) {
+            console.log(c);
             c.field = "id"
             c.value = c.kind == 'In' ? c.value.map(v => v.id) : c.value.id
         }
 
-        if (c.kind === 'Eq') query[c.field] = c.value
-        else if (c.kind === 'Neq') query[c.field] = Not(c.value)
-        else if (c.kind === 'In') query[c.field] = In(c.value)
+        let q;
+
+        if (c.kind === 'Eq') q = { [c.field]: c.value }
+        else if (c.kind === 'Neq') q = { NOT: { [c.field]: c.value } }
+        else if (c.kind === 'In') query[c.field] = { in: c.value }
         else throw new Error(`Unknown constraint kind: ${c.kind}`);
 
-        return query;
+        return { AND: [query, q] };
     };
 
-    if (constraints.length == 0) return { id: Not(null) }; // FIXME(gw) hack to work with TypeORM query builder
-    return constraints.reduce(constrain, {})
+    const q = constraints.reduce(constrain, {});
+    return q;
 };
 
 
 const combineQuery = (a: any, b: any) => {
-    const listify = (x: any) => x instanceof Array ? x : [x];
-    return listify(a).concat(listify(b));
+    return {
+        OR: [a, b]
+    }
 };
 
-const execFromRepo = (repo) => {
-    return (q) => getRepository(repo).find({where: q})
+const execFromModel = (model) => {
+    return (q) => model.findMany({ where: q })
 }

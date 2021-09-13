@@ -7,6 +7,12 @@ export function addRoutes(router, routes) {
     // register express routes from defined application routes
     routes.forEach(route => {
         (router as any)[route.method](route.route, (req: Request, res: Response, next) => {
+            for (const k in req.params) {
+                if (k.endsWith("Id") || k === "id") {
+                    req.params[k] = parseInt(req.params[k]);
+                }
+            }
+
             const result = (new (route.controller as any))[route.action](req, res, next);
             if (result instanceof Promise) {
                 result.then(result => {
