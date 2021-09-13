@@ -8,6 +8,11 @@ const Routes = [ {
     route: "/:id",
     controller: UserController,
     action: "one"
+}, {
+    method: "get",
+    route: "/:id/repos",
+    controller: UserController,
+    action: "allRepos"
 }];
 
 // Handles requests made to /users
