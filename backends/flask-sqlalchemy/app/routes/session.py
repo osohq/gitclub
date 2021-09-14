@@ -2,7 +2,6 @@ from flask import Blueprint, g, request, current_app, jsonify, session as flask_
 from werkzeug.exceptions import BadRequest, NotFound
 
 from ..models import User
-from .helpers import session
 
 bp = Blueprint("routes.session", __name__, url_prefix="/session")
 
@@ -13,7 +12,6 @@ def show():
 
 
 @bp.route("", methods=["POST"])
-@session(checked_permissions=None)
 def create():
     payload = request.get_json(force=True)
     if "email" not in payload:

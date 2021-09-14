@@ -1,0 +1,8 @@
+entity: Repo
+items:
+  abbey_road:
+    name: "Abbey Road"
+    org: "@beatles"
+  paperwork:
+    name: "Paperwork"
+    org: "@monsters"

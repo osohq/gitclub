@@ -12,12 +12,13 @@ import { Index as OrgIndex } from './orgs/Index';
 import { New as OrgNew } from './orgs/New';
 import { Show as OrgShow } from './orgs/Show';
 
-import { Index as RepoIndex } from './repos/Index';
-import { New as RepoNew } from './repos/New';
-import { Settings as RepoSettings } from './repos/Settings';
-import { Show as RepoShow } from './repos/Show';
+import { Index as OrgRepoIndex } from './orgs/repos/Index';
+import { New as OrgRepoNew } from './orgs/repos/New';
+import { Settings as OrgRepoSettings } from './orgs/repos/Settings';
+import { Show as OrgRepoShow } from './orgs/repos/Show';
 
 import { Show as UserShow } from './users/Show';
+import { Index as UserRepoIndex } from './users/repos/Index';
 
 export const View = {
   Home,
@@ -28,14 +29,22 @@ export const View = {
 
   Issue: { Index: IssueIndex, New: IssueNew, Show: IssueShow },
 
-  Org: { Index: OrgIndex, New: OrgNew, Show: OrgShow },
-
-  Repo: {
-    Index: RepoIndex,
-    New: RepoNew,
-    Settings: RepoSettings,
-    Show: RepoShow,
+  Org: {
+    Index: OrgIndex,
+    New: OrgNew,
+    Show: OrgShow,
+    Repo: {
+      Index: OrgRepoIndex,
+      New: OrgRepoNew,
+      Settings: OrgRepoSettings,
+      Show: OrgRepoShow,
+    }
   },
 
-  User: { Show: UserShow },
+  User: {
+    Show: UserShow,
+    Repo: {
+      Index: UserRepoIndex
+    }
+  },
 };
