@@ -14,7 +14,7 @@
       "cookie-session": "1.4.0",
       "cors": "^2.8.5",
       "express": "^4.15.4",
-      "oso": "0.20.1-beta",
+      "oso": "0.20.1",
       "reflect-metadata": "^0.1.10",
       "sql.js": "^1.6.1",
       "sqlite3": "^4.0.3",

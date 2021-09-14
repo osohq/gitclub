@@ -1472,10 +1472,10 @@ osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
-oso@0.20.1-beta:
-  version "0.20.1-beta"
-  resolved "https://registry.yarnpkg.com/oso/-/oso-0.20.1-beta.tgz#c04c9f7d2c68ca81e284b0f019115393d313cbe5"
-  integrity sha512-K7dEp8EyaebEyMLgVCxMwFG4JDqKaUoN4tea+gdkUe742SszRNB0ERRL7KOmMNKydBYiY3clPJHb4FrhX0K3+A==
+oso@0.20.1:
+  version "0.20.1"
+  resolved "https://registry.yarnpkg.com/oso/-/oso-0.20.1.tgz#f41762198dcfb99a99c42660d23cb5eb7eef239f"
+  integrity sha512-LLXU+GlnX95nGGU21RX/vwAVIdZeZ73nlfHvkMcFpUeLMGARDSI8anKgZpOQ8JGMehQP10X3pdXFWnG1udMeCQ==
 
 p-cancelable@^1.0.0:
   version "1.1.0"
