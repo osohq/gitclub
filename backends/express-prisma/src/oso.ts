@@ -1,5 +1,3 @@
-
-import * as models from "@prisma/client";
 import { Relation, Oso, ForbiddenError, NotFoundError } from "oso";
 import { prisma } from ".";
 
@@ -93,9 +91,6 @@ export async function initOso() {
     await oso.loadFiles(["src/authorization.polar"]);
 }
 
-
-type Model = models.Issue | models.Org | models.OrgRole | models.Repo | models.RepoRole | models.User;
-
 export function addEnforcer(req, _resp, next) {
     req.oso = oso;
     function wrapFn(fn) {
@@ -105,7 +100,7 @@ export function addEnforcer(req, _resp, next) {
                 cls = modelToClass(model)
             }
             const res = await fn.call(req.oso, actor, action, cls);
-            console.log(fn, cls, JSON.stringify(res, null, 2))
+            // console.log(fn, cls, JSON.stringify(res, null, 2))
             return res
         }
     }
@@ -132,7 +127,7 @@ export function errorHandler(err: Error, req, res, next) {
 const buildQuery = (constraints: any) => {
     const constrain = (query: any, c: any) => {
         if (c.field === undefined) {
-            console.log(c);
+            // console.log(c);
             c.field = "id"
             c.value = c.kind == 'In' ? c.value.map(v => v.id) : c.value.id
         }

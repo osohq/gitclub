@@ -17,7 +17,6 @@ import { NotFoundError } from "oso";
 
 export const prisma = new PrismaClient({
     rejectOnNotFound: (e) => new NotFoundError(),
-    log: ["query"]
 })
 
 
