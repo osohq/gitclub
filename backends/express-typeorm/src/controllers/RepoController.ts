@@ -30,7 +30,7 @@ export class RepoController {
     async save(request: Request, response) {
         const org = await this.orgRepository.findOneOrFail({ id: request.params.orgId });
         await request.oso.authorize(request.user, "create_repos", org);
-        const res = await this.repoRepository.save({ id: org.id, ...request.body });
+        const res = await this.repoRepository.save({ org: org, ...request.body });
         await this.roleRepository.save({ repo: res, user: request.user, role: org.base_repo_role });
         return response.status(201).send(res);
     }
