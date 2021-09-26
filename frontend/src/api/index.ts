@@ -1,10 +1,8 @@
-import { issue } from './issue';
-import { org } from './org';
-import { repo, userRepo } from './repo';
-import { RoleAssignmentsApi, roleAssignments } from './roleAssignments';
-import { roleChoices } from './roleChoices';
-import { session } from './session';
-import { user } from './user';
-
-export { issue, org, repo, userRepo, roleAssignments, roleChoices, session, user };
-export type { RoleAssignmentsApi };
+export { issue } from './issue';
+export { org } from './org';
+export { repo } from './repo';
+export { roleAssignments } from './roleAssignments';
+export type { RoleAssignmentsApi } from './roleAssignments';
+export { roleChoices } from './roleChoices';
+export { session } from './session';
+export { user, userRepo, userIssue } from './user';

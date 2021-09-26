@@ -1472,6 +1472,9 @@ osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
+oso@/home/sam/work/oso/oso/languages/js/:
+  version "0.20.1"
+
 oso@0.20.1:
   version "0.20.1"
   resolved "https://registry.yarnpkg.com/oso/-/oso-0.20.1.tgz#f41762198dcfb99a99c42660d23cb5eb7eef239f"

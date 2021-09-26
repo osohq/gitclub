@@ -3,7 +3,7 @@ import { UserController } from "../controllers/UserController";
 import { addRoutes } from "./helpers";
 
 
-const Routes = [ {
+const Routes = [{
     method: "get",
     route: "/:id",
     controller: UserController,
@@ -13,6 +13,11 @@ const Routes = [ {
     route: "/:id/repos",
     controller: UserController,
     action: "allRepos"
+}, {
+    method: "get",
+    route: "/:id/issues",
+    controller: UserController,
+    action: "allIssues"
 }];
 
 // Handles requests made to /users

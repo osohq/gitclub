@@ -80,7 +80,8 @@ resource Issue {
   permissions = ["read"];
   relations = { parent: Repo };
 
-  "read" if "reader" on "parent";
+  # re-enable to see issues
+  # "read" if "reader" on "parent";
 }
 
 has_relation(repo: Repo, "parent", _: Issue{repo: repo});

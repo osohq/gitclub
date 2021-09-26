@@ -15,9 +15,3 @@ export function repo(orgId: string) {
   };
 }
 
-export function userRepo(userId: string) {
-  const path = `/users/${userId}/repos`;
-  return {
-    index: () => index(path, Repo),
-  };
-}

@@ -46,3 +46,7 @@ body {
 a:visited {
   color: blue;
 }
+
+a {
+  text-decoration: none;
+}
