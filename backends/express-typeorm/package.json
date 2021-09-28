@@ -21,7 +21,7 @@
       "typeorm": "0.2.32"
    },
    "scripts": {
-      "start": "nodemon src/index.ts",
+      "start": "nodemon src/index.ts -e ts,js,polar -w src/",
       "test-server": "ts-node src/index.ts",
       "fixtures": "fixtures ./fixtures -d --config ./ormconfig.json --sync --require=ts-node/register"
    }

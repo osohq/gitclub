@@ -18,7 +18,12 @@ export class UserController {
     async allRepos(request: Request) {
         const user = await this.userRepository.findOne(request.params.id);
         await request.oso.authorize(request.user, "read_profile", user);
-        return await request.oso.authorizedResources(user, "read", Repo);
+        const repos: Repo[] = await request.oso.authorizedResources(user, "read", Repo);
+        for (const idx in repos) {
+            const permissions = await request.oso.authorizedActions(request.user, repos[idx])
+            repos[idx].permissions = Array.from(permissions);
+        }
+        return repos
     }
 
     async allIssues(request: Request) {

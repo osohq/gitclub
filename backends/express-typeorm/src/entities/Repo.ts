@@ -24,4 +24,6 @@ export class Repo {
 
     @OneToMany(() => RepoRole, repo_role => repo_role.repo)
     repoRoles!: RepoRole[];
+
+    permissions?: string[]
 }

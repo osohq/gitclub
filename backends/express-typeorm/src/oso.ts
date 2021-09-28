@@ -75,7 +75,7 @@ export async function initOso() {
         }
     });
 
-    await oso.loadFile("src/authorization.polar");
+    await oso.loadFiles(["src/authorization.polar"]);
 }
 
 
@@ -106,6 +106,10 @@ const buildQuery = (constraints: any) => {
             c.value = c.kind == 'In' ? c.value.map(v => v.id) : c.value.id
         }
 
+        if (c.field in query) {
+            throw new Error(`multiple conditions on the same field: ${c.field}`)
+        }
+
         if (c.kind === 'Eq') query[c.field] = c.value
         else if (c.kind === 'Neq') query[c.field] = Not(c.value)
         else if (c.kind === 'In') query[c.field] = In(c.value)
@@ -119,8 +123,13 @@ const buildQuery = (constraints: any) => {
 
 
 const combineQuery = (a: any, b: any) => {
+    if (Object.keys(a).length === 0) {
+        // OR of no filter + anything is no filter
+        return a
+    }
     const listify = (x: any) => x instanceof Array ? x : [x];
-    return listify(a).concat(listify(b));
+    const res = listify(a).concat(listify(b));
+    return res
 };
 
 const execFromRepo = (repo) => {

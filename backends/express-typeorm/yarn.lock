@@ -1475,10 +1475,8 @@ osenv@^0.1.4:
 oso@/home/sam/work/oso/oso/languages/js/:
   version "0.20.1"
 
-oso@0.20.1:
+"oso@file:../../../oso/languages/js":
   version "0.20.1"
-  resolved "https://registry.yarnpkg.com/oso/-/oso-0.20.1.tgz#f41762198dcfb99a99c42660d23cb5eb7eef239f"
-  integrity sha512-LLXU+GlnX95nGGU21RX/vwAVIdZeZ73nlfHvkMcFpUeLMGARDSI8anKgZpOQ8JGMehQP10X3pdXFWnG1udMeCQ==
 
 p-cancelable@^1.0.0:
   version "1.1.0"
