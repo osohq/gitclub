@@ -41,7 +41,7 @@ has_role(user: User, name: String, org: Org) if
     role matches { name: name, org_id: org.id };
 
 resource Repo {
-  roles = ["admin", "writer", "reader"];
+  roles = ["admin", "maintainer", "reader"];
   permissions = [
     "read",
     "create_issues",
@@ -58,7 +58,7 @@ resource Repo {
   "update_role_assignments" if "admin";
   "delete_role_assignments" if "admin";
 
-  "create_issues" if "writer";
+  "create_issues" if "maintainer";
 
   "read" if "reader";
   "list_issues" if "reader";
@@ -66,8 +66,8 @@ resource Repo {
   "admin" if "owner" on "parent";
   "reader" if "member" on "parent";
 
-  "writer" if "admin";
-  "reader" if "writer";
+  "maintainer" if "admin";
+  "reader" if "maintainer";
 }
 
 has_role(user: User, name: String, repo: Repo) if

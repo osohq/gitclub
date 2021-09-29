@@ -69,7 +69,7 @@ In addition to the "domain" models listed above, there are also the following
 "Roles" models:
 
 - `OrgRole`, which grant users either a `member` or `owner` role orgs.
-- `RepoRole`, which grant users a `admin`, `writer`, or `reader` role on repos.
+- `RepoRole`, which grant users a `admin`, `maintainer`, or `reader` role on repos.
 
 The roles models are used by the Oso policy to determine which orgs, repos, and
 issues users can access. Those permissions are defined in

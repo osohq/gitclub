@@ -80,7 +80,7 @@ def load_fixture_data(session):
 
     repo_role(john, abby_road, "reader")
     repo_role(paul, abby_road, "reader")
-    repo_role(ringo, abby_road, "writer")
+    repo_role(ringo, abby_road, "maintainer")
     repo_role(mike, paperwork, "reader")
     repo_role(sully, paperwork, "reader")
 
