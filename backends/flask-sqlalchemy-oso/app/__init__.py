@@ -120,6 +120,8 @@ def create_app(db_path=None, load_fixtures=False):
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
     oso = SQLAlchemyOso(Base)
+    oso.forbidden_error = Forbidden
+    oso.not_found_error = NotFound
 
     # Load authorization policy.
     oso.load_files(["app/authorization.polar"])

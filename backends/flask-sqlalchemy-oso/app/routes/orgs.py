@@ -17,7 +17,7 @@ def index():
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    current_app.oso.authorize(g.current_user, "create", org)
+    current_app.oso.authorize(g.current_user, "create", org, check_read=False)
 
     g.session.add(org)
     org = g.session.get_or_404(Org, **payload)
