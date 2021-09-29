@@ -298,6 +298,37 @@ def test_issue_create(test_client):
     assert resp.status_code == 404
 
 
+def test_issue_close(test_client):
+    test_client.log_in_as(john)
+    mike_id = 4
+
+    issue_params = {"title": "new issue"}
+    abbey_road_issues = "/orgs/1/repos/1/issues"
+    resp = test_client.post(abbey_road_issues, json=issue_params)
+    issue = resp.json()
+    assert resp.status_code == 201
+
+    # Grant mike a reader role on the abbey road repo
+    role_params = {"user_id": mike_id, "role": "reader"}
+    abbey_road_roles = "/orgs/1/repos/1/role_assignments"
+    resp = test_client.post(abbey_road_roles, json=role_params)
+    assert resp.status_code == 201
+
+    test_client.log_in_as(mike)
+
+    issue_path = f"/orgs/1/repos/1/issues/{issue['id']}"
+    resp = test_client.get(issue_path)
+    assert resp.status_code == 200
+
+    close_issue_path = f"{issue_path}/close"
+    resp = test_client.put(close_issue_path)
+    assert resp.status_code == 403
+
+    test_client.log_in_as(john)
+    resp = test_client.put(close_issue_path)
+    assert resp.status_code == 200
+
+
 def test_issue_show(test_client):
     too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
     resp = test_client.get(too_much_critical_acclaim)
