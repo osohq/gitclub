@@ -329,6 +329,26 @@ def test_issue_close(test_client):
     assert resp.status_code == 200
 
 
+def test_issue_close_as_creator(test_client):
+    test_client.log_in_as(paul)
+
+    # As a reader of abbey road, Paul should not be allowed to close an issue
+    too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
+    resp = test_client.put(f"{too_much_critical_acclaim}/close")
+    assert resp.status_code == 403
+
+    # Paul should be able to create and then close an issue
+    issue_params = {"title": "new issue"}
+    abbey_road_issues = "/orgs/1/repos/1/issues"
+    resp = test_client.post(abbey_road_issues, json=issue_params)
+    issue = resp.json()
+    assert resp.status_code == 201
+
+    close_issue_path = f"/orgs/1/repos/1/issues/{issue['id']}/close"
+    resp = test_client.put(close_issue_path)
+    assert resp.status_code == 200
+
+
 def test_issue_show(test_client):
     too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
     resp = test_client.get(too_much_critical_acclaim)
