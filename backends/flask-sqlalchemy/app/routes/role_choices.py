@@ -20,4 +20,4 @@ def org_roles():
 
 @bp.route("/repo_role_choices", methods=["GET"])
 def repo_roles():
-    return jsonify(["admin", "writer", "reader"])
+    return jsonify(["admin", "maintainer", "reader"])

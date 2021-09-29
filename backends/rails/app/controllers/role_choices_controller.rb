@@ -6,6 +6,6 @@ class RoleChoicesController < ApplicationController
 
   def repo_role_choices
     # TODO: dynamic roles?
-    render json: ["admin", "writer", "reader"]
+    render json: ["admin", "maintainer", "reader"]
   end
 end
