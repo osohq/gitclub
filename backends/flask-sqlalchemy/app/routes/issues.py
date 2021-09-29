@@ -24,7 +24,7 @@ def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
     current_app.oso.authorize(g.current_user, "create_issues", repo)
-    issue = Issue(title=payload["title"], repo_id=repo.id)
+    issue = Issue(title=payload["title"], repo_id=repo.id, creator=g.current_user)
     g.session.add(issue)
     g.session.commit()
     return issue.repr(), 201
@@ -34,4 +34,14 @@ def create(org_id, repo_id):
 def show(org_id, repo_id, issue_id):
     issue = g.session.query(Issue).filter_by(id=issue_id).one_or_none()
     current_app.oso.authorize(g.current_user, "read", issue)
+    return issue.repr()
+
+
+@bp.route("/<int:issue_id>/close", methods=["PUT"])
+def close(org_id, repo_id, issue_id):
+    issue = g.session.query(Issue).filter_by(id=issue_id).one_or_none()
+    current_app.oso.authorize(g.current_user, "close", issue)
+    issue.closed = True
+    g.session.add(issue)
+    g.session.commit()
     return issue.repr()
