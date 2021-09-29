@@ -44,9 +44,9 @@ def ensure_port_5000_is_open(process):
                 "Server died before port 5000 was opened. Check the output above to see why."
             )
         elapsed += interval
-        if elapsed > 30:
+        if elapsed > 60:
             raise RuntimeError(
-                "Server took more than 30s to start listening on port 5000, aborting."
+                "Server took more than 60s to start listening on port 5000, aborting."
             )
 
 
