@@ -2,27 +2,22 @@ from flask import Blueprint, g, request, current_app, jsonify
 from werkzeug.exceptions import Forbidden
 
 from ..models import Org, OrgRole
-from .helpers import check_permission, session
+from .helpers import session
 
 bp = Blueprint("routes.orgs", __name__, url_prefix="/orgs")
 
-# docs: begin-org-index
 @bp.route("", methods=["GET"])
 @session(checked_permissions={Org: "read"})
 def index():
     return jsonify([o.repr() for o in g.session.query(Org)])
-    # docs: end-org-index
 
 
-# docs: begin-is-allowed
 @bp.route("", methods=["POST"])
 @session(checked_permissions=None)
 def create():
     payload = request.get_json(force=True)
     org = Org(**payload)
-    if not current_app.oso.is_allowed(g.current_user, "create", org):
-        raise Forbidden
-    # docs: end-is-allowed
+    current_app.oso.authorize(g.current_user, "create", org)
 
     g.session.add(org)
     org = g.session.get_or_404(Org, **payload)

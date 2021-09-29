@@ -1,7 +1,7 @@
 from flask import Blueprint, g, jsonify
 
 from ..models import User, Repo
-from .helpers import check_permission, session
+from .helpers import session
 
 bp = Blueprint("routes.users", __name__, url_prefix="/users")
 
