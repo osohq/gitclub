@@ -39,7 +39,7 @@ $ bundle exec rails s
 - [`initializers/oso.rb`][file-initializer]: Defines the `OSO` constant,
   registers the necessary models, and loads the policy.
 - [`application_controller.rb`][file-app-controller]: Defines a small controller
-  helper `authorize! :action, resource` that uses `OSO.allowed?` under the hood
+  helper `authorize! :action, resource` that uses `OSO.authorize` under the hood
   to enforce the authorization policy. Check out
   [`repos_controller.rb`][file-repos-controller] to see it in action.
 - [`authorization.polar`][file-auth-polar]: The policy itself! Defines the roles
