@@ -21,57 +21,57 @@ export async function initOso() {
     }
     oso.registerClass(Issue, {
         execQuery: execFromRepo(Issue),
-        types: {
-          id: Number,
-          repo: new Relation('one', 'Repo', 'repoId', 'id')
+        fields: {
+            id: Number,
+            repo: new Relation('one', 'Repo', 'repoId', 'id')
         }
     });
 
     oso.registerClass(Org, {
         execQuery: execFromRepo(Org),
-        types: {
-          id: Number,
-          base_repo_role: String,
-          orgRoles: new Relation('many', 'OrgRole', 'id', 'orgId')
+        fields: {
+            id: Number,
+            base_repo_role: String,
+            orgRoles: new Relation('many', 'OrgRole', 'id', 'orgId')
         }
     });
 
     oso.registerClass(OrgRole, {
         execQuery: execFromRepo(OrgRole),
-        types: {
-          id: Number,
-          role: String,
-          org: new Relation('one', 'Org', 'orgId', 'id'),
-          user: new Relation('one', 'User', 'userId', 'id')
-      }
+        fields: {
+            id: Number,
+            role: String,
+            org: new Relation('one', 'Org', 'orgId', 'id'),
+            user: new Relation('one', 'User', 'userId', 'id')
+        }
     });
 
     oso.registerClass(Repo, {
         execQuery: execFromRepo(Repo),
-        types: {
-          id: Number,
-          org: new Relation('one', 'Org', 'orgId', 'id'),
-          issues: new Relation('many', 'Issue', 'id', 'repoId'),
-          repoRoles: new Relation('many', 'RepoRole', 'id', 'repoId')
-      }
+        fields: {
+            id: Number,
+            org: new Relation('one', 'Org', 'orgId', 'id'),
+            issues: new Relation('many', 'Issue', 'id', 'repoId'),
+            repoRoles: new Relation('many', 'RepoRole', 'id', 'repoId')
+        }
     });
 
     oso.registerClass(RepoRole, {
         execQuery: execFromRepo(RepoRole),
-        types: {
-          id: Number,
-          role: String,
-          repo: new Relation('one', 'Repo', 'repoId', 'id'),
-          user: User,
+        fields: {
+            id: Number,
+            role: String,
+            repo: new Relation('one', 'Repo', 'repoId', 'id'),
+            user: User,
         }
     });
 
     oso.registerClass(User, {
         execQuery: execFromRepo(User),
-        types: {
-          id: Number,
-          repoRoles: new Relation('many', 'RepoRole', 'id', 'userId'),
-          orgRoles: new Relation('many', 'OrgRole', 'id', 'userId')
+        fields: {
+            id: Number,
+            repoRoles: new Relation('many', 'RepoRole', 'id', 'userId'),
+            orgRoles: new Relation('many', 'OrgRole', 'id', 'userId')
         }
     });
 
@@ -125,5 +125,5 @@ const combineQuery = (a: any, b: any) => {
 };
 
 const execFromRepo = (repo) => {
-    return (q) => getRepository(repo).find({where: q})
+    return (q) => getRepository(repo).find({ where: q })
 }

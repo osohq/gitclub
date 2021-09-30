@@ -29,6 +29,8 @@ function modelToClass(model) {
     }
 }
 
+const isaCheck = (name: string) => (i: any) => i !== undefined && "typename" in i && i.typename == name;
+
 export async function initOso() {
     // set global exec/combine query functions
     oso.setDataFilteringQueryDefaults({
@@ -36,24 +38,27 @@ export async function initOso() {
         buildQuery: buildQuery,
     });
     oso.registerClass(Issue, {
+        isaCheck: isaCheck('Issue'),
         execQuery: (q) => prisma.issue.findMany({ where: q, include: { repo: true } }),
-        types: {
+        fields: {
             id: Number,
             repo: new Relation('one', 'Repo', 'repoId', 'id')
         }
     });
 
     oso.registerClass(Org, {
+        isaCheck: isaCheck('Org'),
         execQuery: execFromModel(prisma.org),
-        types: {
+        fields: {
             id: Number,
             base_repo_role: String,
         }
     });
 
     oso.registerClass(OrgRole, {
+        isaCheck: isaCheck('OrgRole'),
         execQuery: (q) => prisma.orgRole.findMany({ where: q, include: { org: true, user: true } }),
-        types: {
+        fields: {
             id: Number,
             role: String,
             org: new Relation('one', 'Org', 'orgId', 'id'),
@@ -62,16 +67,18 @@ export async function initOso() {
     });
 
     oso.registerClass(Repo, {
+        isaCheck: isaCheck('Repo'),
         execQuery: (q) => prisma.repo.findMany({ where: q, include: { org: true } }),
-        types: {
+        fields: {
             id: Number,
             org: new Relation('one', 'Org', 'orgId', 'id'),
         }
     });
 
     oso.registerClass(RepoRole, {
+        isaCheck: isaCheck('RepoRole'),
         execQuery: (q) => prisma.repoRole.findMany({ where: q, include: { repo: true, user: true } }),
-        types: {
+        fields: {
             id: Number,
             role: String,
             repo: new Relation('one', 'Repo', 'repoId', 'id'),
@@ -80,8 +87,9 @@ export async function initOso() {
     });
 
     oso.registerClass(User, {
+        isaCheck: isaCheck('User'),
         execQuery: (q) => prisma.user.findMany({ where: q, include: { repoRole: { include: { repo: true } }, orgRole: { include: { org: true } } } }),
-        types: {
+        fields: {
             id: Number,
             repoRole: new Relation('many', 'RepoRole', 'id', 'userId'),
             orgRole: new Relation('many', 'OrgRole', 'id', 'userId')
