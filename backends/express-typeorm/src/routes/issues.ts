@@ -23,6 +23,11 @@ const Routes = [{
     route: "/:id",
     controller: IssueController,
     action: "remove"
+}, {
+    method: "put",
+    route: "/:id/close",
+    controller: IssueController,
+    action: "close"
 }];
 
 // Handles requests made to /issues

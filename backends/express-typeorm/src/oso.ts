@@ -8,7 +8,12 @@ import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
 
-export const oso = new Oso();
+export const oso = new Oso({
+  // Compare using === or by using IDs
+  equalityFn: (a: any, b: any) => {
+    return a === b || ("id" in a && "id" in b && a.id === b.id);
+  }
+});
 
 export async function initOso() {
     // set global exec/combine query functions
@@ -23,7 +28,8 @@ export async function initOso() {
         execQuery: execFromRepo(Issue),
         fields: {
             id: Number,
-            repo: new Relation('one', 'Repo', 'repoId', 'id')
+            repo: new Relation('one', 'Repo', 'repoId', 'id'),
+            creator: new Relation('one', 'User', 'creatorId', 'id')
         }
     });
 
