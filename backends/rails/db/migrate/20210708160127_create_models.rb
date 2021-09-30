@@ -24,8 +24,9 @@ class CreateModels < ActiveRecord::Migration[6.1]
 
     create_table :issues do |t|
       t.string :title
+      t.boolean :closed, null: false, default: false
       t.references :repo, null: false, foreign_key: true
-
+      t.references :creator, foreign_key: {to_table: :users}
       t.timestamps
     end
   end

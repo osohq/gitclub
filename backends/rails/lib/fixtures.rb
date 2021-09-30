@@ -54,7 +54,7 @@ module Fixtures
     # Issues #
     ##########
 
-    too_much_critical_acclaim = Issue.create(title: "Too much critical acclaim", repo: abbey_road)
+    too_much_critical_acclaim = Issue.create(title: "Too much critical acclaim", repo: abbey_road, creator: john)
     issues = [too_much_critical_acclaim]
 
     ##############
