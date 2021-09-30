@@ -305,8 +305,8 @@ def test_issue_close(test_client):
     issue_params = {"title": "new issue"}
     abbey_road_issues = "/orgs/1/repos/1/issues"
     resp = test_client.post(abbey_road_issues, json=issue_params)
-    issue = resp.json()
     assert resp.status_code == 201
+    issue = resp.json()
 
     # Grant mike a reader role on the abbey road repo
     role_params = {"user_id": mike_id, "role": "reader"}
@@ -341,8 +341,8 @@ def test_issue_close_as_creator(test_client):
     issue_params = {"title": "new issue"}
     abbey_road_issues = "/orgs/1/repos/1/issues"
     resp = test_client.post(abbey_road_issues, json=issue_params)
-    issue = resp.json()
     assert resp.status_code == 201
+    issue = resp.json()
 
     close_issue_path = f"/orgs/1/repos/1/issues/{issue['id']}/close"
     resp = test_client.put(close_issue_path)
