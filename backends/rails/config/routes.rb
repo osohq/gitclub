@@ -7,7 +7,11 @@ Rails.application.routes.draw do
     end
 
     resources :repos, only: [:create, :index, :show] do
-      resources :issues, only: [:index, :create, :show]
+      resources :issues, only: [:index, :create, :show] do
+        member do
+          put :close
+        end
+      end
 
       member do
         get :unassigned_users, controller: "repo_roles"
