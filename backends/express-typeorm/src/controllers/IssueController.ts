@@ -31,7 +31,12 @@ export class IssueController {
     async save(request: Request, response) {
         const repo = await this.repoRepository.findOneOrFail({ id: request.params.repoId });
         await request.oso.authorize(request.user, "create_issues", repo);
-        const res = await this.issueRepository.save(request.body);
+        const issue = {
+            ...request.body,
+            creator: request.user,
+            repo
+        };
+        const res = await this.issueRepository.save(issue);
         return response.status(201).send(res);
     }
 
@@ -42,6 +47,16 @@ export class IssueController {
         });
         await request.oso.authorize(request.user, "delete", issue);
         await this.issueRepository.remove(issue);
+    }
+
+    async close(request: Request, response) {
+        const issue = await this.issueRepository.findOneOrFail({
+            id: request.params.id,
+            repoId: request.params.repoId,
+        });
+        await request.oso.authorize(request.user, "close", issue);
+        await this.issueRepository.update(issue.id, { closed: true });
+        return issue;
     }
 
 }

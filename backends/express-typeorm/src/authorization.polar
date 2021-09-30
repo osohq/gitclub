@@ -58,10 +58,10 @@ resource Repo {
   "update_role_assignments" if "admin";
   "delete_role_assignments" if "admin";
 
-  "create_issues" if "maintainer";
 
   "read" if "reader";
   "list_issues" if "reader";
+  "create_issues" if "reader";
 
   "admin" if "owner" on "parent";
   "reader" if "member" on "parent";
@@ -77,10 +77,14 @@ has_role(user: User, name: String, repo: Repo) if
 has_relation(org: Org, "parent", _: Repo{org: org});
 
 resource Issue {
-  permissions = ["read"];
+  roles = ["creator"];
+  permissions = ["read", "close"];
   relations = { parent: Repo };
-
   "read" if "reader" on "parent";
+  "close" if "maintainer" on "parent";
+  "close" if "creator";
 }
 
 has_relation(repo: Repo, "parent", _: Issue{repo: repo});
+
+has_role(user: User, "creator", _: Issue{creator: user});
