@@ -60,14 +60,13 @@ class Issue(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(256))
+    closed = Column(Boolean, default=False)
 
     repo_id = Column(Integer, ForeignKey("repos.id"))
     repo = relationship("Repo", backref="issues", lazy=False)
 
     creator_id = Column(Integer, ForeignKey("users.id"))
     creator = relationship("User", backref="issues", lazy=False)
-
-    closed = Column(Boolean, default=False)
 
     def repr(self):
         return {"id": self.id, "title": self.title, "closed": self.closed}
