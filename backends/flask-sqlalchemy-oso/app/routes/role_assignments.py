@@ -3,7 +3,7 @@ from sqlalchemy import column
 from werkzeug.exceptions import NotFound
 
 from ..models import Org, Repo, User, OrgRole, RepoRole
-from .helpers import check_permission, session
+from .helpers import session
 
 bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_id>")
 
@@ -35,7 +35,7 @@ def org_index(org_id):
 def org_create(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("create_role_assignments", org)
+    current_app.oso.authorize(g.current_user, "create_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
 
     # Assign user the role in org.
@@ -54,7 +54,7 @@ def org_create(org_id):
 def org_update(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("update_role_assignments", org)
+    current_app.oso.authorize(g.current_user, "update_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     role = g.session.get_or_404(OrgRole, user=user, org=org)
     role.name = payload["role"]
@@ -68,7 +68,7 @@ def org_update(org_id):
 def org_delete(org_id):
     payload = request.get_json(force=True)
     org = g.session.get_or_404(Org, id=org_id)
-    check_permission("delete_role_assignments", org)
+    current_app.oso.authorize(g.current_user, "delete_role_assignments", org)
     user = g.session.get_or_404(User, id=payload["user_id"])
     role = g.session.get_or_404(OrgRole, user=user, org=org)
     g.session.delete(role)
@@ -80,7 +80,7 @@ def org_delete(org_id):
 @session({Repo: "list_role_assignments", User: "read"})
 def repo_unassigned_users_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("create_role_assignments", repo)
+    current_app.oso.authorize(g.current_user, "create_role_assignments", repo)
     existing = [role.user.id for role in repo.roles]
     unassigned = g.session.query(User).filter(User.id.notin_(existing))
     return jsonify([u.repr() for u in unassigned])
@@ -90,7 +90,7 @@ def repo_unassigned_users_index(org_id, repo_id):
 @session({Repo: "list_role_assignments", User: "read", RepoRole: "read"})
 def repo_index(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("list_role_assignments", repo)
+    current_app.oso.authorize(g.current_user, "list_role_assignments", repo)
     # docs: begin-org-role-index-highlight
     assignments = [{"user": role.user.repr(), "role": role.name} for role in repo.roles]
     # docs: end-org-role-index-highlight
@@ -102,7 +102,7 @@ def repo_index(org_id, repo_id):
 def repo_create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("create_role_assignments", repo)
+    current_app.oso.authorize(g.current_user, "create_role_assignments", repo)
     user = g.session.get_or_404(User, id=payload["user_id"])
 
     # TODO(gj): validate that current user is allowed to assign this particular
@@ -119,7 +119,7 @@ def repo_create(org_id, repo_id):
 def repo_update(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("update_role_assignments", repo)
+    current_app.oso.authorize(g.current_user, "update_role_assignments", repo)
     user = g.session.get_or_404(User, id=payload["user_id"])
 
     # TODO(gj): validate that current user is allowed to update this particular
@@ -137,7 +137,7 @@ def repo_update(org_id, repo_id):
 def repo_delete(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
-    check_permission("delete_role_assignments", repo)
+    current_app.oso.authorize(g.current_user, "delete_role_assignments", repo)
     user = g.session.get_or_404(User, id=payload["user_id"])
 
     role = g.session.get_or_404(RepoRole, user=user, repo=repo)

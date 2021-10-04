@@ -25,11 +25,6 @@ def session(checked_permissions: Optional[Permissions]):
     # docs: end-session-decorator
 
 
-def check_permission(action: str, resource: Base):
-    if not current_app.oso.is_allowed(g.current_user, action, resource):
-        raise Forbidden
-
-
 def get_or_raise(self, cls: Type[Any], error, **kwargs):
     resource = self.query(cls).filter_by(**kwargs).one_or_none()
     if resource is None:

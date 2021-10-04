@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request, jsonify
 
 from ..models import Org, Repo
-from .helpers import check_permission, session
+from .helpers import session
 
 bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 
