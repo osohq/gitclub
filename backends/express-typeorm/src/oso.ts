@@ -7,20 +7,7 @@ import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
 
-function typeormObjectsMatch(a: any, b: any) {}
-
-export const oso = new Oso({
-  // Compare using === or by using IDs
-  equalityFn: (a: any, b: any) => {
-    return (
-      a === b ||
-      ("id" in a &&
-        "id" in b &&
-        a.id === b.id &&
-        a.constructor === b.constructor)
-    );
-  },
-});
+export const oso = new Oso();
 
 export async function initOso() {
   // set global exec/combine query functions

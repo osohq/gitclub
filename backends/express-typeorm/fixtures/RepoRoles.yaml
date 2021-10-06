@@ -3,24 +3,24 @@ items:
   role1:
     user: "@john"
     repo: "@abbey_road"
-    role: "owner"
+    role: "admin"
   role2:
     user: "@paul"
     repo: "@abbey_road"
-    role: "member"
+    role: "maintainer"
   role3:
     user: "@ringo"
     repo: "@abbey_road"
-    role: "member"
+    role: "maintainer"
   role4:
     user: "@mike"
     repo: "@paperwork"
-    role: "owner"
+    role: "admin"
   role5:
     user: "@sully"
     repo: "@paperwork"
-    role: "member"
+    role: "maintainer"
   role6:
     user: "@randall"
     repo: "@paperwork"
-    role: "member"
+    role: "maintainer"
