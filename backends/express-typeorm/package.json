@@ -14,7 +14,7 @@
       "cookie-session": "1.4.0",
       "cors": "^2.8.5",
       "express": "^4.15.4",
-      "oso": "/home/sam/work/oso/oso/languages/js/",
+      "oso": "^0.21.0",
       "reflect-metadata": "^0.1.10",
       "sql.js": "^1.6.1",
       "sqlite3": "^4.0.3",

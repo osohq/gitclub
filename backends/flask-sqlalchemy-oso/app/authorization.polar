@@ -1,6 +1,10 @@
 allow(actor, action, resource) if
   has_permission(actor, action, resource);
 
+allow(actor, action, repo: Repo) if
+  org = repo.org and
+  has_permission(actor, action, org);
+
 actor User {
   permissions = ["read"];
 }

@@ -50,7 +50,9 @@ class Repo(Base):
     unique_name_in_org = UniqueConstraint(name, org_id)
 
     def repr(self):
-        return {"id": self.id, "name": self.name}
+        if self.permissions is None:
+            self.permissions = []
+        return {"id": self.id, "name": self.name, "permissions": list(self.permissions)}
         # docs: end-repo-model
 
 

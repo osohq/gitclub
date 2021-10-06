@@ -1,5 +1,5 @@
 import { Issue } from '../models';
-import { create, index, show } from './helpers';
+import { create, index, show } from './issue-helpers';
 
 type Params = { title: string };
 
@@ -12,5 +12,12 @@ export function issue(orgId: string, repoId: string) {
     index: () => index(path, Issue),
 
     show: (id: string) => show(`${path}/${id}`, Issue),
+  };
+}
+
+export function userIssue(userId: string | number) {
+  const path = `/users/${userId}/issues`;
+  return {
+    index: () => index(path, Issue),
   };
 }

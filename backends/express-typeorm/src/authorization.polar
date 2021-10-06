@@ -46,7 +46,7 @@ resource Repo {
   "list_role_assignments" if "admin";
   "update_role_assignments" if "admin";
   "delete_role_assignments" if "admin";
-  "delete" if "admin";
+  # "delete" if "admin";
 
   "create_issues" if "writer";
 
@@ -66,15 +66,6 @@ has_role(user: User, name: String, repo: Repo) if
 
 has_relation(org: Org, "parent", _: Repo{org: org});
 
-resource Issue {
-  permissions = ["read"];
-  relations = { parent: Repo };
-
-  # "read" if "reader" on "parent";
-}
-
-has_relation(repo: Repo, "parent", issue: Issue) if
-  issue.repo = repo;
 
 allow(actor, action, resource) if
   has_permission(actor, action, resource);

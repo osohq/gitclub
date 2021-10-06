@@ -53,7 +53,7 @@ export function Home(_: RouteComponentProps) {
     }
 
     getData()
-      .catch((e) => redirectWithError(`Failed to fetch organizations: ${e.message}`))
+      .catch((e) => redirectWithError(`Failed to fetch data: ${e.message}`))
 
 
   }, [user, refresh]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -69,7 +69,7 @@ export function Home(_: RouteComponentProps) {
 
     <h2>Issues</h2>
     {
-      issues.map((i) => (
+      issues.filter((i) => i.repo !== undefined).map((i) => (
         <IssueComponent repo={i.repo!} issue={i} />
       ))
     }

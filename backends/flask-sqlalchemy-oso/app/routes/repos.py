@@ -1,4 +1,5 @@
 from flask import Blueprint, g, request, jsonify
+from flask.globals import current_app
 
 from ..models import Org, Repo
 from .helpers import check_permission, session
@@ -31,4 +32,6 @@ def create(org_id):
 @session({Repo: "read"})
 def show(org_id, repo_id):
     repo = g.session.get_or_404(Repo, id=repo_id)
+    permissions = current_app.oso.authorized_actions(g.current_user, repo)
+    repo.permissions = permissions
     return repo.repr()

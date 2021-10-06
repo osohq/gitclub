@@ -14,8 +14,8 @@ export class RepoController {
         await request.oso.authorize(request.user, "list_repos", org);
         const repoFilter = await request.oso.authorizedQuery(request.user, "read", Repo);
         const query = this.repoRepository.createQueryBuilder()
-                          .where({ orgId: request.params.orgId })
-                          .andWhere(repoFilter);
+            .where({ orgId: request.params.orgId })
+            .andWhere(repoFilter);
         return await query.getMany();
     }
 
@@ -24,6 +24,8 @@ export class RepoController {
             id: request.params.id, orgId: request.params.orgId
         });
         await request.oso.authorize(request.user, "read", repo);
+        const permissions = await request.oso.authorizedActions(request.user, repo)
+        repo.permissions = Array.from(permissions);
         return repo
     }
 

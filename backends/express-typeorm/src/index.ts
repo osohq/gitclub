@@ -35,7 +35,14 @@ createConnection().then(async connection => {
     // set current user on the request
     const userRepository = getRepository(User);
     app.use(async function (req, res, next) {
-        const userId = req.session.userId;
+        let userId;
+        const authzHeader = req.headers['authorization'];
+        if (authzHeader) {
+            userId = authzHeader.split(' ')[1];
+        }
+        if (req.session.userId) {
+            userId = req.session.userId;
+        }
         if (userId) {
             req.user = await userRepository.findOne(userId, {
                 relations: ["repoRoles", "orgRoles"]

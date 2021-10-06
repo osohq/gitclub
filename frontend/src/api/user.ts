@@ -1,5 +1,6 @@
 import { Issue, Repo, User } from '../models';
 import { index, show } from './helpers';
+import { index as IssueIndex } from './issue-helpers';
 
 const path = '/users';
 
@@ -11,12 +12,5 @@ export function userRepo(userId: string | number) {
   const path = `/users/${userId}/repos`;
   return {
     index: () => index(path, Repo),
-  };
-}
-
-export function userIssue(userId: string | number) {
-  const path = `/users/${userId}/issues`;
-  return {
-    index: () => index(path, Issue),
   };
 }
