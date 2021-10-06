@@ -7,10 +7,10 @@ which all expose a common API that is consumed by a React frontend (in the
 
 For more information, check out one of the backend implementations linked below.
 ## Backends
-- [TypeScript/Express/TypeORM Backend](backends/flask-sqlalchemy)
+- [TypeScript/Express/TypeORM Backend](backends/express-typeorm)
 - [Python/Flask/SQLAlchemy Backend](backends/flask-sqlalchemy)
 - [Python/Flask/SQLAlchemy Backend (with sqlalchemy-oso integration library)](backends/flask-sqlalchemy-oso)
-- [Ruby/Rails Backend](backends/express-typeorm)
+- [Ruby/Rails Backend](backends/rails)
 ## Frontend
 
 ### Running the frontend
