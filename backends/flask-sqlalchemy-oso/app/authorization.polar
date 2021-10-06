@@ -93,16 +93,16 @@ has_role(user: User, "creator", issue: Issue) if
 
 resource OrgRole {
   permissions = ["read"];
-  relations = { parent: Org };
-  "read" if "list_role_assignments" on "parent";
+  relations = { org: Org };
+  "read" if "list_role_assignments" on "org";
 }
 
-has_relation(org: Org, "parent", role: OrgRole) if org = role.org;
+has_relation(org: Org, "org", role: OrgRole) if org = role.org;
 
 resource RepoRole {
   permissions = ["read"];
-  relations = { parent: Repo };
-  "read" if "list_role_assignments" on "parent";
+  relations = { repo: Repo };
+  "read" if "list_role_assignments" on "repo";
 }
 
-has_relation(repo: Repo, "parent", role: RepoRole) if repo = role.repo;
+has_relation(repo: Repo, "repo", role: RepoRole) if repo = role.repo;

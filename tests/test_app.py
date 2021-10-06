@@ -299,6 +299,11 @@ def test_issue_create(test_client):
 
 
 def test_issue_close(test_client):
+    # Logged out user should not be able to close an issue
+    too_much_critical_acclaim = "/orgs/1/repos/1/issues/1"
+    resp = test_client.put(f"{too_much_critical_acclaim}/close")
+    assert resp.status_code == 404
+
     test_client.log_in_as(john)
     mike_id = 4
 
