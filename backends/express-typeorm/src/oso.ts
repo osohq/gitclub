@@ -12,15 +12,13 @@ function typeormObjectsMatch(a: any, b: any) {}
 export const oso = new Oso({
   // Compare using === or by using IDs
   equalityFn: (a: any, b: any) => {
-    if (
-      "id" in a &&
-      "id" in b &&
-      a.id === b.id &&
-      a.constructor === b.constructor
-    ) {
-      return true;
-    }
-    return a === b;
+    return (
+      a === b ||
+      ("id" in a &&
+        "id" in b &&
+        a.id === b.id &&
+        a.constructor === b.constructor)
+    );
   },
 });
 
