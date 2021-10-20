@@ -10,6 +10,7 @@ For more information, check out one of the backend implementations linked below.
 - [Flask SQLAlchemy Backend](backends/flask-sqlalchemy)
 - [Flask SQLAlchemy Backend (with sqlalchemy-oso integration library)](backends/flask-sqlalchemy-oso)
 - [Rails Backend](backends/rails)
+- [Express/TypeORM Backend](backends/express-typeorm)
 ## Frontend
 
 ### Running the frontend
