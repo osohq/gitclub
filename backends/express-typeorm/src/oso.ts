@@ -1,4 +1,10 @@
-import { Relation, Oso, ForbiddenError, NotFoundError } from "oso";
+import {
+  Relation,
+  Oso,
+  ForbiddenError,
+  NotFoundError,
+  defaultEqualityFn,
+} from "oso";
 import { getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
 import { Org } from "./entities/Org";
@@ -7,18 +13,16 @@ import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
 
-function typeormObjectsMatch(a: any, b: any) {}
+function typeormObjectsMatch(a: any, b: any) {
+  return (
+    "id" in a && "id" in b && a.id === b.id && a.constructor === b.constructor
+  );
+}
 
 export const oso = new Oso({
   // Compare using === or by using IDs
   equalityFn: (a: any, b: any) => {
-    return (
-      a === b ||
-      ("id" in a &&
-        "id" in b &&
-        a.id === b.id &&
-        a.constructor === b.constructor)
-    );
+    return defaultEqualityFn(a, b) || (a && b && typeormObjectsMatch(a, b));
   },
 });
 
