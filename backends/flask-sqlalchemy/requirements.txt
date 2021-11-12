@@ -1,3 +1,3 @@
 flask~=1.1.4
 SQLAlchemy~=1.3.20
-oso==0.21.0
+oso==0.23.0

@@ -151,7 +151,8 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         Repo,
         build_query=query_builder(Repo),
-        types={
+        fields={
+            "id": int,
             "name": str,
             "org": Relation(
                 kind="one", other_type="Org", my_field="org_id", other_field="id"
@@ -165,7 +166,7 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         OrgRole,
         build_query=query_builder(OrgRole),
-        types={
+        fields={
             "name": str,
             "user": Relation(
                 kind="one", other_type="User", my_field="user_id", other_field="id"
@@ -179,7 +180,7 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         RepoRole,
         build_query=query_builder(RepoRole),
-        types={
+        fields={
             "name": str,
             "user": Relation(
                 kind="one", other_type="User", my_field="user_id", other_field="id"
@@ -193,7 +194,7 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         Issue,
         build_query=query_builder(Issue),
-        types={
+        fields={
             "title": str,
             "repo": Relation(
                 kind="one", other_type="Repo", my_field="repo_id", other_field="id"
@@ -204,7 +205,8 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         Org,
         build_query=query_builder(Org),
-        types={
+        fields={
+            "id": int,
             "name": str,
             "base_repo_role": str,
             "billing_address": str,
@@ -217,7 +219,7 @@ def init_oso(app, Session: sessionmaker):
     oso.register_class(
         User,
         build_query=query_builder(User),
-        types={
+        fields={
             "email": str,
             "org_roles": Relation(
                 kind="many", other_type="OrgRole", my_field="id", other_field="user_id"

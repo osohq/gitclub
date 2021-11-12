@@ -1,4 +1,5 @@
 from flask import Blueprint, g, request, jsonify
+from flask.globals import current_app
 
 from ..models import Repo, Issue
 from .helpers import session
@@ -23,7 +24,7 @@ def index(org_id, repo_id):
 def create(org_id, repo_id):
     payload = request.get_json(force=True)
     repo = g.session.get_or_404(Repo, id=repo_id)
-    issue = Issue(title=payload["title"], repo=repo)
+    issue = Issue(title=payload["title"], repo=repo, creator_id=g.current_user.id)
     # check_permission("create", issue)  # TODO(gj): validation check; maybe unnecessary.
     g.session.add(issue)
     g.session.commit()
@@ -34,4 +35,15 @@ def create(org_id, repo_id):
 @session({Issue: "read"})
 def show(org_id, repo_id, issue_id):
     issue = g.session.get_or_404(Issue, id=issue_id)
+    return issue.repr()
+
+
+@bp.route("/<int:issue_id>/close", methods=["PUT"])
+@session({Issue: "read"})
+def close(org_id, repo_id, issue_id):
+    issue = g.session.get_or_404(Issue, id=issue_id)
+    current_app.oso.authorize(g.current_user, "close", issue)
+    issue.closed = True
+    g.session.add(issue)
+    g.session.commit()
     return issue.repr()

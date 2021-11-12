@@ -54,7 +54,7 @@ module Fixtures
     # Issues #
     ##########
 
-    too_much_critical_acclaim = Issue.create(title: "Too much critical acclaim", repo: abbey_road)
+    too_much_critical_acclaim = Issue.create(title: "Too much critical acclaim", repo: abbey_road, creator: john)
     issues = [too_much_critical_acclaim]
 
     ##############
@@ -65,7 +65,7 @@ module Fixtures
 
     RepoRole.create(user: john, repo: abbey_road, name: "reader")
     RepoRole.create(user: paul, repo: abbey_road, name: "reader")
-    RepoRole.create(user: ringo, repo: abbey_road, name: "writer")
+    RepoRole.create(user: ringo, repo: abbey_road, name: "maintainer")
     RepoRole.create(user: mike, repo: paperwork, name: "reader")
     RepoRole.create(user: sully, repo: paperwork, name: "reader")
 

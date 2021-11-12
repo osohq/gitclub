@@ -1,3 +1,4 @@
+from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.types import Integer, String
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -59,12 +60,16 @@ class Issue(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(256))
+    closed = Column(Boolean, default=False)
 
     repo_id = Column(Integer, ForeignKey("repos.id"))
     repo = relationship("Repo", backref="issues", lazy=False)
 
+    creator_id = Column(Integer, ForeignKey("users.id"))
+    creator = relationship("User", backref="issues", lazy=False)
+
     def repr(self):
-        return {"id": self.id, "title": self.title}
+        return {"id": self.id, "title": self.title, "closed": self.closed}
 
 
 class OrgRole(Base):
