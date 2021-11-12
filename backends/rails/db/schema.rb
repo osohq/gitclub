@@ -14,9 +14,12 @@ ActiveRecord::Schema.define(version: 2021_07_08_211206) do
 
   create_table "issues", force: :cascade do |t|
     t.string "title"
+    t.boolean "closed", default: false, null: false
     t.integer "repo_id", null: false
+    t.integer "creator_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.index ["creator_id"], name: "index_issues_on_creator_id"
     t.index ["repo_id"], name: "index_issues_on_repo_id"
   end
 
@@ -66,6 +69,7 @@ ActiveRecord::Schema.define(version: 2021_07_08_211206) do
   end
 
   add_foreign_key "issues", "repos"
+  add_foreign_key "issues", "users", column: "creator_id"
   add_foreign_key "org_roles", "orgs"
   add_foreign_key "org_roles", "users"
   add_foreign_key "repo_roles", "repos"
