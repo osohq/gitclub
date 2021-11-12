@@ -20,7 +20,7 @@ function typeormObjectsMatch(a: any, b: any) {
 }
 
 export const oso = new Oso({
-  // Compare using === or by using IDs
+  // Compare using defaultEqualityFn or by using IDs
   equalityFn: (a: any, b: any) => {
     return defaultEqualityFn(a, b) || (a && b && typeormObjectsMatch(a, b));
   },
