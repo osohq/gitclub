@@ -126,7 +126,7 @@ const buildQuery = (constraints: any) => {
 
     if (c.kind === "Eq") query[c.field] = c.value;
     else if (c.kind === "Neq") query[c.field] = Not(c.value);
-    else if (c.kind === "In") query[c.field[0]] = In(c.value[0]);
+    else if (c.kind === "In") query[c.field] = In(c.value);
     else throw new Error(`Unknown constraint kind: ${c.kind}`);
 
     return query;
