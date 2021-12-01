@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
-import { OrgRole } from "./OrgRole";
+import { CustomOrgRole, OrgRole } from "./OrgRole";
 import { Repo } from "./Repo";
 import { RepoRole } from "./RepoRole";
 
@@ -23,4 +23,7 @@ export class Org {
 
     @OneToMany(() => OrgRole, org_role => org_role.org)
     orgRoles!: OrgRole[];
+
+    @OneToMany(() => CustomOrgRole, org_role => org_role.org)
+    customOrgRoles!: CustomOrgRole[];
 }
