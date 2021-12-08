@@ -20,6 +20,8 @@ Rails.application.routes.draw do
     end
   end
 
+  get '/_oso_internal/:user_id/:role_name/:resource_id', to: 'oso#check'
+
   resources :users, only: [:show] do
     resources :repos, only: [:index], controller: "user_repos"
   end
