@@ -1,0 +1,3 @@
+main: make test-server
+actions: make actions-server
+oso: node oso-service/oso.js

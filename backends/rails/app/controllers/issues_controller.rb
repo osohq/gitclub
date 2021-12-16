@@ -14,7 +14,6 @@ class IssuesController < ApplicationController
   end
 
   def show
-    p Issue.all.to_a
     issue = Issue.find(params[:id])
     authorize! "read", issue
     render json: issue

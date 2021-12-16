@@ -25,8 +25,6 @@ class OrgRolesController < ApplicationController
 
     OrgRole.create(name: role, user: user, org: org)
 
-    OSO.add_role(user, role, org)
-
     render json: {
       user: user,
       role: role
@@ -41,10 +39,7 @@ class OrgRolesController < ApplicationController
     role = params.require(:role)
 
     existing_role = OrgRole.find_by!(user: user, org: org)
-    OSO.delete_role(user, existing_role.name, org)
-
     existing_role.update(name: role)
-    OSO.add_role(user, role, org)
 
     render json: {
       user: user,
@@ -58,10 +53,7 @@ class OrgRolesController < ApplicationController
     user_id = params.require(:user_id)
     user = User.find(user_id)
 
-    roles = OrgRole.destroy_by(user: user, org: org)
-    roles.each do |role|
-      OSO.delete_role(user, role.name, org)
-    end
+    OrgRole.destroy_by(user: user, org: org)
 
     head :no_content
   end

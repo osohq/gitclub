@@ -2,7 +2,7 @@ class ReposController < ApplicationController
   def index
     org = Org.find(params[:org_id])
     authorize! "list_repos", org
-    repos = OSO.authorized_query(current_user, 'read', Repo).where(org: org)
+    repos = OSO.authorized_query(current_user, 'read', 'Repo').where(org: org)
 
     render json: repos
   end

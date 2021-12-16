@@ -1,0 +1,11 @@
+{
+  "name": "oso-service",
+  "version": "0.0.1",
+  "description": "Demo service for running standalone Oso",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.19.1",
+    "express": "^4.17.1",
+    "oso": "^0.24.0"
+  }
+}

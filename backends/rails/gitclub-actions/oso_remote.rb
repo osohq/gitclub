@@ -6,7 +6,7 @@ class OsoRemote
   end
 
   def self.has_role(user, role_name, resource)
-    uri = URI("http://localhost:5000/_oso_internal/#{user.id}/#{role_name}/#{resource.id}")
+    uri = URI("http://localhost:5000/has_role/User/#{user.id}/#{role_name}/Repo/#{resource.id}")
     res = Net::HTTP.get_response(uri)
     return JSON.parse(res.body) if res.is_a?(Net::HTTPSuccess)
     false
