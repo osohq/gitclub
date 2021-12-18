@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 class Base {
   constructor(type, id) {
     this.type = type;
-    this.id = id;
+    this.id = id.toString();
   }
 }
 
@@ -64,7 +64,7 @@ app.delete("/roles", (req, res) => {
   console.log("Deleting role", req.body);
   const actor = new Base(req.body.actor_type, req.body.actor_id);
   const resource = new Base(req.body.resource_type, req.body.resource_id);
-  const currentIndex = relations.findIndex(
+  const currentIndex = roles.findIndex(
     (role) => equals(role.actor, actor) && equals(role.resource, resource)
   );
   console.log("Found current role index", currentIndex);
@@ -101,11 +101,8 @@ app.delete("/relations", (req, res) => {
 app.get(
   "/has_role/:actorType/:actorId/:roleName/:resourceType/:resourceId",
   async (req, res) => {
-    const actor = new Base(req.params.actorType, parseInt(req.params.actorId));
-    const resource = new Base(
-      req.params.resourceType,
-      parseInt(req.params.resourceId)
-    );
+    const actor = new Base(req.params.actorType, req.params.actorId);
+    const resource = new Base(req.params.resourceType, req.params.resourceId);
     const role = req.params.roleName;
     const result = await oso.queryRuleOnce("has_role", actor, role, resource);
     console.log("QUERYING FOR ROLE", req.params, result);
