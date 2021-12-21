@@ -1,3 +1,4 @@
+# BELONGS TO GITCLUB --------------------------
 allow(actor, action, resource) if has_permission(actor, action, resource);
 
 # Users can see each other.
@@ -64,10 +65,13 @@ resource Repo {
   "reader" if "maintainer";
 }
 
+# BELONGS TO OSO SERVICE ----------------------
 has_role(actor: Actor, name: String, resource: Resource) if
-  role in Data.roles and role matches { name, actor, resource };
+  # Data.has_role(actor, name, resource);
+  role in Data.getRoles(actor) and role matches { name, resource };
 
 # type has_relation(subject: Org, predicate: String, object: Repo);
 has_relation(subject: Org, "parent", object: Repo) if
-  relation in Data.relations and
-  relation matches { predicate: "parent", subject, object };
+  # HACK: we have to assume that object is the thing that's bound here
+  relation in Data.getRelations(object) and
+  relation matches { predicate: "parent", subject };

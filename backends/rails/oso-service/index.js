@@ -1,7 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Oso, defaultEqualityFn } = require("oso");
+const knexfile = require("./knexfile");
 
+const knex = require("knex")(knexfile.development);
 const app = express();
 app.use(bodyParser.json());
 
@@ -9,6 +11,14 @@ class Base {
   constructor(type, id) {
     this.type = type;
     this.id = id.toString();
+  }
+
+  static from(row, field_name) {
+    return new Base(row[field_name + "_type"], row[field_name + "_id"]);
+  }
+
+  toString() {
+    return `${this.type}:${this.id}`;
   }
 }
 
@@ -30,7 +40,33 @@ oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Repo",
   name: "Repo",
 });
-oso.registerConstant({ roles, relations }, "Data");
+const Data = {
+  roles,
+  relations,
+  getRoles: async (actor) => {
+    const rows = await knex("roles").where({
+      actor_id: actor.id,
+      actor_type: actor.type,
+    });
+    return rows.map((row) => ({
+      name: row.name,
+      actor: Base.from(row, "actor"),
+      resource: Base.from(row, "resource"),
+    }));
+  },
+  getRelations: async (object) => {
+    const rows = await knex("relations").where({
+      object_id: object.id,
+      object_type: object.type,
+    });
+    return rows.map((row) => ({
+      predicate: row.predicate,
+      subject: Base.from(row, "subject"),
+      object: Base.from(row, "object"),
+    }));
+  },
+};
+oso.registerConstant(Data, "Data");
 oso.loadFiles(["main.polar"]);
 
 // app.post("/update_policy", async (req, res) => {
@@ -50,51 +86,63 @@ function equals(obj1, obj2) {
   return defaultEqualityFn(obj1, obj2);
 }
 
-app.post("/roles", (req, res) => {
-  console.log("Got role", req.body);
-  const actor = new Base(req.body.actor_type, req.body.actor_id);
-  const resource = new Base(req.body.resource_type, req.body.resource_id);
-  roles.push({ actor, resource, name: req.body.name });
-
-  console.log("ROLES: ", roles);
-  res.send("ok");
-});
-
-app.delete("/roles", (req, res) => {
-  console.log("Deleting role", req.body);
-  const actor = new Base(req.body.actor_type, req.body.actor_id);
-  const resource = new Base(req.body.resource_type, req.body.resource_id);
-  const currentIndex = roles.findIndex(
-    (role) => equals(role.actor, actor) && equals(role.resource, resource)
+app.post("/roles", async (req, res) => {
+  console.log(
+    `Creating role:`,
+    Base.from(req.body, "actor").toString(),
+    req.body.name,
+    Base.from(req.body, "resource").toString()
   );
-  console.log("Found current role index", currentIndex);
-  if (currentIndex >= 0) roles.splice(currentIndex, 1);
-
-  console.log("ROLES: ", roles);
+  // TODO: This isn't safe at all
+  await knex("roles").insert(req.body);
   res.send("ok");
 });
 
-app.post("/relations", (req, res) => {
-  console.log("Got relation", req.body);
-  const subject = new Base(req.body.subject_type, req.body.subject_id);
-  const object = new Base(req.body.object_type, req.body.object_id);
-  relations.push({ subject, object, predicate: req.body.predicate });
-
-  console.log("RELATIONS: ", relations);
-  res.send("ok");
-});
-
-app.delete("/relations", (req, res) => {
-  console.log("Deleting relation", req.body);
-  const subject = new Base(req.body.subject_type, req.body.subject_id);
-  const object = new Base(req.body.object_type, req.body.object_id);
-  const currentIndex = relations.findIndex(
-    (role) => equals(role.subject, subject) && equals(role.object, object)
+app.delete("/roles", async (req, res) => {
+  console.log(
+    `Deleting role:`,
+    Base.from(req.body, "actor").toString(),
+    Base.from(req.body, "resource").toString()
   );
-  console.log("Found current relation index", currentIndex);
-  if (currentIndex >= 0) relations.splice(currentIndex, 1);
+  const count = await knex("roles")
+    .where({
+      actor_type: req.body.actor_type,
+      actor_id: req.body.actor_id,
+      resource_type: req.body.resource_type,
+      resource_id: req.body.resource_id,
+    })
+    .delete();
+  console.log(`Deleted ${count} roles`);
+  res.send("ok");
+});
 
-  console.log("RELATIONS: ", relations);
+app.post("/relations", async (req, res) => {
+  console.log(
+    `Creating role:`,
+    Base.from(req.body, "subject").toString(),
+    req.body.predicate,
+    Base.from(req.body, "object").toString()
+  );
+  // TODO: This isn't safe at all
+  await knex("relations").insert(req.body);
+  res.send("ok");
+});
+
+app.delete("/relations", async (req, res) => {
+  console.log(
+    `Deleting role:`,
+    Base.from(req.body, "subject").toString(),
+    Base.from(req.body, "object").toString()
+  );
+  const count = await knex("roles")
+    .where({
+      subject_type: req.body.subject_type,
+      subject_id: req.body.subject_id,
+      object_type: req.body.object_type,
+      object_id: req.body.object_id,
+    })
+    .delete();
+  console.log(`Deleted ${count} relations`);
   res.send("ok");
 });
 
@@ -105,7 +153,8 @@ app.get(
     const resource = new Base(req.params.resourceType, req.params.resourceId);
     const role = req.params.roleName;
     const result = await oso.queryRuleOnce("has_role", actor, role, resource);
-    console.log("QUERYING FOR ROLE", req.params, result);
+    console.log("Querying role", actor.toString(), role, resource.toString());
+    console.log("Got result:", result);
     res.send(result);
   }
 );
