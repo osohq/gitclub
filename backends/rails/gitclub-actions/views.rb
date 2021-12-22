@@ -20,18 +20,21 @@ def actions_view(user, repo)
   end.join("\n")
 end
 
-def footer_view
+def footer_view(total_duration, remote_duration)
   "Log in as different users: <br />" +
   [1,2,4].map do |id|
     "<a href='/login/#{id}'><button>#{User.find(id).email}</button></a>"
-  end.join(horizontal_space)
+  end.join(horizontal_space) +
+  "<br /><br />" +
+  "Authorization took #{total_duration.to_i}ms<br />" +
+  "Role lookups took #{remote_duration.to_i}ms<br />"
 end
 
-def actions_page(user, repo)
+def actions_page(user, repo, total_duration, remote_duration)
   header_view(user) +
   vertical_space +
   actions_view(user, repo) +
   vertical_space +
-  footer_view
+  footer_view(total_duration, remote_duration)
 end
 

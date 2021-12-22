@@ -4,6 +4,9 @@ const { Oso, defaultEqualityFn } = require("oso");
 const knexfile = require("./knexfile");
 
 const knex = require("knex")(knexfile.development);
+knex.on("query", (data) =>
+  console.log(data.sql + " " + JSON.stringify(data.bindings))
+);
 const app = express();
 app.use(bodyParser.json());
 
@@ -43,16 +46,27 @@ oso.registerClass(Object, {
 const Data = {
   roles,
   relations,
-  getRoles: async (actor) => {
+  rolesCache: {},
+  clearCache() {
+    this.rolesCache = {};
+  },
+  async getRoles(actor) {
+    const cacheKey = actor.type + ":" + actor.id;
+    if (this.rolesCache[cacheKey]) {
+      return this.rolesCache[cacheKey];
+    }
     const rows = await knex("roles").where({
       actor_id: actor.id,
       actor_type: actor.type,
     });
-    return rows.map((row) => ({
+
+    const result = rows.map((row) => ({
       name: row.name,
       actor: Base.from(row, "actor"),
       resource: Base.from(row, "resource"),
     }));
+    this.rolesCache[cacheKey] = result;
+    return result;
   },
   getRelations: async (object) => {
     const rows = await knex("relations").where({
@@ -149,12 +163,15 @@ app.delete("/relations", async (req, res) => {
 app.get(
   "/has_role/:actorType/:actorId/:roleName/:resourceType/:resourceId",
   async (req, res) => {
+    Data.clearCache();
+    const start = new Date().getTime();
     const actor = new Base(req.params.actorType, req.params.actorId);
     const resource = new Base(req.params.resourceType, req.params.resourceId);
     const role = req.params.roleName;
-    const result = await oso.queryRuleOnce("has_role", actor, role, resource);
     console.log("Querying role", actor.toString(), role, resource.toString());
-    console.log("Got result:", result);
+    const result = await oso.queryRuleOnce("has_role", actor, role, resource);
+    const duration = new Date().getTime() - start;
+    console.log("Got result", result, "in", duration, "ms");
     res.send(result);
   }
 );

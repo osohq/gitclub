@@ -26,11 +26,15 @@ end
 get '/repo/:repo_id/actions' do
   user = Session.get_user(self)
   repo = Repository.find(params[:repo_id])
-  OSO.authorize(user, "list_actions", repo)
 
-  actions_page(user, repo)
+  start = Time.now
+  OsoRemote.reset_timer
+  OSO.authorize(user, "list_actions", repo)
+  total_duration = (Time.now - start) * 1000.0
+
+  actions_page(user, repo, total_duration, OsoRemote.get_duration)
 end
 
 error Oso::NotFoundError do
-  "Repository not found" + vertical_space + footer_view
+  "Repository not found" + vertical_space + footer_view(0, OsoRemote.get_duration)
 end
