@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const { Oso, defaultEqualityFn } = require("oso");
+const { Oso, defaultEqualityFn, Relation, Variable } = require("oso");
 const knexfile = require("./knexfile");
 
 const knex = require("knex")(knexfile.development);
@@ -23,29 +23,64 @@ class Base {
   toString() {
     return `${this.type}:${this.id}`;
   }
+
+  get roles() {
+    return knex("roles")
+      .where({
+        resource_type: this.type,
+        resource_id: this.id,
+      })
+      .then((rows) =>
+        rows.map((row) => ({
+          name: row.name,
+          actor: Base.from(row, "actor"),
+          resource: Base.from(row, "resource"),
+        }))
+      );
+  }
 }
 
-let roles = [];
-let relations = [];
+class Role {}
+class Relation2 {}
 
 let oso = new Oso({
   equalityFn: equals,
+});
+oso.registerClass(Relation2, { name: "Relation" });
+oso.registerClass(Role, {
+  fields: {
+    actor: new Relation("one", "User", "actor_id", "id"),
+  },
 });
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "User",
   name: "User",
 });
 oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Tenant",
+  name: "Tenant",
+  fields: {
+    roles: new Relation("many", "Role", "id", "resource_id"),
+    relations: new Relation("many", "Relation", "id", "object_id"),
+  },
+});
+oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Org",
   name: "Org",
+  fields: {
+    roles: new Relation("many", "Role", "id", "resource_id"),
+    relations: new Relation("many", "Relation", "id", "object_id"),
+  },
 });
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Repo",
   name: "Repo",
+  fields: {
+    roles: new Relation("many", "Role", "id", "resource_id"),
+    relations: new Relation("many", "Relation", "id", "object_id"),
+  },
 });
 const Data = {
-  roles,
-  relations,
   rolesCache: {},
   clearCache() {
     this.rolesCache = {};
@@ -160,6 +195,212 @@ app.delete("/relations", async (req, res) => {
   res.send("ok");
 });
 
+function assert(condition, errorMessage) {
+  if (!condition) throw new Error(errorMessage);
+}
+
+/*
+{
+  resource: {
+    operator: "And",
+    args: [
+      {
+        operator: "Isa",
+        args: [{ name: "_this" }, { tag: "Repo", fields: {} }],
+      },
+      {
+        operator: "In",
+        args: [
+          { name: "_relation_2310" },
+          { operator: "Dot", args: [{ name: "_this" }, "relations"] },
+        ],
+      },
+      {
+        operator: "Isa",
+        args: [
+          { operator: "Dot", args: [{ name: "_relation_2310" }, "subject"] },
+          { tag: "Org", fields: {} },
+        ],
+      },
+      {
+        operator: "Unify",
+        args: [
+          { operator: "Dot", args: [{ name: "_relation_2310" }, "predicate"] },
+          "parent",
+        ],
+      },
+      {
+        operator: "In",
+        args: [
+          { name: "_role_2326" },
+          {
+            operator: "Dot",
+            args: [
+              {
+                operator: "Dot",
+                args: [{ name: "_relation_2310" }, "subject"],
+              },
+              "roles",
+            ],
+          },
+        ],
+      },
+      {
+        operator: "Unify",
+        args: [
+          { operator: "Dot", args: [{ name: "_role_2326" }, "name"] },
+          "owner",
+        ],
+      },
+      {
+        operator: "Unify",
+        args: [
+          { operator: "Dot", args: [{ name: "_role_2326" }, "actor"] },
+          { type: "User", id: "2" },
+        ],
+      },
+    ],
+  },
+}
+=>
+SELECT object_id FROM relations _relation_1146
+JOIN roles _role_1162
+  ON _role_1162.resource_type = _relation_1146.subject_type
+  AND _role_1162.resource_id = _relation_1146.subject_id
+WHERE _role_1162.actor_id = '4'
+  AND _role_1162.actor_type = 'User'
+  AND _relation_1146.object_type = 'Repo'
+*/
+
+function bindingsToQuery(bindings) {
+  assert(
+    Object.keys(bindings).length === 1,
+    "Can only check one variable at a time: " +
+      JSON.stringify(Object.keys(bindings))
+  );
+  const condition = Object.values(bindings)[0];
+  assert(condition.operator === "And", "Top-level condition must be an AND");
+  const conditions = condition.args;
+  const sources = {};
+  let base = null;
+  const joins = [];
+  const whereConditions = [];
+  let targetType = null;
+
+  // NOTE: this is tightly coupled with the has_role and has_relation
+  // definitions in the oso-service policy. It's also probably a bad idea, just
+  // a proof of concept.
+  //
+  // This would also be a lot cleaner if we used one schema for roles AND
+  // relations.
+  //
+  // Basic algorithm:
+  // ---------------
+  // Go through all conditions (Isa, In, Unify, etc)
+  // For "In" conditions:
+  //   In conditions take one of the forms:
+  //     _role_ABC in _this.roles or
+  //     _role_ABC in _relation_XYZ.subject.roles
+  //   In the former case (where its a lookup on _this), then we consider the
+  //   variable to be the "base" of the query: SELECT * FROM [table]
+  //   In the latter case (where its a lookup on ANOTHER relation/role's
+  //   property), then the variable is added as a join.
+  // For "Unify" conditions:
+  //   Add a where clause
+  // For "Isa" conditions:
+  //   Ignore unless on _this, in which case we add a condition on the base table
+  for (let condition of conditions) {
+    if (
+      condition.operator === "Isa" &&
+      condition.args[0] instanceof Variable &&
+      condition.args[0].name === "_this"
+    ) {
+      // This condition defines the type of the object we're looking for
+      targetType = condition.args[1].tag;
+    } else if (condition.operator === "In") {
+      assert(
+        condition.args[0] instanceof Variable,
+        "First argument to In must be a variable: " +
+          JSON.stringify(condition.args[0])
+      );
+      const sourceName = condition.args[0].name;
+      const isRole = condition.args[1].args[1] === "roles";
+      const sourceTable = isRole ? "roles" : "relations";
+      const from = condition.args[1].args[0];
+      // thisSourceProp is a bad name, but it means the property on this variable
+      // that corresponds to the resource from which this relationship is defined
+      const thisSourceProp = isRole ? "resource" : "object";
+      if (from instanceof Variable && from.name === "_this") {
+        // from is the thing we're trying to figure out
+        base = {
+          alias: sourceName,
+          table: sourceTable,
+          field: thisSourceProp + "_id",
+        };
+        whereConditions.push({
+          [`${sourceName}.${thisSourceProp + "_type"}`]: targetType,
+        });
+      } else if (from.operator === "Dot") {
+        const fromName = from.args[0].name;
+        // Create a new join
+        const fromSourceProp = from.args[1];
+        joins.push({
+          alias: sourceName,
+          table: sourceTable,
+          on: {
+            [`${sourceName}.${thisSourceProp + "_type"}`]: `${fromName}.${
+              fromSourceProp + "_type"
+            }`,
+            [`${sourceName}.${thisSourceProp + "_id"}`]: `${fromName}.${
+              fromSourceProp + "_id"
+            }`,
+          },
+        });
+      }
+    }
+    if (condition.operator === "Unify") {
+      assert(
+        condition.args[0].operator === "Dot",
+        "Unifies must be on dot lookups"
+      );
+      const sourceName = condition.args[0].args[0].name;
+      const propertyName = condition.args[0].args[1];
+      const value = condition.args[1];
+      if (propertyName === "actor" || propertyName === "subject") {
+        whereConditions.push({
+          [`${sourceName}.${propertyName + "_type"}`]: value.type,
+          [`${sourceName}.${propertyName + "_id"}`]: value.id,
+        });
+      } else {
+        whereConditions.push({
+          [`${sourceName}.${propertyName}`]: value,
+        });
+      }
+    }
+  }
+  // console.log("BASE:", base);
+  // console.log("JOINS: ", joins);
+  // console.log("WHERES: ", whereConditions);
+
+  let query = knex
+    .select({ id: `${base.alias}.${base.field}` })
+    .from({ [base.alias]: base.table });
+  for (let join of joins) {
+    query = query.join(
+      { [join.alias]: join.table },
+      knex.raw(
+        Object.entries(join.on)
+          .map((arr) => arr.join(" = "))
+          .join(" AND ")
+      )
+    );
+  }
+  for (let where of whereConditions) {
+    query = query.where(where);
+  }
+  return query;
+}
+
 app.get(
   "/has_role/:actorType/:actorId/:roleName/:resourceType/:resourceId",
   async (req, res) => {
@@ -168,11 +409,32 @@ app.get(
     const actor = new Base(req.params.actorType, req.params.actorId);
     const resource = new Base(req.params.resourceType, req.params.resourceId);
     const role = req.params.roleName;
+    const resourceVar = new Variable("resource");
     console.log("Querying role", actor.toString(), role, resource.toString());
-    const result = await oso.queryRuleOnce("has_role", actor, role, resource);
+    const results = await oso.queryRule(
+      { acceptExpression: true },
+      "has_role",
+      actor,
+      role,
+      resourceVar
+    );
+    let found = false;
+    for await (result of results) {
+      const bindings = Object.fromEntries(result.entries());
+      const query = bindingsToQuery(bindings);
+      const results = await knex
+        .select("id")
+        .from(query)
+        .where("id", resource.id);
+      console.log("RESULTS:", results);
+      if (results.length > 0) {
+        found = true;
+        break;
+      }
+    }
     const duration = new Date().getTime() - start;
-    console.log("Got result", result, "in", duration, "ms");
-    res.send(result);
+    console.log("Got result", found, "in", duration, "ms");
+    res.send(found);
   }
 );
 

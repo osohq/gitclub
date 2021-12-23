@@ -12,6 +12,9 @@ has_permission(_: User, "create", _: Org);
 
 actor User {}
 
+# resource Tenant {
+#   roles = ["superadmin"];
+# }
 resource Org {
   roles = ["owner", "member"];
   permissions = [
@@ -24,6 +27,8 @@ resource Org {
     "delete_role_assignments"
   ];
 
+  # relations = { tenant: Tenant };
+  # "owner" if "superadmin" on "tenant";
   "read" if "member";
   "list_repos" if "member";
   "list_role_assignments" if "member";
@@ -68,10 +73,15 @@ resource Repo {
 # BELONGS TO OSO SERVICE ----------------------
 has_role(actor: Actor, name: String, resource: Resource) if
   # Data.has_role(actor, name, resource);
-  role in Data.getRoles(actor) and role matches { name, resource };
+  # role in Data.getRoles(actor) and role matches { name, resource };
+  role in resource.roles and role matches { actor, name };
 
 # type has_relation(subject: Org, predicate: String, object: Repo);
 has_relation(subject: Org, "parent", object: Repo) if
   # HACK: we have to assume that object is the thing that's bound here
-  relation in Data.getRelations(object) and
+  relation in object.relations and
   relation matches { predicate: "parent", subject };
+# has_relation(subject: Tenant, "tenant", object: Org) if
+#   # HACK: we have to assume that object is the thing that's bound here
+#   relation in object.relations and
+#   relation matches { predicate: "tenant", subject };
