@@ -12,9 +12,13 @@ has_permission(_: User, "create", _: Org);
 
 actor User {}
 
+# NOTE: these commented-out resources are used for testing the policy with more
+# complexity.
 # resource Tenant {
 #   roles = ["superadmin"];
 # }
+# resource Foo {}
+# resource Bar {}
 resource Org {
   roles = ["owner", "member"];
   permissions = [
@@ -27,7 +31,7 @@ resource Org {
     "delete_role_assignments"
   ];
 
-  # relations = { tenant: Tenant };
+  relations = { tenant: Tenant };
   # "owner" if "superadmin" on "tenant";
   "read" if "member";
   "list_repos" if "member";
@@ -78,10 +82,8 @@ has_role(actor: Actor, name: String, resource: Resource) if
 
 # type has_relation(subject: Org, predicate: String, object: Repo);
 has_relation(subject: Org, "parent", object: Repo) if
-  # HACK: we have to assume that object is the thing that's bound here
   relation in object.relations and
   relation matches { predicate: "parent", subject };
 # has_relation(subject: Tenant, "tenant", object: Org) if
-#   # HACK: we have to assume that object is the thing that's bound here
 #   relation in object.relations and
 #   relation matches { predicate: "tenant", subject };

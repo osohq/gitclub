@@ -1,7 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Oso, defaultEqualityFn, Relation, Variable } = require("oso");
+const { Expression } = require("oso/dist/src/Expression");
+const { Pattern } = require("oso/dist/src/Pattern");
 const knexfile = require("./knexfile");
+const { cloneDeep } = require("lodash");
 
 const knex = require("knex")(knexfile.development);
 knex.on("query", (data) =>
@@ -55,6 +58,16 @@ oso.registerClass(Role, {
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "User",
   name: "User",
+});
+// These classes are used to test the policy performance with increased
+// complexity.
+oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Foo",
+  name: "Foo",
+});
+oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Bar",
+  name: "Bar",
 });
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Tenant",
@@ -200,6 +213,8 @@ function assert(condition, errorMessage) {
 }
 
 /*
+bindingsToQuery takes a set of bindings and turns them into a SQL query over the
+roles and relations tables, like so:
 {
   resource: {
     operator: "And",
@@ -271,7 +286,6 @@ WHERE _role_1162.actor_id = '4'
   AND _role_1162.actor_type = 'User'
   AND _relation_1146.object_type = 'Repo'
 */
-
 function bindingsToQuery(bindings) {
   assert(
     Object.keys(bindings).length === 1,
@@ -401,6 +415,52 @@ function bindingsToQuery(bindings) {
   return query;
 }
 
+const resultsCache = {};
+
+// queryHasRole runs a has_role query with an unbound resource and returns its
+// results, caching the results based on actorType, role, and resourceType
+// WART: The actor's actual ID has to be awkwardly stuffed back into the bindings.
+async function queryHasRole(actorType, actorId, role, resourceType) {
+  const cacheKey = actorType + ":" + role + ":" + resourceType;
+  const resourceVar = new Variable("resource");
+  const constraint = new Expression("And", [
+    new Expression("Isa", [
+      resourceVar,
+      new Pattern({ tag: resourceType, fields: {} }),
+    ]),
+  ]);
+  const bindings = new Map();
+  bindings.set("resource", constraint);
+  if (!resultsCache[cacheKey]) {
+    const resultIterator = await oso.queryRule(
+      { acceptExpression: true, bindings },
+      "has_role",
+      new Base(actorType, "DYNAMIC_ACTOR_ID"),
+      role,
+      resourceVar
+    );
+    const results = [];
+    for await (result of resultIterator) {
+      results.push(Object.fromEntries(result.entries()));
+    }
+    resultsCache[cacheKey] = results;
+  }
+  // HACK ALERT: Stuff actorId into the results, replacing DYNAMIC_ACTOR_ID
+  const results = cloneDeep(resultsCache[cacheKey]);
+  for (let result of results) {
+    const conditions = result.resource.args;
+    for (let condition of conditions) {
+      const actorArg = condition.args.find(
+        (arg) => arg.id === "DYNAMIC_ACTOR_ID"
+      );
+      if (actorArg) {
+        actorArg.id = actorId;
+      }
+    }
+  }
+  return results;
+}
+
 app.get(
   "/has_role/:actorType/:actorId/:roleName/:resourceType/:resourceId",
   async (req, res) => {
@@ -411,16 +471,17 @@ app.get(
     const role = req.params.roleName;
     const resourceVar = new Variable("resource");
     console.log("Querying role", actor.toString(), role, resource.toString());
-    const results = await oso.queryRule(
-      { acceptExpression: true },
-      "has_role",
-      actor,
+    const otherResults = await queryHasRole(
+      actor.type,
+      actor.id,
       role,
-      resourceVar
+      resource.type
     );
     let found = false;
-    for await (result of results) {
-      const bindings = Object.fromEntries(result.entries());
+    for await (result of otherResults) {
+      // console.log(JSON.stringify(result, undefined, 2));
+
+      const bindings = result; //Object.fromEntries(result.entries());
       const query = bindingsToQuery(bindings);
       const results = await knex
         .select("id")
