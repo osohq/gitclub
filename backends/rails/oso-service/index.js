@@ -93,42 +93,6 @@ oso.registerClass(Object, {
     relations: new Relation("many", "Relation", "id", "object_id"),
   },
 });
-const Data = {
-  rolesCache: {},
-  clearCache() {
-    this.rolesCache = {};
-  },
-  async getRoles(actor) {
-    const cacheKey = actor.type + ":" + actor.id;
-    if (this.rolesCache[cacheKey]) {
-      return this.rolesCache[cacheKey];
-    }
-    const rows = await knex("roles").where({
-      actor_id: actor.id,
-      actor_type: actor.type,
-    });
-
-    const result = rows.map((row) => ({
-      name: row.name,
-      actor: Base.from(row, "actor"),
-      resource: Base.from(row, "resource"),
-    }));
-    this.rolesCache[cacheKey] = result;
-    return result;
-  },
-  getRelations: async (object) => {
-    const rows = await knex("relations").where({
-      object_id: object.id,
-      object_type: object.type,
-    });
-    return rows.map((row) => ({
-      predicate: row.predicate,
-      subject: Base.from(row, "subject"),
-      object: Base.from(row, "object"),
-    }));
-  },
-};
-oso.registerConstant(Data, "Data");
 oso.loadFiles(["main.polar"]);
 
 // app.post("/update_policy", async (req, res) => {
@@ -464,7 +428,6 @@ async function queryHasRole(actorType, actorId, role, resourceType) {
 app.get(
   "/has_role/:actorType/:actorId/:roleName/:resourceType/:resourceId",
   async (req, res) => {
-    Data.clearCache();
     const start = new Date().getTime();
     const actor = new Base(req.params.actorType, req.params.actorId);
     const resource = new Base(req.params.resourceType, req.params.resourceId);
