@@ -500,6 +500,20 @@ app.get(
     );
     const results = [];
     for await (let result of resultsGen) {
+      // HACK: clean up results that include constraints like "_this Isa Org"
+      // those constraints are never met because _this is a Repo.
+      // TODO: this should somehow be done in the VM
+      if (
+        result
+          .get("resource")
+          .args.find(
+            (expr) =>
+              expr.operator === "Isa" &&
+              expr.args[0].name === "_this" &&
+              expr.args[1].tag !== "Repo"
+          )
+      )
+        continue;
       results.push(result);
       console.log("RESULT:", debugPrint(result.get("resource")));
     }
