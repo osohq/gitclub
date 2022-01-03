@@ -43,19 +43,11 @@ class Base {
   }
 }
 
-class Role {}
-class Relation2 {}
-
 let oso = new Oso({
   equalityFn: equals,
 });
-oso.registerClass(Relation2, { name: "Relation" });
-oso.registerClass(Role, {
-  fields: {
-    actor: new Relation("one", "User", "actor_id", "id"),
-  },
-});
 oso.registerClass(Object, {
+  // TODO: how to register classes when they are declared by other services?
   isaCheck: (obj) => obj.type === "User",
   name: "User",
 });
@@ -72,28 +64,28 @@ oso.registerClass(Object, {
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Tenant",
   name: "Tenant",
-  fields: {
-    roles: new Relation("many", "Role", "id", "resource_id"),
-    relations: new Relation("many", "Relation", "id", "object_id"),
-  },
 });
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Org",
   name: "Org",
-  fields: {
-    roles: new Relation("many", "Role", "id", "resource_id"),
-    relations: new Relation("many", "Relation", "id", "object_id"),
-  },
 });
 oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Repo",
   name: "Repo",
-  fields: {
-    roles: new Relation("many", "Role", "id", "resource_id"),
-    relations: new Relation("many", "Relation", "id", "object_id"),
-  },
 });
-oso.loadFiles(["main.polar"]);
+oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Repository",
+  name: "Repository",
+});
+oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Action",
+  name: "Action",
+});
+oso.loadFiles([
+  "policies/oso-service.polar",
+  "policies/gitclub.polar",
+  "policies/gitclub-actions.polar",
+]);
 
 // app.post("/update_policy", async (req, res) => {
 //   oso = new Oso();
@@ -432,7 +424,6 @@ app.get(
     const actor = new Base(req.params.actorType, req.params.actorId);
     const resource = new Base(req.params.resourceType, req.params.resourceId);
     const role = req.params.roleName;
-    const resourceVar = new Variable("resource");
     console.log("Querying role", actor.toString(), role, resource.toString());
     const otherResults = await queryHasRole(
       actor.type,
@@ -459,6 +450,63 @@ app.get(
     const duration = new Date().getTime() - start;
     console.log("Got result", found, "in", duration, "ms");
     res.send(found);
+  }
+);
+
+function debugPrint(expression) {
+  if (expression.operator) {
+    const args = expression.args.map(debugPrint);
+    if (expression.operator === "And") {
+      return args.join(" AND\n  ");
+    } else if (expression.operator === "Dot") {
+      return [args[0], expression.args[1]].join(".");
+    } else if (expression.operator === "Unify") {
+      return args.join(" = ");
+    } else {
+      return args.join(" " + expression.operator + " ");
+    }
+  } else if (expression.name) {
+    return expression.name;
+  } else if (expression.tag) {
+    return `${expression.tag}${JSON.stringify(expression.fields)}`;
+  } else {
+    return JSON.stringify(expression);
+  }
+}
+
+app.get(
+  "/authorize/:actorType/:actorId/:action/:resourceType/:resourceId",
+  async (req, res) => {
+    const start = new Date().getTime();
+    const actor = new Base(req.params.actorType, req.params.actorId);
+    const resource = new Base(req.params.resourceType, req.params.resourceId);
+    const action = req.params.action;
+
+    const resourceVar = new Variable("resource");
+    const constraint = new Expression("And", [
+      new Expression("Isa", [
+        resourceVar,
+        new Pattern({ tag: resource.type, fields: {} }),
+      ]),
+    ]);
+    const bindings = new Map();
+    bindings.set("resource", constraint);
+    const resultsGen = await oso.queryRule(
+      { acceptExpression: true, bindings },
+      "allow",
+      actor,
+      action,
+      resourceVar
+    );
+    const results = [];
+    for await (let result of resultsGen) {
+      results.push(result);
+      console.log("RESULT:", debugPrint(result.get("resource")));
+    }
+
+    const duration = new Date().getTime() - start;
+    console.log("GOT RESULTS IN", duration, "ms");
+    res.send(true);
   }
 );
 
