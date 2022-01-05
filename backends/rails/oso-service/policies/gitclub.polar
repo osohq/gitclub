@@ -74,3 +74,13 @@ resource Repo {
   "maintainer" if "admin";
   "reader" if "maintainer";
 }
+
+resource Issue {
+  roles = ["creator"];
+  permissions = ["read", "close"];
+  relations = { parent: Repo };
+  "read" if "reader" on "parent";
+  "close" if "maintainer" on "parent";
+  "close" if "creator";
+}
+has_relation(repo: Repo, "parent", issue: Issue) if issue.repo_id = repo.id;

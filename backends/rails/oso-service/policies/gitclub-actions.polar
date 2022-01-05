@@ -3,7 +3,7 @@
 actor User {}
 
 resource Repo {
-  # roles = ["reader", "maintainer"];
+  roles = ["reader", "maintainer"];
   permissions = ["list_actions"];
 
   # Can list a repo's actions if you can read the repo
@@ -23,8 +23,8 @@ resource Action {
 
 # Can do ABAC on local resources (like actions)
 has_permission(user: User, "cancel", action: Action) if
-  action.status = "running" and has_role(user, "maintainer", action.repository);
+  action.status = "running" and has_permission(user, "restart", action);
 
 # Define how actions and repositories are related
 has_relation(repository: Repo, "repository", action: Action) if
-  action.repository = repository;
+  action.repository_id = repository.id;

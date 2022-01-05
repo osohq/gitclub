@@ -11,6 +11,7 @@ exports.up = function (knex) {
 
         table.index(["actor_type", "actor_id"]);
         table.index(["resource_type", "resource_id"]);
+        table.index("name");
       })
       // TODO: just use relations for roles? might make sense
       .createTable("relations", function (table) {
@@ -23,6 +24,7 @@ exports.up = function (knex) {
 
         table.index(["subject_type", "subject_id"]);
         table.index(["object_type", "object_id"]);
+        table.index("predicate");
       })
   );
 };

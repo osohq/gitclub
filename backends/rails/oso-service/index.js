@@ -5,10 +5,16 @@ const { Expression } = require("oso/dist/src/Expression");
 const { Pattern } = require("oso/dist/src/Pattern");
 const knexfile = require("./knexfile");
 const { cloneDeep } = require("lodash");
+const SQLFormat = require("sql-formatter");
 
 const knex = require("knex")(knexfile.development);
 knex.on("query", (data) =>
-  console.log(data.sql + " " + JSON.stringify(data.bindings))
+  console.log(
+    "[SQL] " +
+      SQLFormat.format(data.sql).split("\n").join("\n[SQL] ") +
+      "\n  " +
+      JSON.stringify(data.bindings)
+  )
 );
 const app = express();
 app.use(bodyParser.json());
@@ -74,12 +80,12 @@ oso.registerClass(Object, {
   name: "Repo",
 });
 oso.registerClass(Object, {
-  isaCheck: (obj) => obj.type === "Repository",
-  name: "Repository",
-});
-oso.registerClass(Object, {
   isaCheck: (obj) => obj.type === "Action",
   name: "Action",
+});
+oso.registerClass(Object, {
+  isaCheck: (obj) => obj.type === "Issue",
+  name: "Issue",
 });
 oso.loadFiles([
   "policies/oso-service.polar",
@@ -252,7 +258,7 @@ function bindingsToQuery(bindings) {
   assert(condition.operator === "And", "Top-level condition must be an AND");
   const conditions = condition.args;
   const sources = {};
-  let base = null;
+  let base = { alias: null, field: null };
   const joins = [];
   const whereConditions = [];
   let targetType = null;
@@ -369,6 +375,268 @@ function bindingsToQuery(bindings) {
     query = query.where(where);
   }
   return query;
+}
+
+function dotPath(expression) {
+  if (expression.name) return [expression.name];
+  assert(
+    expression.operator === "Dot",
+    "dotPath method called on a non-dot operator: " + debugPrint(expression)
+  );
+  const path = [];
+  // TODO: make this work with more than just a.b lookups
+  // e.g. a.b.c lookups
+  return [...dotPath(expression.args[0]), expression.args[1]];
+}
+
+async function simplifyBindings(bindings) {
+  const simplifiedBindings = {};
+  for (let key in bindings) {
+    const constraints = await simplifyConstraints(bindings[key]);
+    if (!constraints) return null;
+    simplifiedBindings[key] = constraints;
+  }
+  return simplifiedBindings;
+}
+
+async function simplifyConstraints(expression) {
+  assert(expression.operator === "And", "Top-level condition must be an AND");
+  const conditions = expression.args;
+
+  const inConditions = conditions.filter(
+    (condition) =>
+      condition.operator === "In" &&
+      condition.args[1].operator === "Dot" &&
+      ["roles", "relations"].includes(condition.args[1].args[1])
+  );
+
+  const isaConditions = conditions.filter(
+    (condition) => condition.operator === "Isa"
+  );
+
+  const otherConditions = conditions.filter(
+    (c) => !inConditions.includes(c) && !isaConditions.includes(c)
+  );
+
+  const dependencies = {};
+
+  const selections = {};
+
+  /* Generating selections
+  _object_615 Isa Repo{}
+  _relation_617 In _object_615.relations
+  _relation_617.subject Isa Org{}
+  _relation_617.predicate = "parent"
+  _role_641 In _relation_617.subject.roles
+  _role_641.name = "owner"
+  _role_641.actor = {"type":"User","id":"1"}
+  =>
+  {
+    table: "relations",
+    name: "_relation_617",
+    to: {
+      name: "_object_615",
+      field: null,
+      type: "Repo"
+    },
+    from: {
+      name: "_role_641",
+      field: "resource",
+      type: "Org"
+    },
+    predicate: "parent"
+  },
+  {
+    table: "roles",
+    name: "_role_641",
+    to: {
+      name: "_relation_617",
+      field: "subject",
+      type: "Org"
+    },
+    from: {
+      name: null,
+      type: "User",
+      id: "1"
+    },
+    predicate: "owner"
+  }
+  =>
+  _object_615.id =
+    SELECT object_id FROM relations _relation_617
+    JOIN roles _role_641 ON _role_641.resource_id = _relation_617.subject_id
+    WHERE _relation_617.object_type = "Repo"
+      AND _relation_617
+  */
+
+  const unhandledConditions = [];
+
+  for (let condition of inConditions) {
+    assert(
+      condition.args[0] instanceof Variable,
+      "In condition has a first argument that is not a variable: " +
+        debugPrint(condition)
+    );
+    const varName = condition.args[0].name;
+    const dependencyPath = dotPath(condition.args[1]);
+    const toName = dotPath(condition.args[1])[0];
+    const toField = dependencyPath.length > 2 ? dependencyPath[1] : null;
+    selections[varName] = {
+      table: varName.startsWith("_role") ? "roles" : "relations",
+      name: varName,
+      to: {
+        name: toName,
+        field: toField,
+        type: null,
+      },
+      from: { name: null, field: null, type: null },
+      predicate: null,
+    };
+
+    // OLD
+    // if (!dependencies[varName]) dependencies[varName] = [];
+    // if (!dependencies[dependencyName]) dependencies[dependencyName] = [];
+    // dependencies[varName].push(dependencyName);
+  }
+
+  for (let condition of isaConditions) {
+    // _object_615 Isa Action{}
+    // _relation_617.subject Isa Org{}
+    const type = condition.args[1].tag;
+    const varPath = dotPath(condition.args[0]);
+    if (varPath.length === 1) {
+      const selection = Object.values(selections).find((sel) => {
+        return sel.to.name === varPath[0];
+      });
+      if (!selection) continue;
+      selection.to.type = type;
+    } else if (varPath.length === 2) {
+      const selection = Object.values(selections).find((sel) => {
+        return sel.to.name === varPath[0] && sel.to.field === varPath[1];
+      });
+      if (!selection) continue;
+      selection.to.type = type;
+    }
+  }
+
+  // Populate selection.from
+  for (let selection of Object.values(selections)) {
+    const toSelection = Object.values(selections).find((other) => {
+      return other.name === selection.to.name;
+    });
+    if (toSelection) {
+      const fromField = selection.table === "roles" ? "resource" : "object";
+      toSelection.from.name = selection.name;
+      toSelection.from.type = selection.to.type;
+      toSelection.from.field = fromField;
+    }
+  }
+
+  // Populate predicates and other where conditions
+  for (let condition of otherConditions) {
+    switch (condition.operator) {
+      case "Unify":
+        if (!condition.args[0].operator) {
+          unhandledConditions.push(condition);
+          continue;
+        }
+        const varPath = dotPath(condition.args[0]);
+        if (varPath.length === 2 && selections[varPath[0]]) {
+          const selection = selections[varPath[0]];
+          // _role_641.name = "owner"
+          // _role_641.actor = {"type":"User","id":"1"}
+          // _relation_617.predicate = "parent"
+          if (selection.table === "relations" && varPath[1] === "predicate") {
+            selection.predicate = condition.args[1];
+          } else if (selection.table === "roles" && varPath[1] === "name") {
+            selection.predicate = condition.args[1];
+          } else if (selection.table === "roles" && varPath[1] === "actor") {
+            assert(
+              condition.args[1].type && condition.args[1].id,
+              "Non-bound actor condition: " + debugPrint(condition)
+            );
+            selection.from.type = condition.args[1].type;
+            selection.from.id = condition.args[1].id;
+          } else {
+            unhandledConditions.push(condition);
+          }
+        } else {
+          unhandledConditions.push(condition);
+        }
+    }
+  }
+
+  // Target selection is the one where sel.to is not another selection
+  const targetSelection = Object.values(selections).find(
+    (sel) => !selections[sel.to.name]
+  );
+
+  for (let condition of unhandledConditions) {
+    if (
+      condition.operator === "Unify" &&
+      condition.args[0].operator === "Dot"
+    ) {
+      const path = dotPath(condition.args[0]);
+      if (path[0] === targetSelection.to.name && path[1] === "id") {
+        // args[0] is the value we'll be selecting from the DB
+        condition.operator = "In";
+        condition.args = [condition.args[1], "_OUTPUT"];
+      }
+    }
+  }
+
+  const outputCondition = unhandledConditions.find(
+    (cond) => cond.args[1] === "_OUTPUT"
+  );
+  if (!outputCondition) {
+    unhandledConditions.push({
+      operator: "In",
+      args: [{ operator: "Dot", args: [{ name: "_this" }, "id"] }, "_OUTPUT"],
+    });
+  }
+
+  const targetField =
+    targetSelection.table === "roles" ? "resource_id" : "object_id";
+  let query = knex
+    .select({ id: `${targetSelection.name}.${targetField}` })
+    .from({ [targetSelection.name]: targetSelection.table });
+
+  for (let selection of Object.values(selections)) {
+    if (selection !== targetSelection) {
+      // Add a join
+      const to = selections[selection.to.name];
+      const fromField = to.from.field;
+      const toField = selection.to.field;
+      // JOIN [selection.table] ON [selection.name].[fromField] = [to.name].[toField]
+      let condition = `${selection.name}.${fromField}_id = ${to.name}.${toField}_id`;
+      condition += ` AND ${selection.name}.${fromField}_type = ${to.name}.${toField}_type`;
+      query.join({ [selection.name]: selection.table }, knex.raw(condition));
+    }
+
+    const predicateField = selection.table === "roles" ? "name" : "predicate";
+    query.where(`${selection.name}.${predicateField}`, selection.predicate);
+
+    const toField = selection.table === "roles" ? "resource" : "object";
+    query.where(`${selection.name}.${toField}_type`, selection.to.type);
+
+    if (selection.from.id) {
+      const fromField = selection.table === "roles" ? "actor" : "subject";
+      query.where(`${selection.name}.${fromField}_id`, selection.from.id);
+      query.where(`${selection.name}.${fromField}_type`, selection.from.type);
+    }
+  }
+
+  const ids = (await query).map((res) => res.id);
+  // If no ids come back, there are no results. Return null
+  if (ids.length === 0) return null;
+  unhandledConditions.forEach((cond) => {
+    if (cond.args[1] === "_OUTPUT") cond.args[1] = ids;
+  });
+
+  return {
+    operator: "And",
+    args: unhandledConditions,
+  };
 }
 
 const resultsCache = {};
@@ -503,24 +771,38 @@ app.get(
       // HACK: clean up results that include constraints like "_this Isa Org"
       // those constraints are never met because _this is a Repo.
       // TODO: this should somehow be done in the VM
-      if (
-        result
-          .get("resource")
-          .args.find(
-            (expr) =>
-              expr.operator === "Isa" &&
-              expr.args[0].name === "_this" &&
-              expr.args[1].tag !== "Repo"
-          )
-      )
+      const incompatibleIsaConstraint = result
+        .get("resource")
+        .args.find(
+          (expr) =>
+            expr.operator === "Isa" &&
+            expr.args[0].name === "_this" &&
+            expr.args[1].tag !== resource.type
+        );
+      if (incompatibleIsaConstraint) {
+        console.log(
+          "Skipping result because of incompatible constraint: ",
+          debugPrint(incompatibleIsaConstraint)
+        );
         continue;
-      results.push(result);
+      }
       console.log("RESULT:", debugPrint(result.get("resource")));
+      const newConstraints = await simplifyBindings(
+        Object.fromEntries(result.entries())
+      );
+      if (!newConstraints) continue;
+      for (let key in newConstraints) {
+        console.log(debugPrint(newConstraints[key]));
+      }
+      results.push(newConstraints);
     }
+
+    // const plan = await oso.filterPlan(results, "resource", "Action");
+    // console.log(JSON.stringify(plan, undefined, 2));
 
     const duration = new Date().getTime() - start;
     console.log("GOT RESULTS IN", duration, "ms");
-    res.send(true);
+    res.send(results);
   }
 );
 

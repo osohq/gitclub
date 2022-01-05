@@ -9,6 +9,10 @@
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
     "oso": "^0.25.0",
+    "sql-formatter": "^4.0.2",
     "sqlite3": "^5.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }

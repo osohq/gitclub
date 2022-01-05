@@ -5,9 +5,10 @@ const knexfile = require("./knexfile");
 
 const knex = require("knex")(knexfile.development);
 
-const ROLES_TO_CREATE = 1000;
+const ROLES_TO_CREATE = 1000000;
 const BATCH_SIZE = 100;
-const FORCE_USER_ID = "4";
+// const FORCE_USER_ID = "4";
+const FORCE_USER_ID = undefined;
 
 function createFakeRole() {
   return {
