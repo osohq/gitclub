@@ -399,6 +399,21 @@ async function simplifyBindings(bindings) {
   return simplifiedBindings;
 }
 
+// Simplifies constraints for one variable by pulling out role and relation
+// constraints, building a SQL query, and in-lining the query results into a
+// simpler set of contraints.
+// Example:
+//   _this Isa Issue{}
+//   _object_615.id = _this.repo_id
+//   _object_615 Isa Repo{}
+//   _relation_617 In _object_615.relations
+//   _relation_617.subject Isa Org{}
+//   _relation_617.predicate = "parent"
+//   _role_641 In _relation_617.subject.roles
+//   _role_641.name = "owner"
+//   _role_641.actor = {"type":"User","id":"1"}
+// =>
+//   _this.repo_id In ["1", "3"]
 async function simplifyConstraints(expression) {
   assert(expression.operator === "And", "Top-level condition must be an AND");
   const conditions = expression.args;
@@ -418,18 +433,19 @@ async function simplifyConstraints(expression) {
     (c) => !inConditions.includes(c) && !isaConditions.includes(c)
   );
 
-  const dependencies = {};
-
   const selections = {};
 
-  /* Generating selections
-  _object_615 Isa Repo{}
-  _relation_617 In _object_615.relations
-  _relation_617.subject Isa Org{}
-  _relation_617.predicate = "parent"
-  _role_641 In _relation_617.subject.roles
-  _role_641.name = "owner"
-  _role_641.actor = {"type":"User","id":"1"}
+  /*
+  "Selections" are an intermediate representation of the constraint data in a
+  format that is convenient for building a SQL query:
+  Example:
+    _object_615 Isa Repo{}
+    _relation_617 In _object_615.relations
+    _relation_617.subject Isa Org{}
+    _relation_617.predicate = "parent"
+    _role_641 In _relation_617.subject.roles
+    _role_641.name = "owner"
+    _role_641.actor = {"type":"User","id":"1"}
   =>
   {
     table: "relations",
@@ -461,12 +477,6 @@ async function simplifyConstraints(expression) {
     },
     predicate: "owner"
   }
-  =>
-  _object_615.id =
-    SELECT object_id FROM relations _relation_617
-    JOIN roles _role_641 ON _role_641.resource_id = _relation_617.subject_id
-    WHERE _relation_617.object_type = "Repo"
-      AND _relation_617
   */
 
   const unhandledConditions = [];
@@ -492,16 +502,18 @@ async function simplifyConstraints(expression) {
       from: { name: null, field: null, type: null },
       predicate: null,
     };
-
-    // OLD
-    // if (!dependencies[varName]) dependencies[varName] = [];
-    // if (!dependencies[dependencyName]) dependencies[dependencyName] = [];
-    // dependencies[varName].push(dependencyName);
   }
+
+  const typesByExpression = {};
 
   for (let condition of isaConditions) {
     // _object_615 Isa Action{}
     // _relation_617.subject Isa Org{}
+
+    // Check for duplicate Isa
+    // TODO: if there are supertypes/subtypes, this won't work
+    if (typesByExpression[debugPrint(condition.args[0])]) return null;
+    typesByExpression[debugPrint(condition.args[0])] = condition.args[1].tag;
     const type = condition.args[1].tag;
     const varPath = dotPath(condition.args[0]);
     if (varPath.length === 1) {
@@ -704,13 +716,13 @@ app.get(
       // console.log(JSON.stringify(result, undefined, 2));
 
       const bindings = result; //Object.fromEntries(result.entries());
-      const query = bindingsToQuery(bindings);
-      const results = await knex
-        .select("id")
-        .from(query)
-        .where("id", resource.id);
-      console.log("RESULTS:", results);
-      if (results.length > 0) {
+      const newConstraints = await simplifyBindings(bindings);
+      if (!newConstraints) continue;
+      // TODO: this next line makes a LOT of assumptions about the constraints
+      // coming back from simplifyBindings!
+      // It basically assumes there's one constraint and it looks like:
+      // _this.id In ["1", "2", "3"]
+      if (newConstraints.resource.args[0].args[1].includes(resource.id)) {
         found = true;
         break;
       }
@@ -766,7 +778,7 @@ app.get(
       action,
       resourceVar
     );
-    const results = [];
+    const results = {};
     for await (let result of resultsGen) {
       // HACK: clean up results that include constraints like "_this Isa Org"
       // those constraints are never met because _this is a Repo.
@@ -794,7 +806,7 @@ app.get(
       for (let key in newConstraints) {
         console.log(debugPrint(newConstraints[key]));
       }
-      results.push(newConstraints);
+      results[debugPrint(newConstraints)] = newConstraints;
     }
 
     // const plan = await oso.filterPlan(results, "resource", "Action");
@@ -802,7 +814,7 @@ app.get(
 
     const duration = new Date().getTime() - start;
     console.log("GOT RESULTS IN", duration, "ms");
-    res.send(results);
+    res.send(Object.values(results));
   }
 );
 
