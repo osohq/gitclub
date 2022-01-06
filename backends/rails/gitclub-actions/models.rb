@@ -10,7 +10,7 @@ ActiveRecord::Base.establish_connection(
 class User < ActiveRecord::Base
 end
 
-class Repository
+class Repo
   attr_reader :id
 
   def initialize(id)
@@ -31,11 +31,15 @@ class Repository
 end
 
 class Action
-  attr_reader :repository, :name, :status
+  @@max_id = 0
+  attr_reader :repository, :repository_id, :name, :status, :id
+
   def initialize(repository, name, status)
     @repository = repository
+    @repository_id = repository.id
     @name = name
     @status = status
+    @id = (@@max_id += 1)
   end
 
   def status_html

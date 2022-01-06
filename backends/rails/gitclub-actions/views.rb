@@ -13,28 +13,28 @@ end
 
 def actions_view(user, repo)
   "Actions for repo #{repo.id}: " + repo.actions.map do |action|
-    action_buttons = (Set.new(["restart", "cancel"]) & OSO.authorized_actions(user, action)).map do |action_name|
-      "<button>#{action_name.capitalize}</button>"
+    action_buttons = ["restart", "cancel"].map do |action_name|
+    # action_buttons = (Set.new(["restart", "cancel"]) & OSO.authorized_actions(user, action)).map do |action_name|
+      if OsoClient.is_allowed(user, action_name, action) then "<button>#{action_name.capitalize}</button>" else "" end
     end.join(" ")
     "<div>Action #{action.name}: #{action.status_html}#{horizontal_space}#{action_buttons}</div>"
   end.join("\n")
 end
 
-def footer_view(total_duration, remote_duration)
+def footer_view
   "Log in as different users: <br />" +
   [1,2,4].map do |id|
     "<a href='/login/#{id}'><button>#{User.find(id).email}</button></a>"
   end.join(horizontal_space) +
   "<br /><br />" +
-  "Authorization took #{total_duration.to_i}ms<br />" +
-  "Role lookups took #{remote_duration.to_i}ms<br />"
+  "Authorization took #{OsoClient.get_duration.to_i}ms total<br />"
 end
 
-def actions_page(user, repo, total_duration, remote_duration)
+def actions_page(user, repo)
   header_view(user) +
   vertical_space +
   actions_view(user, repo) +
   vertical_space +
-  footer_view(total_duration, remote_duration)
+  footer_view
 end
 

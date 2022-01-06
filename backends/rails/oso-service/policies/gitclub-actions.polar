@@ -23,7 +23,9 @@ resource Action {
 
 # Can do ABAC on local resources (like actions)
 has_permission(user: User, "cancel", action: Action) if
-  action.status = "running" and has_permission(user, "restart", action);
+  has_role(user, "maintainer", repo) and
+  has_relation(repo, "repository", action) and
+  action.status = "running";
 
 # Define how actions and repositories are related
 has_relation(repository: Repo, "repository", action: Action) if
