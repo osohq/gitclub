@@ -1477,10 +1477,10 @@ osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
-oso@^0.25.0:
-  version "0.25.0"
-  resolved "https://registry.yarnpkg.com/oso/-/oso-0.25.0.tgz#74a8263ccf84cf920f16c41486a08e6943c14983"
-  integrity sha512-9HRRoTwG2zeOKftmADv9h2QCsKqFP9wVapKs81cXaUFe5T61ErAc623Elgw1nc2sHT4yZr+TuvVNZGUfaut1YQ==
+oso@0.25.1:
+  version "0.25.1"
+  resolved "https://registry.yarnpkg.com/oso/-/oso-0.25.1.tgz#167dfada857232fe77812b9793ca37cd06bc7d51"
+  integrity sha512-0RZKZnmpvL1lKpml6hW4gUvrz/5tpOK2Gqlj73JJlkRt3lte2nmOYbfFz35laxbf1MgBSHkgy3ASBqy4wh93Dg==
   dependencies:
     lodash.isequal "^4.5.0"
 
