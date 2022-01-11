@@ -9,9 +9,9 @@ bp = Blueprint("routes.repos", __name__, url_prefix="/orgs/<int:org_id>/repos")
 def index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_repos", org)
-    query = current_app.oso\
-            .authorized_query(g.current_user, "read", Repo)\
-            .filter(Repo.org_id == org_id)
+    query = current_app.oso.authorized_query(g.current_user, "read", Repo).filter(
+        Repo.org_id == org_id
+    )
     return jsonify([repo.repr() for repo in query])
 
 
