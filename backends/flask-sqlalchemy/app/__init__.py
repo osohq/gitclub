@@ -16,7 +16,6 @@ from oso import Oso, OsoError
 from polar.data_filtering import Relation
 from polar.data.adapter.sqlalchemy_adapter import SqlAlchemyAdapter
 
-
 from typing import Any, Callable, Dict, Optional, Type
 
 from functools import reduce
