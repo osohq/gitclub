@@ -12,11 +12,11 @@ def header_view(user)
 end
 
 def actions_view(user, repo)
-  "Actions for repo #{repo.id}: " + repo.actions.map do |action|
-    action_buttons = ["restart", "cancel"].map do |action_name|
-    # action_buttons = (Set.new(["restart", "cancel"]) & OSO.authorized_actions(user, action)).map do |action_name|
-      if OsoClient.is_allowed(user, action_name, action) then "<button>#{action_name.capitalize}</button>" else "" end
-    end.join(" ")
+  can_cancel = OsoClient.batch_is_allowed(user, "cancel", repo.actions)
+  can_restart = OsoClient.batch_is_allowed(user, "restart", repo.actions)
+  "Actions for repo #{repo.id}: " + repo.actions.each_with_index.map do |action, i|
+    action_buttons = if can_restart[i] then "<button>Restart</button>" else "" end +
+    if can_cancel[i] then "<button>Cancel</button>" else "" end
     "<div>Action #{action.name}: #{action.status_html}#{horizontal_space}#{action_buttons}</div>"
   end.join("\n")
 end

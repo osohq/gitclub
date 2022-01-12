@@ -380,6 +380,9 @@ async function simplifyConstraints(expression) {
     (sel) => !selections[sel.to.name]
   );
 
+  // No roles/relations to load, just pass through the conditions as-is
+  if (!targetSelection) return expression;
+
   for (let condition of unhandledConditions) {
     if (
       condition.operator === "Unify" &&

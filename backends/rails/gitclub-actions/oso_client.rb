@@ -84,6 +84,19 @@ class OsoClient
     raise Oso::NotFoundError unless self.is_allowed(user, action, resource)
   end
 
+  def self.batch_is_allowed(user, action, resources)
+    return [] if resources.empty?
+    start = Time.now
+    results = self.authorize_req(user, action, resources[0])
+    @@duration += (Time.now - start) * 1000.0
+    is_alloweds = resources.map do |resource|
+      results.all? do |result|
+        true if result.to_value({ "_this" => resource })
+      end
+    end
+    return is_alloweds
+  end
+
   private
 
   def self.authorize_req(user, action, resource)
