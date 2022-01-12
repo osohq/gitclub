@@ -14,6 +14,7 @@ from .fixtures import load_fixture_data
 
 from oso import Oso, OsoError
 from polar.data_filtering import Relation
+from polar.data.adapter.sqlalchemy_adapter import SqlAlchemyAdapter
 
 from typing import Any, Callable, Dict, Optional, Type
 
@@ -144,9 +145,7 @@ def init_oso(app, Session: sessionmaker):
 
         return combine_filters
 
-    oso.set_data_filtering_query_defaults(
-        combine_query=lambda q, r: q.union(r), exec_query=lambda q: q.distinct().all()
-    )
+    oso.set_data_filtering_adapter(SqlAlchemyAdapter(Session()))
 
     oso.register_class(
         Repo,

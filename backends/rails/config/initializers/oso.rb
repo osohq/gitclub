@@ -1,6 +1,9 @@
 require 'exceptions'
 OSO = Oso::Oso.new not_found_error: Exceptions::NotFound, forbidden_error: Exceptions::Forbidden
+
 Relation = Oso::Polar::DataFiltering::Relation
+require 'oso/polar/data/adapter/active_record_adapter'
+OSO.data_filtering_adapter = ::Oso::Polar::Data::Adapter::ActiveRecordAdapter.new
 
 OSO.register_class(
   User,
