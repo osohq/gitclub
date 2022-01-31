@@ -1,3 +1,4 @@
+from oso_client.client import OsoClient
 from .models import Base, Issue, Org, Repo, User, OrgRole, RepoRole
 
 john_email = "john@beatles.com"
@@ -7,13 +8,13 @@ ringo_email = "ringo@beatles.com"
 
 
 def load_fixture_data(session):
+    oso = OsoClient()
+
     def org_role(user, org, name):
-        role = OrgRole(user=user, org=org, name=name)
-        session.add(role)
+        oso.add_role(org, name, user)
 
     def repo_role(user, repo, name):
-        role = RepoRole(user=user, repo=repo, name=name)
-        session.add(role)
+        oso.add_role(repo, name, user)
 
     #########
     # Users #
@@ -77,6 +78,16 @@ def load_fixture_data(session):
 
     # https://github.com/osohq/oso/blob/70965f2277d7167c38d3641140e6e97dec78e3bf/languages/python/sqlalchemy-oso/tests/test_roles.py#L132-L133
     session.flush()
+    session.commit()
+
+    #############
+    # Relations #
+    #############
+
+    for repo in repos:
+        oso.add_relation(repo, "parent", repo.org)
+    for issue in issues:
+        oso.add_relation(issue, "parent", issue.repo)
 
     ##############
     # Repo roles #
@@ -98,7 +109,3 @@ def load_fixture_data(session):
     org_role(mike, monsters, "owner")
     org_role(sully, monsters, "member")
     org_role(randall, monsters, "member")
-
-    session.flush()
-    session.commit()
-    session.close()

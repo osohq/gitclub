@@ -11,7 +11,8 @@ bp = Blueprint("routes.role_assignments", __name__, url_prefix="/orgs/<int:org_i
 def org_unassigned_users_index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", org)
-    existing = [assignment.user_id for assignment in org.roles]
+    roles = current_app.oso.client.get_roles(resource=org)
+    existing = [role["actor_id"] for role in roles]
     unassigned = g.session.query(User).filter(column("id").notin_(existing))
     return jsonify([u.repr() for u in unassigned])
 
@@ -20,7 +21,16 @@ def org_unassigned_users_index(org_id):
 def org_index(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", org)
-    assignments = [{"user": role.user.repr(), "role": role.name} for role in org.roles]
+
+    roles = current_app.oso.client.get_roles(resource=org)
+
+    def get_user(id):
+        return g.session.query(User).filter_by(id=id).one()
+
+    assignments = [
+        {"user": get_user(role["actor_id"]).repr(), "role": role["role"]}
+        for role in roles
+    ]
     return jsonify(assignments)
 
 
@@ -30,11 +40,9 @@ def org_create(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "create_role_assignments", org)
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
-    current_app.oso.authorize(g.current_user, "read", user)
+    # current_app.oso.authorize(g.current_user, "read", user)
 
-    role = OrgRole(org_id=org.id, user_id=user.id, name=payload["role"])
-    g.session.add(role)
-    g.session.commit()
+    current_app.oso.client.add_role(org, payload["role"], user)
     return {"user": user.repr(), "role": payload["role"]}, 201
 
 
@@ -44,12 +52,15 @@ def org_update(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "update_role_assignments", org)
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
-    current_app.oso.authorize(g.current_user, "read", user)
+    # current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.query(OrgRole).filter_by(user=user, org=org).one_or_none()
-    role.name = payload["role"]
-    g.session.add(role)
-    g.session.commit()
+    current_roles = current_app.oso.client.get_roles(actor=user, resource=org)
+    if current_roles:
+        for role in current_roles:
+            current_app.oso.client.delete_role(
+                actor=user, role_name=role["role"], resource=org
+            )
+    current_app.oso.client.add_role(org, payload["role"], user)
     return {"user": user.repr(), "role": payload["role"]}
 
 
@@ -59,11 +70,14 @@ def org_delete(org_id):
     org = g.session.query(Org).filter_by(id=org_id).one_or_none()
     current_app.oso.authorize(g.current_user, "delete_role_assignments", org)
     user = g.session.query(User).filter_by(id=payload["user_id"]).one_or_none()
-    current_app.oso.authorize(g.current_user, "read", user)
+    # current_app.oso.authorize(g.current_user, "read", user)
 
-    role = g.session.query(OrgRole).filter_by(user=user, org=org).one_or_none()
-    g.session.delete(role)
-    g.session.commit()
+    current_roles = current_app.oso.client.get_roles(actor=user, resource=org)
+    if current_roles:
+        for role in current_roles:
+            current_app.oso.client.delete_role(
+                actor=user, role_name=role["role"], resource=org
+            )
     return current_app.response_class(status=204, mimetype="application/json")
 
 
@@ -82,7 +96,16 @@ def repo_unassigned_users_index(org_id, repo_id):
 def repo_index(org_id, repo_id):
     repo = g.session.query(Repo).filter_by(id=repo_id).one_or_none()
     current_app.oso.authorize(g.current_user, "list_role_assignments", repo)
-    assignments = [{"user": role.user.repr(), "role": role.name} for role in repo.roles]
+
+    roles = current_app.oso.client.get_roles(resource=repo)
+
+    def get_user(id):
+        return g.session.query(User).filter_by(id=id).one()
+
+    assignments = [
+        {"user": get_user(role["actor_id"]).repr(), "role": role["role"]}
+        for role in roles
+    ]
     return jsonify(assignments)
 
 

@@ -9,10 +9,11 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import expression as sql
 
+from oso_client.client import OsoClient
+
 from .models import Base, User, Org, Repo, Issue, OrgRole, RepoRole
 from .fixtures import load_fixture_data
 
-from oso import Oso, OsoError
 from polar.data_filtering import Relation
 from polar.data.adapter.sqlalchemy_adapter import SqlAlchemyAdapter
 
@@ -113,124 +114,30 @@ def create_app(db_path=None, load_fixtures=False):
     return app
 
 
+class OsoWrapper:
+    def __init__(self, oso_client, sessionmaker):
+        self.client = oso_client
+        self.session = sessionmaker
+
+    def authorize(self, actor, action, resource):
+        if not self.client.authorize(actor, action, resource):
+            if self.client.authorize(actor, "read", resource):
+                raise Forbidden
+            else:
+                raise NotFound
+
+    def authorized_query(self, actor, action, resource_type):
+        ids = self.client.list(actor, action, resource_type.__name__)
+        return self.session().query(resource_type).filter(resource_type.id.in_(ids))
+
+    def authorized_resources(self, actor, action, resource_type):
+        return self.authorized_query(actor, action, resource_type).all()
+
+
 # docs: begin-init-oso
 def init_oso(app, Session: sessionmaker):
     # Initialize SQLAlchemyOso instance.
-    oso = Oso(forbidden_error=Forbidden, not_found_error=NotFound)
-
-    def query_builder(model):
-        # A "filter" is an object returned from Oso that describes
-        # a condition that must hold on an object. This turns an
-        # Oso filter into one that can be applied to an SQLAlchemy
-        # query.
-        def to_sqlalchemy_filter(filter):
-            if filter.field is not None:
-                field = getattr(model, filter.field)
-                value = filter.value
-            else:
-                field = model.id
-                value = filter.value.id
-
-            if filter.kind == "Eq":
-                return field == value
-            elif filter.kind == "In":
-                return field.in_(value)
-            else:
-                raise OsoError(f"Unsupported filter kind: {filter.kind}")
-
-        # Turn a collection of Oso filters into one SQLAlchemy filter.
-        def combine_filters(filters):
-            filter = and_(*[to_sqlalchemy_filter(f) for f in filters])
-            return Session().query(model).filter(filter)
-
-        return combine_filters
-
-    oso.set_data_filtering_adapter(SqlAlchemyAdapter(Session()))
-
-    oso.register_class(
-        Repo,
-        build_query=query_builder(Repo),
-        fields={
-            "id": int,
-            "name": str,
-            "org": Relation(
-                kind="one", other_type="Org", my_field="org_id", other_field="id"
-            ),
-            "issues": Relation(
-                kind="many", other_type="Issue", my_field="id", other_field="repo_id"
-            ),
-        },
-    )
-
-    oso.register_class(
-        OrgRole,
-        build_query=query_builder(OrgRole),
-        fields={
-            "name": str,
-            "user": Relation(
-                kind="one", other_type="User", my_field="user_id", other_field="id"
-            ),
-            "org": Relation(
-                kind="one", other_type="Org", my_field="org_id", other_field="id"
-            ),
-        },
-    )
-
-    oso.register_class(
-        RepoRole,
-        build_query=query_builder(RepoRole),
-        fields={
-            "name": str,
-            "user": Relation(
-                kind="one", other_type="User", my_field="user_id", other_field="id"
-            ),
-            "repo": Relation(
-                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
-            ),
-        },
-    )
-
-    oso.register_class(
-        Issue,
-        build_query=query_builder(Issue),
-        fields={
-            "title": str,
-            "repo": Relation(
-                kind="one", other_type="Repo", my_field="repo_id", other_field="id"
-            ),
-        },
-    )
-
-    oso.register_class(
-        Org,
-        build_query=query_builder(Org),
-        fields={
-            "id": int,
-            "name": str,
-            "base_repo_role": str,
-            "billing_address": str,
-            "repos": Relation(
-                kind="many", other_type="Repo", my_field="id", other_field="org_id"
-            ),
-        },
-    )
-
-    oso.register_class(
-        User,
-        build_query=query_builder(User),
-        fields={
-            "email": str,
-            "org_roles": Relation(
-                kind="many", other_type="OrgRole", my_field="id", other_field="user_id"
-            ),
-            "repo_roles": Relation(
-                kind="many", other_type="RepoRole", my_field="id", other_field="user_id"
-            ),
-        },
-    )
-
-    # Load authorization policy.
-    oso.load_files(["app/authorization.polar"])
+    oso = OsoWrapper(OsoClient(), Session)
 
     # Attach Oso instance to Flask application.
     app.oso = oso
