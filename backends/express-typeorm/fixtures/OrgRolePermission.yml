@@ -1,0 +1,8 @@
+entity: OrgRolePermission
+items:
+  role_perm1:
+    role: "@beatles_contributors"
+    permission: "read"
+  role_perm2:
+    role: "@beatles_contributors"
+    permission: "list_repos"

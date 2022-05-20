@@ -14,8 +14,8 @@ export class RepoController {
         await request.oso.authorize(request.user, "list_repos", org);
         const repoFilter = await request.oso.authorizedQuery(request.user, "read", Repo);
         const query = this.repoRepository.createQueryBuilder()
-                          .where({ orgId: request.params.orgId })
-                          .andWhere(repoFilter);
+            .where({ orgId: request.params.orgId })
+            .andWhere(new Brackets(qb => qb.where(repoFilter)));
         return await query.getMany();
     }
 

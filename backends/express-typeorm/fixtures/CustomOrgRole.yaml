@@ -1,0 +1,5 @@
+entity: CustomOrgRole
+items:
+  beatles_contributors:
+    name: "external_contributors"
+    org: "@beatles"

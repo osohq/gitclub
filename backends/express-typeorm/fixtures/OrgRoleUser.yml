@@ -1,0 +1,5 @@
+entity: OrgRoleUser
+items:
+  role_user1:
+    role: "@beatles_contributors"
+    user: "@mike"
