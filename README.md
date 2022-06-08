@@ -5,8 +5,14 @@ permissions system. The app is implemented in a number of backend languages,
 which all expose a common API that is consumed by a React frontend (in the
 `frontend/` folder).
 
-For more information, check out one of the backend implementations linked below.
+This application is built as an example for the Oso library. If you are looking
+for an example of using [Oso Cloud](https://cloud-docs.osohq.com/), check out
+[GitCloud](https://github.com/osohq/gitcloud).
+
 ## Backends
+
+For more information, check out one of the backend implementations linked below.
+
 - [Flask SQLAlchemy Backend](backends/flask-sqlalchemy)
 - [Flask SQLAlchemy Backend (with sqlalchemy-oso integration library)](backends/flask-sqlalchemy-oso)
 - [Rails Backend](backends/rails)
@@ -23,7 +29,7 @@ $ yarn start
 
 ### Architecture
 
-- TypeScript / React / Reach Router
+- TypeScript / React / React Router
 
 ## Development
 
