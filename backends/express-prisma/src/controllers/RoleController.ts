@@ -9,29 +9,20 @@ type Role = {
 
 export class RoleController {
     protected resourceName: string;
+    protected className: string;
 
     async unassignedUsers(request: Request) {
-        const resource = await prisma[this.resourceName].findUnique({
-            where: {
-                id: request.params.id
-            }
-        });
-        await request.oso.authorize(request.user, "list_role_assignments", resource);
+        await request.oso.authorizeObj(request.user, "list_role_assignments", { type: this.className, id: request.params.id });
         const assigned = await prisma[`${this.resourceName}Role`].findMany({
             where: { [this.resourceName]: { id: request.params.id } }
         });
         const assignedUsers: Set<number> = new Set((await assigned).map(role => role.userId));
-        const authorizeFilter = await request.oso.authorizedQuery(request.user, "read", prisma.user);
+        const [_model, authorizeFilter, _] = await request.oso.authorizedQuery(request.user, "read", "User");
         return await (await prisma.user.findMany({ where: authorizeFilter })).filter(u => !assignedUsers.has(u.id));
     }
 
     async all(request: Request): Promise<Role[]> {
-        const resource = await prisma[this.resourceName].findUnique({
-            where: {
-                id: request.params.id
-            }
-        });
-        await request.oso.authorize(request.user, "list_role_assignments", resource);
+        await request.oso.authorizeObj(request.user, "list_role_assignments", { type: this.className, id: request.params.id });
         const resourceRoles = await prisma[`${this.resourceName}Role`].findMany({
             where: {
                 [this.resourceName]: {
@@ -52,15 +43,11 @@ export class RoleController {
     }
 
     async save(request: Request, response) {
-        const resource = await prisma[this.resourceName].findUnique({
-            where: {
-                id: request.params.id
-            }
-        });
-        await request.oso.authorize(request.user, "create_role_assignments", resource);
+        await request.oso.authorizeObj(request.user, "create_role_assignments", { type: this.className, id: request.params.id });
+
         const payload = request.body;
-        const user = await prisma.user.findUnique({ where: { id: payload.user_id } });
-        await request.oso.authorize(request.user, "read", user);
+        await request.oso.authorizeObj(request.user, "read", { type: "User", id: payload.user_id });
+
         let role = await prisma[`${this.resourceName}Role`].create({
             data: {
                 [this.resourceName]: {
@@ -75,12 +62,7 @@ export class RoleController {
     }
 
     async update(request: Request) {
-        const resource = await prisma[this.resourceName].findUnique({
-            where: {
-                id: request.params.id
-            }
-        });
-        await request.oso.authorize(request.user, "update_role_assignments", resource);
+        await request.oso.authorizeObj(request.user, "update_role_assignments", { type: this.className, id: request.params.id });
 
         const payload = request.body;
         const existingRole = await prisma[`${this.resourceName}Role`].findFirst({
@@ -97,12 +79,7 @@ export class RoleController {
     }
 
     async delete(request: Request, response) {
-        const resource = await prisma[this.resourceName].findUnique({
-            where: {
-                id: request.params.id
-            }
-        });
-        await request.oso.authorize(request.user, "delete_role_assignments", resource);
+        await request.oso.authorizeObj(request.user, "delete_role_assignments", { type: this.className, id: request.params.id });
 
         const payload = request.body;
         const existingRole = await prisma[`${this.resourceName}Role`].findFirst({

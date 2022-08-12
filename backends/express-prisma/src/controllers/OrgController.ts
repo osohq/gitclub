@@ -3,7 +3,7 @@ import { prisma } from "..";
 
 export class OrgController {
     async all(request: Request) {
-        const orgs = await request.oso.authorizedResources(request.user, "read", prisma.org);
+        const orgs = await request.oso.authorizedResources(request.user, "read", "Org");
         return orgs;
     }
 
@@ -13,7 +13,8 @@ export class OrgController {
                 id: request.params.id
             }
         });
-        await request.oso.authorize(request.user, "read", org);
+        console.log(org);
+        await request.oso.authorizeObj(request.user, "read", { type: "Org", id: org.id });
         return org
     }
 

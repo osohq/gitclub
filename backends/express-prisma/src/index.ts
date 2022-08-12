@@ -17,7 +17,7 @@ import { NotFoundError } from "oso";
 
 export const prisma = new PrismaClient({
     rejectOnNotFound: (e) => new NotFoundError(),
-    log: ["info"]
+    log: ["info", "query"]
 })
 
 
@@ -50,8 +50,8 @@ async function main() {
                         id: Number.parseInt(userId)
                     },
                     include: {
-                        orgRole: { include: { org: true } },
-                        repoRole: { include: { repo: true } },
+                        orgRole: true,
+                        repoRole: true,
                     }
                 })
             } catch (err) {

@@ -6,9 +6,9 @@ import { prisma } from "..";
 
 export class IssueController {
     async all(request: Request) {
-        const repo = await prisma.repo.findUnique({ where: { id: request.params.repoId } });
-        await request.oso.authorize(request.user, "list_issues", repo);
-        const issueFilter = await request.oso.authorizedQuery(request.user, "read", prisma.issue);
+        await request.oso.authorizeObj(request.user, "list_issues", { type: "Repo", id: request.params.repoId });
+
+        const [_model, issueFilter, _] = await request.oso.authorizedQuery(request.user, "read", "Issue");
         return await prisma.issue.findMany(
             {
                 where: {
@@ -24,7 +24,7 @@ export class IssueController {
     }
 
     async one(request: Request) {
-        const issueFilter = await request.oso.authorizedQuery(request.user, "read", prisma.issue);
+        const [_model, issueFilter, _] = await request.oso.authorizedQuery(request.user, "read", "Issue");
         const issue = await prisma.issue.findFirst({
             where: {
                 AND: [{
@@ -39,8 +39,7 @@ export class IssueController {
     }
 
     async save(request: Request, response) {
-        const repo = await prisma.repo.findMany({ where: { id: request.params.repoId } });
-        // await request.oso.authorize(request.user, "create_issues", repo);
+        await request.oso.authorizeObj(request.user, "create_issues", { type: "Repo", id: request.params.repoId });
         const res = await prisma.issue.create({ data: request.body });
         return response.status(201).send(res);
     }
@@ -52,7 +51,8 @@ export class IssueController {
                 repoId: request.params.repoId,
             }
         });
-        await request.oso.authorize(request.user, "delete", issue);
+        await request.oso.authorizeObj(request.user, "delete", { type: "Issue", id: issue.id });
+
         await prisma.issue.delete({ where: { id: issue.id } });
     }
 

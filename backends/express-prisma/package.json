@@ -9,7 +9,7 @@
       "@types/node": "^8.0.29",
       "nodemon": "^2.0.7",
       "ts-node": "^10.2.1",
-      "typescript": "3.3.3333"
+      "typescript": "^4.7.4"
    },
    "dependencies": {
       "@prisma/client": "^3.0.2",
@@ -17,8 +17,8 @@
       "cookie-session": "1.4.0",
       "cors": "^2.8.5",
       "express": "^4.15.4",
-      "oso": "https://github.com/samscott89/oso-node-preview",
-      "prisma": "^3.0.2",
+      "oso": "https://github.com/osohq/oso.git#sam/isacheck-preview",
+      "prisma": "^4.2.1",
       "reflect-metadata": "^0.1.10",
       "sql.js": "^1.6.1",
       "sqlite3": "^4.0.3"

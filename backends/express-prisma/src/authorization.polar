@@ -29,7 +29,7 @@ resource Org {
 
 has_role(user: User, name: String, org: Org) if
     role in user.orgRole and
-    role matches { role: name, org: org };
+    role matches { role: name, orgId: org.id };
 
 resource Repo {
   roles = ["admin", "writer", "reader"];
@@ -63,9 +63,9 @@ resource Repo {
 
 has_role(user: User, name: String, repo: Repo) if
     role in user.repoRole and
-    role matches { role: name, repo: repo };
+    role matches { role: name, repo };
 
-has_relation(org: Org, "parent", _: Repo{org: org});
+has_relation(org: Org, "parent", _: Repo{org });
 
 resource Issue {
   permissions = ["read"];
@@ -74,7 +74,7 @@ resource Issue {
   "read" if "reader" on "parent";
 }
 
-has_relation(repo: Repo, "parent", _: Issue{repo: repo});
+has_relation(repo: Repo, "parent", _: Issue{repo });
 
 
 ### Misc rules
@@ -84,7 +84,7 @@ has_relation(repo: Repo, "parent", _: Issue{repo: repo});
 has_permission(_: User, "read", _: User);
 
 # A User can read their own profile.
-has_permission(_: User{id: id}, "read_profile", _:User{id: id});
+has_permission(_: User{id}, "read_profile", _:User{id});
 
 # Any logged-in user can create a new org.
 has_permission(_: User, "create", _: Org);

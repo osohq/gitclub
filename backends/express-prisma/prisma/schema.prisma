@@ -11,8 +11,8 @@ model Issue {
   id       Int    @id @default(autoincrement())
   title    String
   repoId   Int?
-  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   typename String @default("Issue")
+  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Org {
@@ -20,9 +20,9 @@ model Org {
   name            String
   base_repo_role  String
   billing_address String
+  typename        String    @default("Org")
   orgRole         OrgRole[]
   repo            Repo[]
-  typename        String    @default("Org")
 }
 
 model OrgRole {
@@ -30,19 +30,19 @@ model OrgRole {
   role     String
   orgId    Int?
   userId   Int?
-  org      Org?   @relation(fields: [orgId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   typename String @default("OrgRole")
+  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  org      Org?   @relation(fields: [orgId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Repo {
   id       Int        @id @default(autoincrement())
   name     String
   orgId    Int?
+  typename String     @default("Repo")
   org      Org?       @relation(fields: [orgId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   issue    Issue[]
   repoRole RepoRole[]
-  typename String     @default("Repo")
 }
 
 model RepoRole {
@@ -50,15 +50,15 @@ model RepoRole {
   role     String
   repoId   Int?
   userId   Int?
-  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   typename String @default("RepoRole")
+  user     User?  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  repo     Repo?  @relation(fields: [repoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model User {
   id       Int        @id @default(autoincrement())
   email    String
+  typename String     @default("User")
   orgRole  OrgRole[]
   repoRole RepoRole[]
-  typename String     @default("User")
 }
