@@ -94,7 +94,8 @@ def create_app(db_path=None, load_fixtures=False):
                 if user is None:
                     flask_session.pop("current_user_id")
                 g.current_user = user
-                session.close()
+                g.current_user_session = session
+                # session.close()
             else:
                 g.current_user = None
         # docs: end-authn
@@ -111,6 +112,8 @@ def create_app(db_path=None, load_fixtures=False):
     def close_session(res):
         if "session" in g:
             g.session.close()
+        if "current_user_session" in g:
+            g.current_user_session.close()
         return res
 
     return app

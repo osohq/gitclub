@@ -29,6 +29,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
+    main_org_id = Column(Integer, ForeignKey("orgs.id"))
+    main_org = relationship("Org")
 
     def repr(self):
         return {"id": self.id, "email": self.email}

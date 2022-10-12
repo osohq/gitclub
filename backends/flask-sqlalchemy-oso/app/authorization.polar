@@ -38,6 +38,9 @@ resource Org {
   "member" if "owner";
 }
 
+has_role(user: User, "member", org: Org) if
+  org = user.main_org;
+
 has_role(user: User, name: String, org: Org) if
     role in user.org_roles and
     role matches { name: name, org_id: org.id };
