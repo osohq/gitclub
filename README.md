@@ -29,7 +29,7 @@ $ yarn start
 
 ### Architecture
 
-- TypeScript / React / React Router
+- TypeScript / React
 
 ## Development
 
