@@ -6,7 +6,7 @@ which all expose a common API that is consumed by a React frontend (in the
 `frontend/` folder).
 
 This application is built as an example for the Oso library. If you are looking
-for an example of using [Oso Cloud](https://cloud-docs.osohq.com/), check out
+for an example of using [Oso Cloud](https://www.osohq.com/docs), check out
 [GitCloud](https://github.com/osohq/gitcloud).
 
 ## Backends
