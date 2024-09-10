@@ -5,8 +5,7 @@ permissions system. The app is implemented in a number of backend languages,
 which all expose a common API that is consumed by a React frontend (in the
 `frontend/` folder).
 
-This application is built as an example for the Oso library. If you are looking
-for an example of using [Oso Cloud](https://www.osohq.com/docs), check out
+This application is built as an example for the Oso library. [Oso library](https://github.com/osohq/oso) is now deprecated. If you are looking for an example of using [Oso Cloud](https://www.osohq.com/docs), check out
 [GitCloud](https://github.com/osohq/gitcloud).
 
 ## Backends
@@ -17,6 +16,7 @@ For more information, check out one of the backend implementations linked below.
 - [Flask SQLAlchemy Backend (with sqlalchemy-oso integration library)](backends/flask-sqlalchemy-oso)
 - [Rails Backend](backends/rails)
 - [Express/TypeORM Backend](backends/express-typeorm)
+  
 ## Frontend
 
 ### Running the frontend
