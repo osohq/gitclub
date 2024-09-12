@@ -8,7 +8,7 @@ import {
 import { getRepository, In, Not } from "typeorm";
 import { Issue } from "./entities/Issue";
 import { Org } from "./entities/Org";
-import { OrgRole } from "./entities/OrgRole";
+import { OrgRole, CustomOrgRole, OrgRolePermission, OrgRoleUser } from "./entities/OrgRole";
 import { Repo } from "./entities/Repo";
 import { RepoRole } from "./entities/RepoRole";
 import { User } from "./entities/User";
@@ -50,6 +50,7 @@ export async function initOso() {
       id: Number,
       base_repo_role: String,
       orgRoles: new Relation("many", "OrgRole", "id", "orgId"),
+      customOrgRoles: new Relation("many", "CustomOrgRole", "id", "orgId")
     },
   });
 
@@ -60,6 +61,33 @@ export async function initOso() {
       role: String,
       org: new Relation("one", "Org", "orgId", "id"),
       user: new Relation("one", "User", "userId", "id"),
+    },
+  });
+
+  oso.registerClass(CustomOrgRole, {
+    execQuery: execFromRepo(CustomOrgRole),
+    fields: {
+      id: Number,
+      org: new Relation("one", "Org", "orgId", "id"),
+      permissionAssignments: new Relation("many", "OrgRolePermission", "id", "roleId"),
+      userAssignments: new Relation("many", "OrgRoleUser", "id", "roleId"),
+      user: new Relation("one", "User", "userId", "id"),
+    },
+  });
+
+  oso.registerClass(OrgRolePermission, {
+    execQuery: execFromRepo(OrgRolePermission),
+    fields: {
+      id: Number,
+      permission: String,
+    },
+  });
+
+  oso.registerClass(OrgRoleUser, {
+    execQuery: execFromRepo(OrgRoleUser),
+    fields: {
+      id: Number,
+      user: new Relation("one", "User", "userId", "id")
     },
   });
 

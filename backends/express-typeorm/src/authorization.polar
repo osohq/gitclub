@@ -40,6 +40,17 @@ has_role(user: User, name: String, org: Org) if
     role in user.orgRoles and
     role matches { role: name, org: org };
 
+
+has_permission(user: User, action: String, org: Org) if
+  has_custom_role(user, role, org) and
+  assignment in role.permissionAssignments and
+  action = assignment.permission;
+
+has_custom_role(user: User, role: CustomOrgRole, org: Org) if 
+    role in org.customOrgRoles and
+    user_assignment in role.userAssignments and
+    user_assignment.user = user;
+
 resource Repo {
   roles = ["admin", "maintainer", "reader"];
   permissions = [

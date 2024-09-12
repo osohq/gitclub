@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { OrgRole } from "./OrgRole";
+import { CustomOrgRole, OrgRole } from "./OrgRole";
 import { RepoRole } from "./RepoRole";
 
 @Entity()
